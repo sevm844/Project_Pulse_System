@@ -13,7 +13,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-8 py-4 bg-white/90 backdrop-blur border-b">
         <div className="flex items-center gap-3">
           <Image
-            src="/Logo.png"
+            src="/logotop.png"
             alt="Project Pulse Logo"
             width={34}
             height={34}
