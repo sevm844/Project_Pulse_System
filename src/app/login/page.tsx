@@ -3,7 +3,23 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { clearStoredStudentGroup } from "../student/_utils/studentGroupStorage";
+
+const demoStaffAccounts = [
+  {
+    email: "anna.cruz@ub.edu.ph",
+    password: "adviser123",
+    role: "Adviser",
+    redirectTo: "/adviser",
+  },
+  {
+    email: "dean.office@ub.edu.ph",
+    password: "dean123",
+    role: "Dean",
+    redirectTo: "/dean",
+  },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,73 +34,86 @@ export default function LoginPage() {
     return /^\d{7}@ub\.edu\.ph$/.test(value.toLowerCase());
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setError("");
 
     const normalizedEmail = email.toLowerCase().trim();
+    const normalizedPassword = password.trim();
 
-    if (!normalizedEmail || !password) {
+    if (!normalizedEmail || !normalizedPassword) {
       setError("Email and password are required.");
-      return;
-    }
-
-    if (!isValidStudentEmail(normalizedEmail)) {
-      setError("Please enter a valid UB student email (e.g. 1234567@ub.edu.ph).");
       return;
     }
 
     setLoading(true);
 
-    // Simulated login
+// Temporary staff login until database authentication is connected.
+    const staffAccount = demoStaffAccounts.find(
+      (account) =>
+        account.email === normalizedEmail &&
+        account.password === normalizedPassword,
+    );
+
+    if (staffAccount) {
+      localStorage.setItem("project-pulse-user-email", staffAccount.email);
+      localStorage.setItem("project-pulse-user-role", staffAccount.role);
+
+      router.push(staffAccount.redirectTo);
+      return;
+    }
+
+    if (!isValidStudentEmail(normalizedEmail)) {
+      setError(
+        "Please enter a valid UB student email or an approved staff account.",
+      );
+      setLoading(false);
+      return;
+    }
+
+// Temporary student login for frontend testing.
     setTimeout(() => {
       const user = {
         email: normalizedEmail,
-        role: "student",
+        role: "Student",
       };
 
-      console.log("Logged in user:", user);
+      localStorage.setItem("project-pulse-user-email", user.email);
+      localStorage.setItem("project-pulse-user-role", user.role);
 
-      if (user.role === "student") {
-        router.push("/student");
-      } else {
-        setError("Unauthorized role.");
-        setLoading(false);
-      }
+      clearStoredStudentGroup();
+      router.push("/student/setup");
     }, 800);
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-md bg-white border rounded-2xl shadow-sm p-8">
-        {/* LOGO */}
-        <div className="flex items-center justify-center gap-3 mb-6">
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+      <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
+{/* Brand */}
+        <div className="mb-6 flex items-center justify-center gap-3">
           <Image src="/Logo.png" alt="Logo" width={34} height={34} />
           <span className="text-lg font-semibold">
             Project <span className="text-green-600">Pulse</span>
           </span>
         </div>
 
-        {/* TITLE */}
-        <h2 className="text-2xl font-semibold text-center">
-          Log in
-        </h2>
-        <p className="text-center text-gray-500 text-sm mt-1">
-          Sign in using your UB student email
+{/* Heading */}
+        <h2 className="text-center text-2xl font-semibold">Log in</h2>
+        <p className="mt-1 text-center text-sm text-gray-500">
+          Sign in using your UB account
         </p>
 
-        {/* ERROR */}
         {error && (
-          <div className="mt-4 text-sm text-red-500 text-center">{error}</div>
+          <div className="mt-4 text-center text-sm text-red-500">{error}</div>
         )}
 
-        {/* FORM */}
+{/* Login form */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
-            placeholder="Student Email (1234567@ub.edu.ph)"
-            className="w-full px-4 py-3 border rounded-md outline-none focus:ring-2 focus:ring-green-200"
+            placeholder="Email address"
+            className="w-full rounded-md border px-4 py-3 outline-none focus:ring-2 focus:ring-green-200"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -92,7 +121,7 @@ export default function LoginPage() {
           <input
             type="password"
             placeholder="Password"
-            className="w-full px-4 py-3 border rounded-md outline-none focus:ring-2 focus:ring-green-200"
+            className="w-full rounded-md border px-4 py-3 outline-none focus:ring-2 focus:ring-green-200"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -109,14 +138,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 disabled:opacity-60"
+            className="w-full rounded-md bg-green-600 py-3 text-white hover:bg-green-700 disabled:opacity-60"
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
-        {/* REGISTER LINK */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+{/* Register link */}
+        <p className="mt-6 text-center text-sm text-gray-500">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-green-600 hover:underline">
             Create Account

@@ -48,6 +48,23 @@ export type ActivityItem = {
   href: string;
 };
 
+export type DefenseSchedule = {
+  stage: string;
+  date: string;
+  time: string;
+  venue: string;
+  panelists: string[];
+  deadline: string;
+};
+
+export type NotificationItem = {
+  id: number;
+  title: string;
+  date: string;
+};
+
+/* Project overview */
+
 export const project = {
   groupName: "Project Pulse",
   groupCode: "PP-DEMO01",
@@ -61,17 +78,17 @@ export const project = {
   chapters: [
     {
       title: "Chapter 1",
-      status: "Approved",
+      status: "Approved" as DocumentStatus,
       progress: 100,
     },
     {
       title: "Chapter 2",
-      status: "Needs Revision",
+      status: "Needs Revision" as DocumentStatus,
       progress: 72,
     },
     {
       title: "Chapter 3",
-      status: "Draft",
+      status: "Draft" as DocumentStatus,
       progress: 45,
     },
     {
@@ -81,6 +98,8 @@ export const project = {
     },
   ],
 };
+
+/* Team */
 
 export const members: GroupMember[] = [
   {
@@ -99,6 +118,8 @@ export const members: GroupMember[] = [
     email: "john.reyes@ub.edu.ph",
   },
 ];
+
+/* Documents */
 
 export const documents: DocumentItem[] = [
   {
@@ -135,6 +156,8 @@ export const documents: DocumentItem[] = [
   },
 ];
 
+/* Adviser feedback */
+
 export const feedbackItems: FeedbackItem[] = [
   {
     id: 1,
@@ -164,6 +187,8 @@ export const feedbackItems: FeedbackItem[] = [
     status: "Addressed",
   },
 ];
+
+/* Checklist */
 
 export const tasks: TaskItem[] = [
   {
@@ -200,7 +225,9 @@ export const tasks: TaskItem[] = [
   },
 ];
 
-export const defenseSchedule = {
+/* Defense */
+
+export const defenseSchedule: DefenseSchedule = {
   stage: "Alpha Defense",
   date: "May 10, 2026",
   time: "9:00 AM",
@@ -208,6 +235,8 @@ export const defenseSchedule = {
   panelists: ["Dr. Santos", "Prof. Lim", "Ms. Cruz"],
   deadline: "May 08, 2026",
 };
+
+/* Timeline */
 
 export const activities: ActivityItem[] = [
   {
@@ -236,6 +265,8 @@ export const activities: ActivityItem[] = [
   },
 ];
 
+/* Support content */
+
 export const resources = [
   "Capstone manuscript format guide",
   "Alpha Defense requirements",
@@ -244,7 +275,7 @@ export const resources = [
   "Document submission policy",
 ];
 
-export const notifications = [
+export const notifications: NotificationItem[] = [
   {
     id: 1,
     title: "Adviser commented on Chapter 2.",

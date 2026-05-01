@@ -9,7 +9,7 @@ const announcements = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
-      {/* HEADER */}
+{/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#edf2ec] bg-white/90 px-6 py-4 backdrop-blur md:px-8">
         <div className="flex items-center gap-3">
           <Image
@@ -19,6 +19,7 @@ export default function Home() {
             height={34}
             className="rounded-xl"
           />
+
           <span className="text-lg font-semibold tracking-tight">
             Project <span className="text-[#4f8f58]">Pulse</span>
           </span>
@@ -47,7 +48,7 @@ export default function Home() {
         </a>
       </header>
 
-      {/* HERO */}
+{/* Hero */}
       <section className="relative flex min-h-screen translate-y-[-20px] flex-col items-center justify-center overflow-hidden px-6 pb-40 text-center">
         <div className="absolute inset-x-0 bottom-0 -z-10 h-[760px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
         <div className="absolute inset-0 -z-20 bg-[radial-gradient(#dfe8df_1px,transparent_1px)] opacity-45 [background-size:22px_22px]" />
@@ -134,16 +135,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ABOUT */}
+{/* About */}
       <section id="about" className="px-6 py-16 md:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-2">
           <div className="rounded-2xl border border-[#dfe8df] bg-white/80 p-8 shadow-[0_1px_2px_rgba(31,42,36,0.04)]">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#4f8f58]">
               About Project Pulse
             </p>
+
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">
               Project Pulse Overview
             </h2>
+
             <p className="mt-4 leading-7 text-[#59645d]">
               Project Pulse is a centralized capstone lifecycle management
               system that streamlines submissions, feedback, scheduling, and
@@ -157,9 +160,11 @@ export default function Home() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#4f8f58]">
               Department Information
             </p>
+
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">
               College of Information and Communication Technology
             </h2>
+
             <p className="mt-4 leading-7 text-[#59645d]">
               The College of Information and Communication Technology supports
               the development of research, innovation, and capstone projects by
@@ -172,7 +177,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ARCHIVE SEARCH */}
+{/* Archive */}
       <section
         id="archive"
         className="border-y border-[#edf2ec] bg-[#fbfdfb] px-6 py-16 md:px-8"
@@ -182,9 +187,11 @@ export default function Home() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#4f8f58]">
               Archive Repository
             </p>
+
             <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
               Search completed capstone projects
             </h2>
+
             <p className="mx-auto mt-4 max-w-2xl text-[#7b877f]">
               Browse approved capstone outputs and filter results by year,
               program, adviser, or keywords.
@@ -241,6 +248,7 @@ export default function Home() {
             <h3 className="mb-3 text-xl font-semibold">
               No archived projects yet
             </h3>
+
             <p className="mx-auto max-w-2xl leading-7 text-[#7b877f]">
               Completed and approved capstone projects will appear here once the
               archive repository becomes available.
@@ -249,16 +257,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ANNOUNCEMENTS */}
+{/* Announcements */}
       <section id="announcements" className="px-6 py-16 md:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#4f8f58]">
               Announcements
             </p>
+
             <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
               Latest updates
             </h2>
+
             <p className="mx-auto mt-4 max-w-2xl text-[#7b877f]">
               Dean and Coordinator can post important updates, reminders, and
               notices for students and faculty.
@@ -274,6 +284,7 @@ export default function Home() {
                 <p className="mb-3 text-sm font-medium text-[#4f8f58]">
                   Announcement {index + 1}
                 </p>
+
                 <p className="leading-7 text-[#59645d]">{item}</p>
               </div>
             ))}
@@ -281,17 +292,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* LOGIN INFO */}
+{/* Role access */}
       <section className="px-6 pb-20 md:px-8">
         <div className="mx-auto max-w-4xl rounded-3xl bg-[#202823] p-10 text-center text-white shadow-[0_24px_70px_rgba(31,42,36,0.18)]">
           <h2 className="text-2xl font-semibold md:text-3xl">
             Access your role-based dashboard
           </h2>
+
           <p className="mx-auto mt-3 max-w-2xl text-white/75">
             Students, advisers, panelists, coordinators, grammarians, records
             staff, and administrators can sign in to access their assigned
             workflows.
           </p>
+
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <a
               href="/register"
@@ -299,6 +312,7 @@ export default function Home() {
             >
               Create Account
             </a>
+
             <a
               href="/contact"
               className="rounded-lg border border-white/25 px-6 py-3 font-medium text-white transition hover:bg-white/10"
@@ -309,23 +323,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
+{/* Footer */}
       <footer className="border-t border-[#edf2ec] bg-white px-6 py-8 md:px-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-[#7b877f] md:flex-row">
           <p>© {new Date().getFullYear()} Project Pulse</p>
+
           <div className="flex items-center gap-6">
             <a href="#about" className="transition hover:text-[#1f2a24]">
               About
             </a>
+
             <a href="#archive" className="transition hover:text-[#1f2a24]">
               Archive
             </a>
+
             <a
               href="#announcements"
               className="transition hover:text-[#1f2a24]"
             >
               Announcements
             </a>
+
             <a href="/login" className="transition hover:text-[#1f2a24]">
               Login
             </a>

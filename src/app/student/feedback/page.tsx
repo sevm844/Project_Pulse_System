@@ -36,10 +36,14 @@ export default function FeedbackPage() {
   return (
     <StudentShell title="Feedback">
       <div className="space-y-5">
+{/* Filters */}
         <Card className="p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-[#203028]">Feedback</h2>
+              <h2 className="text-lg font-semibold text-[#203028]">
+                Feedback
+              </h2>
+
               <p className="mt-1 text-sm text-[#7b877f]">
                 Track adviser comments from Pending to Addressed to Verified.
               </p>
@@ -50,6 +54,7 @@ export default function FeedbackPage() {
                 (item) => (
                   <button
                     key={item}
+                    type="button"
                     onClick={() => setFilter(item)}
                     className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${
                       filter === item
@@ -65,14 +70,17 @@ export default function FeedbackPage() {
           </div>
         </Card>
 
+{/* Feedback list */}
         {filteredFeedback.map((item) => (
           <Card key={item.id} className="p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <StatusBadge status={item.status} />
+
                 <h3 className="mt-3 text-base font-semibold text-[#203028]">
                   {item.comment}
                 </h3>
+
                 <p className="mt-2 text-sm text-[#7b877f]">
                   {item.chapter} • {item.version} • Commented by {item.by} on{" "}
                   {item.date}
@@ -81,11 +89,13 @@ export default function FeedbackPage() {
 
               <div className="flex flex-wrap gap-2">
                 <button
+                  type="button"
                   onClick={() => setSelected(item)}
                   className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
                 >
                   Mark Addressed
                 </button>
+
                 <Link
                   href="/student/documents"
                   className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
@@ -99,6 +109,7 @@ export default function FeedbackPage() {
               <p className="text-xs font-medium text-[#7b877f]">
                 Student response
               </p>
+
               <textarea
                 placeholder="Explain what revision was made..."
                 className="mt-2 min-h-20 w-full resize-none bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
@@ -107,25 +118,34 @@ export default function FeedbackPage() {
           </Card>
         ))}
 
+{/* Address feedback modal */}
         {selected && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Address Feedback
               </h2>
-              <p className="mt-2 text-sm text-[#59645d]">{selected.comment}</p>
+
+              <p className="mt-2 text-sm text-[#59645d]">
+                {selected.comment}
+              </p>
+
               <textarea
                 placeholder="Explain the revision made..."
                 className="mt-5 min-h-24 w-full resize-none rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none"
               />
+
               <div className="mt-4 flex justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => setSelected(null)}
                   className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
                 >
                   Cancel
                 </button>
+
                 <button
+                  type="button"
                   onClick={markAddressed}
                   className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
                 >

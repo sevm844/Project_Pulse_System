@@ -12,14 +12,17 @@ export default function ProfilePage() {
   function handleProfileUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setProfileImage(URL.createObjectURL(file));
   }
 
   return (
     <StudentShell title="Profile / Group Members">
       <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+{/* Student profile */}
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-[#203028]">Profile</h2>
+
           <p className="mt-1 text-sm text-[#7b877f]">
             Student account details
           </p>
@@ -33,9 +36,11 @@ export default function ProfilePage() {
                 height={72}
                 className="h-[72px] w-[72px] rounded-2xl object-cover"
               />
+
               <span className="absolute inset-0 hidden items-center justify-center rounded-2xl bg-black/50 text-xs text-white group-hover:flex">
                 Edit
               </span>
+
               <input
                 type="file"
                 accept="image/*"
@@ -48,7 +53,9 @@ export default function ProfilePage() {
               <p className="text-lg font-semibold text-[#203028]">
                 Student Name
               </p>
+
               <p className="text-sm text-[#7b877f]">1234567@ub.edu.ph</p>
+
               <p className="mt-1 text-xs font-medium text-[#4f8f58]">
                 Group Leader
               </p>
@@ -57,16 +64,19 @@ export default function ProfilePage() {
 
           <div className="mt-6 rounded-xl bg-[#f8faf7] p-4">
             <p className="text-xs text-[#7b877f]">Group Code</p>
+
             <p className="mt-2 text-sm font-semibold text-[#203028]">
               {project.groupCode}
             </p>
           </div>
         </Card>
 
+{/* Group members */}
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-[#203028]">
             Group Members
           </h2>
+
           <p className="mt-1 text-sm text-[#7b877f]">
             Students assigned to this capstone group.
           </p>
@@ -77,7 +87,9 @@ export default function ProfilePage() {
                 <p className="text-sm font-semibold text-[#203028]">
                   {member.name}
                 </p>
+
                 <p className="mt-1 text-xs text-[#7b877f]">{member.email}</p>
+
                 <span className="mt-3 inline-flex rounded-full border border-[#dfe8df] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#59645d]">
                   {member.role}
                 </span>
