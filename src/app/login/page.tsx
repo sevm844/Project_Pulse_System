@@ -92,7 +92,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
 {/* Brand */}
         <div className="mb-6 flex items-center justify-center gap-3">
-          <Image src="/Logo.png" alt="Logo" width={34} height={34} />
+          <Image src="/Logo-icon.png" alt="Logo" width={34} height={34} />
           <span className="text-lg font-semibold">
             Project <span className="text-green-600">Pulse</span>
           </span>
