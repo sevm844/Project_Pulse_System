@@ -101,7 +101,7 @@ export default function Home() {
           <div className="absolute inset-0 rounded-full bg-[#d7f7d8] opacity-60 blur-2xl" />
           <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-[0_16px_40px_rgba(31,42,36,0.12)]">
             <Image
-              src="/logo-icon.png"
+              src="/Logo-icon.png"
               alt="Project Pulse Icon"
               width={40}
               height={40}
