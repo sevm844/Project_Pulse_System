@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
@@ -11,6 +11,10 @@ import {
   project,
   tasks,
 } from "../_data/mockStudentData";
+import {
+  EditableProjectInfo,
+  PROJECT_INFO_STORAGE_KEY,
+} from "../_utils/projectInfoStorage";
 
 type ProjectTab =
   | "overview"
@@ -22,7 +26,6 @@ type ProjectTab =
 
 const tabs: Array<[ProjectTab, string]> = [
   ["overview", "Overview"],
-  ["documents", "Documents"],
   ["versions", "Versions"],
   ["tasks", "Tasks"],
   ["activity", "Activity Log"],
@@ -31,6 +34,85 @@ const tabs: Array<[ProjectTab, string]> = [
 
 export default function ProjectPage() {
   const [tab, setTab] = useState<ProjectTab>("overview");
+  const [projectInfo, setProjectInfo] = useState(project);
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState<EditableProjectInfo>({
+    groupName: project.groupName,
+    groupCode: project.groupCode,
+    title: project.title,
+    abstract: project.abstract,
+    adviser: project.adviser,
+    stage: project.stage,
+    completion: project.completion,
+  });
+
+  useEffect(() => {
+    const savedProjectInfo = localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
+    if (!savedProjectInfo) return;
+
+    const parsedProjectInfo = JSON.parse(
+      savedProjectInfo,
+    ) as Partial<EditableProjectInfo>;
+
+    queueMicrotask(() => {
+      setProjectInfo((current) => ({
+        ...current,
+        ...parsedProjectInfo,
+      }));
+      setForm((current) => ({
+        ...current,
+        ...parsedProjectInfo,
+      }));
+    });
+  }, []);
+
+  function openProjectEditor() {
+    setForm({
+      groupName: projectInfo.groupName,
+      groupCode: projectInfo.groupCode,
+      title: projectInfo.title,
+      abstract: projectInfo.abstract,
+      adviser: projectInfo.adviser,
+      stage: projectInfo.stage,
+      completion: projectInfo.completion,
+    });
+    setIsEditing(true);
+  }
+
+  function updateForm<K extends keyof EditableProjectInfo>(
+    field: K,
+    value: EditableProjectInfo[K],
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function saveProjectInfo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const nextProjectInfo = {
+      ...projectInfo,
+      ...form,
+      completion: Math.min(100, Math.max(0, Number(form.completion) || 0)),
+    };
+
+    setProjectInfo(nextProjectInfo);
+    localStorage.setItem(
+      PROJECT_INFO_STORAGE_KEY,
+      JSON.stringify({
+        groupName: nextProjectInfo.groupName,
+        groupCode: nextProjectInfo.groupCode,
+        title: nextProjectInfo.title,
+        abstract: nextProjectInfo.abstract,
+        adviser: nextProjectInfo.adviser,
+        stage: nextProjectInfo.stage,
+        completion: nextProjectInfo.completion,
+      }),
+    );
+    setIsEditing(false);
+  }
 
   return (
     <StudentShell title="My Project">
@@ -40,7 +122,7 @@ export default function ProjectPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[#203028]">
-                {project.title}
+                {projectInfo.title}
               </h2>
 
               <p className="mt-1 text-sm text-[#7b877f]">
@@ -49,7 +131,11 @@ export default function ProjectPage() {
               </p>
             </div>
 
-            <button className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]">
+            <button
+              type="button"
+              onClick={openProjectEditor}
+              className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
+            >
               Edit Project Info
             </button>
           </div>
@@ -81,15 +167,17 @@ export default function ProjectPage() {
               </h3>
 
               <p className="mt-4 text-sm leading-7 text-[#59645d]">
-                {project.abstract}
+                {projectInfo.abstract}
               </p>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {[
-                  ["Adviser", project.adviser],
-                  ["Stage", project.stage],
-                  ["Last Submission", project.lastSubmission],
-                  ["Completion", `${project.completion}%`],
+                  ["Group Name", projectInfo.groupName],
+                  ["Group Code", projectInfo.groupCode],
+                  ["Adviser", projectInfo.adviser],
+                  ["Stage", projectInfo.stage],
+                  ["Last Submission", projectInfo.lastSubmission],
+                  ["Completion", `${projectInfo.completion}%`],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
                     <p className="text-xs text-[#7b877f]">{label}</p>
@@ -244,6 +332,136 @@ export default function ProjectPage() {
           </Card>
         )}
       </div>
+
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#203028]/35 px-4 py-6">
+          <form
+            onSubmit={saveProjectInfo}
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-xl"
+          >
+            <div className="flex flex-col gap-3 border-b border-[#edf2ec] pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-[#203028]">
+                  Edit Project Info
+                </h3>
+                <p className="mt-1 text-sm text-[#7b877f]">
+                  Update the project details shown on this dashboard.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
+                <span>Project Title</span>
+                <input
+                  required
+                  value={form.title}
+                  onChange={(event) => updateForm("title", event.target.value)}
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
+                <span>Adviser</span>
+                <input
+                  required
+                  value={form.adviser}
+                  onChange={(event) =>
+                    updateForm("adviser", event.target.value)
+                  }
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
+                <span>Group Name</span>
+                <input
+                  required
+                  value={form.groupName}
+                  onChange={(event) =>
+                    updateForm("groupName", event.target.value)
+                  }
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
+                <span>Group Code</span>
+                <input
+                  required
+                  value={form.groupCode}
+                  onChange={(event) =>
+                    updateForm("groupCode", event.target.value)
+                  }
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
+                <span>Current Stage</span>
+                <input
+                  required
+                  value={form.stage}
+                  onChange={(event) => updateForm("stage", event.target.value)}
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028] md:col-span-2">
+                <span>Completion</span>
+                <input
+                  min={0}
+                  max={100}
+                  type="number"
+                  value={form.completion}
+                  onChange={(event) =>
+                    updateForm("completion", Number(event.target.value))
+                  }
+                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+
+              <label className="space-y-1.5 text-sm font-medium text-[#203028] md:col-span-2">
+                <span>Abstract / Description</span>
+                <textarea
+                  required
+                  rows={5}
+                  value={form.abstract}
+                  onChange={(event) =>
+                    updateForm("abstract", event.target.value)
+                  }
+                  className="w-full resize-none rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal leading-6 outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2 border-t border-[#edf2ec] pt-4">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </StudentShell>
   );
 }

@@ -23,6 +23,20 @@ function formatDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+function formatDateLabel(dateKey: string) {
+  return parseDateKey(dateKey).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function getMonthLabel(date: Date) {
   return date.toLocaleDateString("en-US", {
     month: "long",
@@ -64,7 +78,9 @@ export default function StudentCalendar() {
     if (!savedNotes) return;
 
     const parsedNotes = JSON.parse(savedNotes) as CalendarNote[];
-    if (Array.isArray(parsedNotes)) setNotes(parsedNotes);
+    if (!Array.isArray(parsedNotes)) return;
+
+    queueMicrotask(() => setNotes(parsedNotes));
   }, []);
 
   function saveNotes(nextNotes: CalendarNote[]) {
@@ -109,6 +125,8 @@ export default function StudentCalendar() {
 
     saveNotes(nextNotes);
     setNoteTitle("");
+    setSelectedDate(formatDateKey(new Date()));
+    setCurrentMonth(new Date());
   }
 
   function removeNote(id: number) {
@@ -185,11 +203,7 @@ export default function StudentCalendar() {
               My Calendar
             </h3>
             <p className="mt-1 text-xs text-[#7b877f]">
-              {new Date(selectedDate).toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {formatDateLabel(selectedDate)}
             </p>
           </div>
 
@@ -252,6 +266,9 @@ export default function StudentCalendar() {
                   </p>
                   <p className="mt-0.5 text-xs text-[#7b877f]">
                     {note.category}
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium text-[#59645d]">
+                    Due {formatDateLabel(note.date)}
                   </p>
                 </div>
 

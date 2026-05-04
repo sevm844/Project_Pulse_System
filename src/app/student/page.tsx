@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import StudentCalendar from "./_components/StudentCalendar";
@@ -11,6 +11,10 @@ import {
   hasStoredStudentGroup,
   subscribeToStudentGroupStorage,
 } from "./_utils/studentGroupStorage";
+import {
+  EditableProjectInfo,
+  PROJECT_INFO_STORAGE_KEY,
+} from "./_utils/projectInfoStorage";
 import {
   activities,
   defenseSchedule,
@@ -23,6 +27,7 @@ import {
 
 export default function StudentDashboardPage() {
   const router = useRouter();
+  const [projectInfo, setProjectInfo] = useState(project);
 
   const hasGroup = useSyncExternalStore(
     subscribeToStudentGroupStorage,
@@ -36,6 +41,22 @@ export default function StudentDashboardPage() {
       router.replace("/student/setup");
     }
   }, [hasGroup, router]);
+
+  useEffect(() => {
+    const savedProjectInfo = localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
+    if (!savedProjectInfo) return;
+
+    const parsedProjectInfo = JSON.parse(
+      savedProjectInfo,
+    ) as Partial<EditableProjectInfo>;
+
+    queueMicrotask(() => {
+      setProjectInfo((current) => ({
+        ...current,
+        ...parsedProjectInfo,
+      }));
+    });
+  }, []);
 
   if (!hasGroup) {
     return (
@@ -66,11 +87,11 @@ export default function StudentDashboardPage() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl font-semibold tracking-tight text-[#203028]">
-                    {project.title}
+                    {projectInfo.title}
                   </h1>
 
                   <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-3 py-1 text-xs font-semibold text-[#59645d]">
-                    {project.groupName}
+                    {projectInfo.groupName}
                   </span>
                 </div>
 
@@ -81,7 +102,7 @@ export default function StudentDashboardPage() {
 
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
-                    Group Code: {project.groupCode}
+                    Group Code: {projectInfo.groupCode}
                   </span>
                 </div>
               </div>
@@ -91,7 +112,7 @@ export default function StudentDashboardPage() {
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {project.adviser}
+                  {projectInfo.adviser}
                 </p>
               </div>
 
@@ -103,7 +124,7 @@ export default function StudentDashboardPage() {
                   Current Stage
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {project.stage}
+                  {projectInfo.stage}
                 </p>
               </Link>
 
@@ -142,19 +163,19 @@ export default function StudentDashboardPage() {
                     Stage Progress
                   </h2>
                   <p className="mt-1 text-sm text-[#7b877f]">
-                    {project.stage} preparation progress
+                    {projectInfo.stage} preparation progress
                   </p>
                 </div>
 
                 <span className="text-sm font-semibold text-[#4f8f58]">
-                  {project.completion}%
+                  {projectInfo.completion}%
                 </span>
               </div>
 
               <div className="mt-5 h-2 rounded-full bg-[#edf2ec]">
                 <div
                   className="h-2 rounded-full bg-[#94d29a]"
-                  style={{ width: `${project.completion}%` }}
+                  style={{ width: `${projectInfo.completion}%` }}
                 />
               </div>
 
