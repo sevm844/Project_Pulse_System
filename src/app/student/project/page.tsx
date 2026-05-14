@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
@@ -176,7 +177,6 @@ export default function ProjectPage() {
                   ["Group Code", projectInfo.groupCode],
                   ["Adviser", projectInfo.adviser],
                   ["Stage", projectInfo.stage],
-                  ["Last Submission", projectInfo.lastSubmission],
                   ["Completion", `${projectInfo.completion}%`],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
@@ -208,9 +208,12 @@ export default function ProjectPage() {
                 ))}
               </div>
 
-              <button className="mt-5 w-full rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]">
+              <Link
+                href="/student/checklist"
+                className="mt-5 block w-full rounded-lg border border-[#dfe8df] px-4 py-2 text-center text-xs font-semibold hover:bg-[#f3f7f1]"
+              >
                 Stage Requirements
-              </button>
+              </Link>
             </Card>
           </div>
         )}
@@ -339,7 +342,7 @@ export default function ProjectPage() {
             onSubmit={saveProjectInfo}
             className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-xl"
           >
-            <div className="flex flex-col gap-3 border-b border-[#edf2ec] pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="border-b border-[#edf2ec] pb-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#203028]">
                   Edit Project Info
@@ -348,14 +351,6 @@ export default function ProjectPage() {
                   Update the project details shown on this dashboard.
                 </p>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
-              >
-                Cancel
-              </button>
             </div>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">

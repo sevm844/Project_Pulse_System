@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
@@ -11,7 +11,18 @@ import {
   type CourseCode,
   type GroupStage,
   type ReviewItem,
+  type ReviewStatus,
 } from "../_data/mockAdviserData";
+import {
+  addStoredFeedbackItem,
+  getChapterFromDocumentTitle,
+} from "../../_utils/feedbackStorage";
+import {
+  getStoredDocuments,
+  saveStoredDocuments,
+  type StoredDocument,
+} from "../../student/documents/_utils/documentStorage";
+import { getStoredStudentGroup } from "../../student/_utils/studentGroupStorage";
 
 const stages: GroupStage[] = [
   "Proposal Review",
@@ -20,8 +31,152 @@ const stages: GroupStage[] = [
   "Final Defense",
 ];
 
+function getStageFromDocument(document: StoredDocument): GroupStage {
+  if (document.documentType === "Proposal") return "Proposal Review";
+  return "Alpha Defense";
+}
+
+function normalizeGroupStage(
+  value: string | undefined,
+  fallback: GroupStage,
+): GroupStage {
+  if (
+    value === "Proposal Review" ||
+    value === "Alpha Defense" ||
+    value === "Beta Defense" ||
+    value === "Final Defense"
+  ) {
+    return value;
+  }
+
+  return fallback;
+}
+
+function shouldShowForAnnaCruz(document: StoredDocument) {
+  const reviewer = document.reviewer.toLowerCase();
+
+  return (
+    ["Submitted", "Under Review", "Approved", "Needs Revision"].includes(
+      document.status,
+    ) &&
+    (reviewer.includes("anna cruz") || reviewer.includes("adviser"))
+  );
+}
+
+function getSubmittedAt(document: StoredDocument) {
+  return new Date(document.updatedAt).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getReviewStatusFromDocument(document: StoredDocument): ReviewStatus {
+  if (document.status === "Approved") return "Approved";
+  if (document.status === "Needs Revision") return "Needs Revision";
+  return "Pending";
+}
+
+function getDocumentStatusFromReview(
+  status: ReviewStatus,
+): StoredDocument["status"] {
+  if (status === "Approved") return "Approved";
+  if (status === "Needs Revision" || status === "Rejected") {
+    return "Needs Revision";
+  }
+
+  return "Under Review";
+}
+
+function mapDocumentToReview(document: StoredDocument): ReviewItem {
+  const studentGroup = getStoredStudentGroup();
+  const fallbackStage = getStageFromDocument(document);
+
+  return {
+    id: document.id,
+    documentId: document.id,
+    groupId: 1,
+    course: studentGroup?.course || "BSIT",
+    section: studentGroup?.section || "4A",
+    groupName: studentGroup?.groupName || "Project Pulse",
+    projectTitle:
+      studentGroup?.projectTitle || "Smart Capstone Monitoring System",
+    documentTitle: document.title,
+    version: document.currentVersion,
+    submittedAt: getSubmittedAt(document),
+    stage: normalizeGroupStage(studentGroup?.stage, fallbackStage),
+    status: getReviewStatusFromDocument(document),
+    comments: [],
+  };
+}
+
+function mergeReviewsWithStudentSubmissions(
+  baseReviews: ReviewItem[],
+  documents: StoredDocument[],
+) {
+  const submittedReviews = documents
+    .filter(shouldShowForAnnaCruz)
+    .map(mapDocumentToReview);
+
+  const baseWithoutDuplicates = baseReviews.filter(
+    (review) =>
+      !submittedReviews.some(
+        (submitted) =>
+          submitted.id === review.id ||
+          submitted.documentTitle === review.documentTitle,
+      ),
+  );
+
+  return [...submittedReviews, ...baseWithoutDuplicates];
+}
+
+function updateStoredDocumentStatus(reviewId: number, status: ReviewStatus) {
+  const documents = getStoredDocuments();
+
+  const nextDocuments = documents.map((document) =>
+    document.id === reviewId
+      ? {
+          ...document,
+          status: getDocumentStatusFromReview(status),
+          updatedAt: new Date().toISOString(),
+        }
+      : document,
+  );
+
+  saveStoredDocuments(nextDocuments);
+}
+
+function getSelectedDocumentContent(selected: ReviewItem) {
+  if (!selected.documentId) {
+    return `
+      <p><strong>${selected.projectTitle}</strong></p>
+      <p>This is a sample adviser review item. No student document content is linked to this mock submission.</p>
+    `;
+  }
+
+  const document = getStoredDocuments().find(
+    (item) => item.id === selected.documentId,
+  );
+
+  if (!document) {
+    return `
+      <p><strong>${selected.projectTitle}</strong></p>
+      <p>The linked student document could not be found in local storage.</p>
+    `;
+  }
+
+  return (
+    document.currentContent ||
+    `
+      <p><strong>${document.title}</strong></p>
+      <p>This submitted document has no written content yet.</p>
+    `
+  );
+}
+
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState(reviewQueue);
+  const [reviews, setReviews] = useState<ReviewItem[]>(reviewQueue);
   const [selected, setSelected] = useState<ReviewItem>(reviewQueue[0]);
 
   const [course, setCourse] = useState<"All" | CourseCode>("All");
@@ -30,6 +185,17 @@ export default function ReviewsPage() {
 
   const [comment, setComment] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+
+  useEffect(() => {
+    const documents = getStoredDocuments();
+    const nextReviews = mergeReviewsWithStudentSubmissions(
+      reviewQueue,
+      documents,
+    );
+
+    setReviews(nextReviews);
+    setSelected(nextReviews[0] || reviewQueue[0]);
+  }, []);
 
   const filteredReviews = useMemo(() => {
     return reviews.filter((review) => {
@@ -41,14 +207,22 @@ export default function ReviewsPage() {
     });
   }, [course, section, stage, reviews]);
 
+  const selectedDocumentContent = useMemo(
+    () => getSelectedDocumentContent(selected),
+    [selected],
+  );
+
   function updateStatus(status: ReviewItem["status"]) {
+    const nextSelected = { ...selected, status };
+
     setReviews((current) =>
       current.map((review) =>
-        review.id === selected.id ? { ...review, status } : review,
+        review.id === selected.id ? nextSelected : review,
       ),
     );
 
-    setSelected((current) => ({ ...current, status }));
+    setSelected(nextSelected);
+    updateStoredDocumentStatus(selected.id, status);
     setRejectReason("");
   }
 
@@ -68,6 +242,23 @@ export default function ReviewsPage() {
       ),
     );
 
+    updateStoredDocumentStatus(selected.id, "Needs Revision");
+
+    addStoredFeedbackItem({
+      reviewId: selected.id,
+      groupName: selected.groupName,
+      course: selected.course,
+      section: selected.section,
+      projectTitle: selected.projectTitle,
+      documentTitle: selected.documentTitle,
+      chapter: getChapterFromDocumentTitle(selected.documentTitle),
+      version: selected.version,
+      comment: nextComment,
+      detail:
+        "Please revise the linked document based on the adviser comment, then mark the feedback as addressed after updating the chapter workspace.",
+      adviserName: "Anna Cruz",
+    });
+
     setSelected(nextReview);
     setComment("");
   }
@@ -75,7 +266,6 @@ export default function ReviewsPage() {
   return (
     <AdviserShell title="Reviews">
       <div className="space-y-5">
-        {/* Filters */}
         <Card className="p-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
@@ -131,7 +321,6 @@ export default function ReviewsPage() {
         </Card>
 
         <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
-          {/* Review queue */}
           <Card className="overflow-hidden">
             <div className="border-b border-[#edf2ec] p-5">
               <h2 className="text-lg font-semibold text-[#203028]">
@@ -181,7 +370,6 @@ export default function ReviewsPage() {
             </div>
           </Card>
 
-          {/* Review workspace */}
           <div className="space-y-5">
             <Card className="p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -222,30 +410,20 @@ export default function ReviewsPage() {
             </Card>
 
             <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-              {/* Document preview */}
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-[#203028]">
                   Document Viewer
                 </h3>
 
-                <div className="mt-5 min-h-[520px] rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-6 text-sm leading-7 text-[#59645d]">
-                  <p className="font-semibold text-[#203028]">
-                    {selected.projectTitle}
-                  </p>
-                  <p className="mt-4">
-                    This area represents the submitted manuscript viewer. In the
-                    deployed system, this should render the uploaded file or the
-                    built-in editor version selected by the adviser.
-                  </p>
-                  <p className="mt-4">
-                    Advisers can highlight a paragraph, add comments, compare
-                    previous versions, and approve or request revisions.
-                  </p>
-                </div>
+                <div
+                  className="mt-5 min-h-[520px] rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-6 text-sm leading-7 text-[#59645d]"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedDocumentContent,
+                  }}
+                />
               </Card>
 
               <aside className="space-y-5">
-                {/* Comments */}
                 <Card className="p-5">
                   <h3 className="text-lg font-semibold text-[#203028]">
                     Comment Sidebar
@@ -281,7 +459,6 @@ export default function ReviewsPage() {
                   </button>
                 </Card>
 
-                {/* Reject */}
                 <Card className="p-5">
                   <h3 className="text-lg font-semibold text-[#203028]">
                     Reject Submission

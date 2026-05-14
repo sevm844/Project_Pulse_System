@@ -2,15 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../../_lib/firebase";
+import { clearStoredUserSession } from "../../_utils/authStorage";
+import {
+  getStoredStudentGroup,
+  subscribeToStudentGroupStorage,
+} from "../_utils/studentGroupStorage";
 
-const STUDENT_PROFILE_IMAGE_KEY = "project-pulse-student-profile-image";
+export const STUDENT_PROFILE_IMAGE_KEY = "project-pulse-student-profile-image";
+export const STUDENT_PROFILE_IMAGE_UPDATED_EVENT =
+  "project-pulse-student-profile-image-updated";
 const STUDENT_SIDEBAR_COLLAPSED_KEY = "project-pulse-student-sidebar-collapsed";
 
 const navItems = [
@@ -38,6 +47,10 @@ export default function StudentShell({
   children,
 }: StudentShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [groupName, setGroupName] = useState("Project Pulse");
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -48,8 +61,50 @@ export default function StudentShell({
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
+    const role = localStorage.getItem("project-pulse-user-role");
+
+    if (role !== "Student") {
+      router.replace("/login");
+      return;
+    }
+
+    setCheckingAccess(false);
+  }, [router]);
+
+  useEffect(() => {
+    function syncGroupName() {
+      const group = getStoredStudentGroup();
+      setGroupName(group?.groupName || "Project Pulse");
+    }
+
+    syncGroupName();
+
+    return subscribeToStudentGroupStorage(syncGroupName);
+  }, []);
+
+  useEffect(() => {
     const savedImage = localStorage.getItem(STUDENT_PROFILE_IMAGE_KEY);
-    if (savedImage) setProfileImage(savedImage);
+
+    if (savedImage) {
+      queueMicrotask(() => setProfileImage(savedImage));
+    }
+
+    function syncProfileImage(event: Event) {
+      const imageData = (event as CustomEvent<string>).detail;
+      setProfileImage(imageData || null);
+    }
+
+    window.addEventListener(
+      STUDENT_PROFILE_IMAGE_UPDATED_EVENT,
+      syncProfileImage,
+    );
+
+    return () => {
+      window.removeEventListener(
+        STUDENT_PROFILE_IMAGE_UPDATED_EVENT,
+        syncProfileImage,
+      );
+    };
   }, []);
 
   function toggleSidebar() {
@@ -70,15 +125,33 @@ export default function StudentShell({
 
       setProfileImage(imageData);
       localStorage.setItem(STUDENT_PROFILE_IMAGE_KEY, imageData);
+      window.dispatchEvent(
+        new CustomEvent(STUDENT_PROFILE_IMAGE_UPDATED_EVENT, {
+          detail: imageData,
+        }),
+      );
     };
 
     reader.readAsDataURL(file);
   }
 
+  async function handleLogout() {
+    await signOut(auth);
+    clearStoredUserSession();
+    router.push("/login");
+  }
+
+  if (checkingAccess) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white text-[#1f2a24]">
+        <p className="text-sm text-[#7b877f]">Checking access...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
-        {/* Sidebar */}
         <aside
           className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white/[0.86] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[260px]"
@@ -98,7 +171,7 @@ export default function StudentShell({
                 {!sidebarCollapsed && (
                   <div className="min-w-0">
                     <h1 className="truncate text-sm font-semibold tracking-tight">
-                      Project Pulse
+                      {groupName}
                     </h1>
                     <p className="truncate text-[11px] text-[#7b877f]">
                       Student Workspace
@@ -116,7 +189,6 @@ export default function StudentShell({
               </button>
             </div>
 
-            {/* Navigation */}
             <nav className="mt-9 text-sm">
               {!sidebarCollapsed && (
                 <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
@@ -162,26 +234,22 @@ export default function StudentShell({
             </nav>
           </div>
 
-          {/* Sidebar footer */}
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              title="Log out"
-              className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
-                sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
-              }`}
-            >
-              {sidebarCollapsed ? "Out" : "Log out"}
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Log out"
+            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
+              sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
+            }`}
+          >
+            {sidebarCollapsed ? "Out" : "Log out"}
+          </button>
         </aside>
 
-        {/* Main workspace */}
         <section className="relative flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
 
           <div className="relative z-10 flex min-h-screen flex-col">
-            {/* Top bar */}
             <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
               <div>
                 <p className="text-[11px] font-medium text-[#7b877f]">
@@ -242,7 +310,6 @@ export default function StudentShell({
               </div>
             </header>
 
-            {/* Page content */}
             <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-8">
               {children}
             </div>

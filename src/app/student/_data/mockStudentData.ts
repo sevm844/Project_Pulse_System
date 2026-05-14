@@ -63,17 +63,14 @@ export type NotificationItem = {
   date: string;
 };
 
-/* Project overview */
-
 export const project = {
   groupName: "Project Pulse",
   groupCode: "PP-DEMO01",
   title: "Smart Capstone Monitoring System",
   abstract:
     "A centralized monitoring system designed to support capstone document submissions, adviser feedback, defense tracking, and academic workflow management.",
-  adviser: "Dr. Elena Rivera",
+  adviser: "Anna Cruz",
   stage: "Alpha Defense",
-  lastSubmission: "Today",
   completion: 68,
   chapters: [
     {
@@ -99,8 +96,6 @@ export const project = {
   ],
 };
 
-/* Team */
-
 export const members: GroupMember[] = [
   {
     name: "Student Name",
@@ -119,8 +114,6 @@ export const members: GroupMember[] = [
   },
 ];
 
-/* Documents */
-
 export const documents: DocumentItem[] = [
   {
     id: 1,
@@ -128,7 +121,7 @@ export const documents: DocumentItem[] = [
     version: "v2",
     updated: "Apr 20",
     status: "Approved",
-    reviewer: "Adviser",
+    reviewer: "Anna Cruz",
   },
   {
     id: 2,
@@ -136,7 +129,7 @@ export const documents: DocumentItem[] = [
     version: "v3",
     updated: "Apr 23",
     status: "Needs Revision",
-    reviewer: "Adviser",
+    reviewer: "Anna Cruz",
   },
   {
     id: 3,
@@ -156,14 +149,12 @@ export const documents: DocumentItem[] = [
   },
 ];
 
-/* Adviser feedback */
-
 export const feedbackItems: FeedbackItem[] = [
   {
     id: 1,
     comment: "Clarify the scope of the study and define the target users.",
     chapter: "Chapter 1",
-    by: "Dr. Rivera",
+    by: "Anna Cruz",
     date: "Apr 22",
     version: "v2",
     status: "Pending",
@@ -172,7 +163,7 @@ export const feedbackItems: FeedbackItem[] = [
     id: 2,
     comment: "Add more recent local related studies.",
     chapter: "Chapter 2",
-    by: "Dr. Rivera",
+    by: "Anna Cruz",
     date: "Apr 23",
     version: "v3",
     status: "Pending",
@@ -181,14 +172,12 @@ export const feedbackItems: FeedbackItem[] = [
     id: 3,
     comment: "Revise the research objectives into measurable statements.",
     chapter: "Chapter 1",
-    by: "Dr. Rivera",
+    by: "Anna Cruz",
     date: "Apr 19",
     version: "v1",
     status: "Addressed",
   },
 ];
-
-/* Checklist */
 
 export const tasks: TaskItem[] = [
   {
@@ -225,8 +214,6 @@ export const tasks: TaskItem[] = [
   },
 ];
 
-/* Defense */
-
 export const defenseSchedule: DefenseSchedule = {
   stage: "Alpha Defense",
   date: "May 10, 2026",
@@ -235,8 +222,6 @@ export const defenseSchedule: DefenseSchedule = {
   panelists: ["Dr. Santos", "Prof. Lim", "Ms. Cruz"],
   deadline: "May 08, 2026",
 };
-
-/* Timeline */
 
 export const activities: ActivityItem[] = [
   {
@@ -265,8 +250,6 @@ export const activities: ActivityItem[] = [
   },
 ];
 
-/* Support content */
-
 export const resources = [
   "Capstone manuscript format guide",
   "Alpha Defense requirements",
@@ -278,12 +261,12 @@ export const resources = [
 export const notifications: NotificationItem[] = [
   {
     id: 1,
-    title: "Adviser commented on Chapter 2.",
+    title: "Adviser Anna Cruz commented on Chapter 2.",
     date: "Just now",
   },
   {
     id: 2,
-    title: "Chapter 2 is now under review.",
+    title: "Chapter 2 is now under review by Anna Cruz.",
     date: "Today",
   },
   {

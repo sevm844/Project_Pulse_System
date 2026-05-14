@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
 import { tasks as initialTasks, type TaskItem } from "../_data/mockStudentData";
+import {
+  getStoredStudentGroup,
+  hasStoredStudentGroup,
+  subscribeToStudentGroupStorage,
+} from "../_utils/studentGroupStorage";
+import {
+  isTaskAllowedForStage,
+  normalizeProjectStage,
+  type ProjectStage,
+} from "../../_utils/projectWorkflow";
 
 const checklistSections = [
   "Stage Requirement",
@@ -16,8 +26,25 @@ const checklistSections = [
 export default function ChecklistPage() {
   const [tasks, setTasks] = useState(initialTasks);
   const [selected, setSelected] = useState<TaskItem | null>(null);
+  const [currentStage, setCurrentStage] =
+    useState<ProjectStage>("Proposal Defense");
+
+  const hasGroup = useSyncExternalStore(
+    subscribeToStudentGroupStorage,
+    hasStoredStudentGroup,
+    () => false,
+  );
+
+  useEffect(() => {
+    const group = getStoredStudentGroup();
+    if (group?.stage) {
+      queueMicrotask(() => setCurrentStage(normalizeProjectStage(group.stage)));
+    }
+  }, [hasGroup]);
 
   function completeTask(task: TaskItem) {
+    if (!isTaskAllowedForStage(task, currentStage)) return;
+
     setTasks((current) =>
       current.map((item) =>
         item.id === task.id ? { ...item, status: "Completed" } : item,
@@ -30,18 +57,19 @@ export default function ChecklistPage() {
   return (
     <StudentShell title="Tasks / Checklist">
       <div className="space-y-5">
-{/* Page summary */}
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-[#203028]">
             Tasks / Checklist
           </h2>
           <p className="mt-1 text-sm text-[#7b877f]">
-            Stage requirements, missing deliverables, deadlines, adviser
-            approvals, and final requirements.
+            Current workflow stage:{" "}
+            <span className="font-semibold text-[#203028]">{currentStage}</span>
+          </p>
+          <p className="mt-1 text-sm text-[#7b877f]">
+            Actions are restricted depending on the current project stage.
           </p>
         </Card>
 
-{/* Checklist groups */}
         <div className="grid gap-5 lg:grid-cols-2">
           {checklistSections.map((section) => {
             const sectionTasks = tasks.filter(
@@ -55,27 +83,41 @@ export default function ChecklistPage() {
                 </h3>
 
                 <div className="mt-4 space-y-3">
-                  {sectionTasks.map((task) => (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => setSelected(task)}
-                      className="w-full rounded-xl bg-[#f8faf7] p-4 text-left transition hover:bg-[#eff6ee]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-[#203028]">
-                            {task.title}
-                          </p>
-                          <p className="mt-1 text-xs text-[#7b877f]">
-                            Deadline: {task.deadline}
-                          </p>
-                        </div>
+                  {sectionTasks.map((task) => {
+                    const allowed = isTaskAllowedForStage(task, currentStage);
 
-                        <StatusBadge status={task.status} />
-                      </div>
-                    </button>
-                  ))}
+                    return (
+                      <button
+                        key={task.id}
+                        type="button"
+                        disabled={!allowed}
+                        onClick={() => setSelected(task)}
+                        className={`w-full rounded-xl p-4 text-left transition ${
+                          allowed
+                            ? "bg-[#f8faf7] hover:bg-[#eff6ee]"
+                            : "cursor-not-allowed bg-gray-50 opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-[#203028]">
+                              {task.title}
+                            </p>
+                            <p className="mt-1 text-xs text-[#7b877f]">
+                              Deadline: {task.deadline}
+                            </p>
+                            {!allowed && (
+                              <p className="mt-2 text-xs font-medium text-rose-600">
+                                Locked for {currentStage}
+                              </p>
+                            )}
+                          </div>
+
+                          <StatusBadge status={task.status} />
+                        </div>
+                      </button>
+                    );
+                  })}
 
                   {sectionTasks.length === 0 && (
                     <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
@@ -88,7 +130,6 @@ export default function ChecklistPage() {
           })}
         </div>
 
-{/* Requirement modal */}
         {selected && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
@@ -105,16 +146,6 @@ export default function ChecklistPage() {
                 </p>
                 <p className="mt-3 text-sm text-[#59645d]">
                   Required action: {selected.action}
-                </p>
-              </div>
-
-              <div className="mt-5 rounded-xl border border-dashed border-[#dfe8df] p-5 text-center">
-                <p className="text-sm font-medium text-[#203028]">
-                  Upload or complete linked requirement
-                </p>
-                <p className="mt-1 text-xs text-[#7b877f]">
-                  In deployment, this connects to requirement upload and
-                  checklist records.
                 </p>
               </div>
 

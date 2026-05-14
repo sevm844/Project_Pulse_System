@@ -7,27 +7,24 @@ import StudentShell from "./_components/StudentShell";
 import StudentCalendar from "./_components/StudentCalendar";
 import Card from "./_components/Card";
 import StatusBadge from "./_components/StatusBadge";
+import type { CapstoneGroup } from "../_lib/firebase";
 import {
+  getStoredStudentGroup,
   hasStoredStudentGroup,
   subscribeToStudentGroupStorage,
 } from "./_utils/studentGroupStorage";
-import {
-  EditableProjectInfo,
-  PROJECT_INFO_STORAGE_KEY,
-} from "./_utils/projectInfoStorage";
 import {
   activities,
   defenseSchedule,
   documents,
   feedbackItems,
-  members,
   project,
   tasks,
 } from "./_data/mockStudentData";
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const [projectInfo, setProjectInfo] = useState(project);
+  const [studentGroup, setStudentGroup] = useState<CapstoneGroup | null>(null);
 
   const hasGroup = useSyncExternalStore(
     subscribeToStudentGroupStorage,
@@ -35,28 +32,14 @@ export default function StudentDashboardPage() {
     () => false,
   );
 
-  // Keep students in setup until they create or join a group.
   useEffect(() => {
     if (!hasGroup) {
       router.replace("/student/setup");
+      return;
     }
+
+    queueMicrotask(() => setStudentGroup(getStoredStudentGroup()));
   }, [hasGroup, router]);
-
-  useEffect(() => {
-    const savedProjectInfo = localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
-    if (!savedProjectInfo) return;
-
-    const parsedProjectInfo = JSON.parse(
-      savedProjectInfo,
-    ) as Partial<EditableProjectInfo>;
-
-    queueMicrotask(() => {
-      setProjectInfo((current) => ({
-        ...current,
-        ...parsedProjectInfo,
-      }));
-    });
-  }, []);
 
   if (!hasGroup) {
     return (
@@ -73,11 +56,28 @@ export default function StudentDashboardPage() {
   const upcomingTasks = tasks.slice(0, 3);
   const recentActivities = activities.slice(0, 4);
 
+  const displayGroupName = studentGroup?.groupName || project.groupName;
+  const displayProjectTitle = studentGroup?.projectTitle || project.title;
+  const displayGroupCode = studentGroup?.groupCode || project.groupCode;
+  const displayStage = studentGroup?.stage || project.stage;
+  const displayProgress = studentGroup?.progress ?? project.completion;
+  const displayAdviser = studentGroup?.adviserName || project.adviser;
+  const displayPanelists =
+    studentGroup?.panelists && studentGroup.panelists.length > 0
+      ? studentGroup.panelists
+      : defenseSchedule.panelists;
+
+  const displayMembers =
+    studentGroup?.members?.map((member) => ({
+      name: member.name || member.email,
+      role: member.role,
+      email: member.email,
+    })) || [];
+
   return (
     <StudentShell title="Dashboard" subtitle="Student Management">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="space-y-6">
-          {/* Project summary */}
           <Card className="overflow-hidden">
             <div className="border-b border-[#edf2ec] bg-white/80 p-6">
               <div>
@@ -87,11 +87,11 @@ export default function StudentDashboardPage() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl font-semibold tracking-tight text-[#203028]">
-                    {projectInfo.title}
+                    {displayProjectTitle}
                   </h1>
 
                   <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-3 py-1 text-xs font-semibold text-[#59645d]">
-                    {projectInfo.groupName}
+                    {displayGroupName}
                   </span>
                 </div>
 
@@ -102,8 +102,14 @@ export default function StudentDashboardPage() {
 
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
-                    Group Code: {projectInfo.groupCode}
+                    Group Code: {displayGroupCode}
                   </span>
+
+                  {studentGroup && (
+                    <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-3 py-1.5 font-semibold text-[#59645d]">
+                      {studentGroup.course} {studentGroup.section}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -112,7 +118,7 @@ export default function StudentDashboardPage() {
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {projectInfo.adviser}
+                  {displayAdviser}
                 </p>
               </div>
 
@@ -124,7 +130,7 @@ export default function StudentDashboardPage() {
                   Current Stage
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {projectInfo.stage}
+                  {displayStage}
                 </p>
               </Link>
 
@@ -152,9 +158,40 @@ export default function StudentDashboardPage() {
                 </p>
               </Link>
             </div>
+
+            <div className="border-t border-[#edf2ec] bg-[#fbfdfb] p-5">
+              <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4f8f58]">
+                    Defense Panel
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold text-[#203028]">
+                    Assigned panelists
+                  </h2>
+                </div>
+
+                <div className="rounded-2xl border border-[#dfe8df] bg-white p-4">
+                  {displayPanelists.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {displayPanelists.map((panelist) => (
+                        <span
+                          key={panelist}
+                          className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-3 py-1.5 text-xs font-semibold text-[#203028]"
+                        >
+                          {panelist}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm font-semibold text-[#7b877f]">
+                      Panelists not assigned yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </Card>
 
-          {/* Progress and team */}
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
             <Card className="p-5">
               <div className="flex items-center justify-between gap-4">
@@ -163,19 +200,19 @@ export default function StudentDashboardPage() {
                     Stage Progress
                   </h2>
                   <p className="mt-1 text-sm text-[#7b877f]">
-                    {projectInfo.stage} preparation progress
+                    {displayStage} preparation progress
                   </p>
                 </div>
 
                 <span className="text-sm font-semibold text-[#4f8f58]">
-                  {projectInfo.completion}%
+                  {displayProgress}%
                 </span>
               </div>
 
               <div className="mt-5 h-2 rounded-full bg-[#edf2ec]">
                 <div
                   className="h-2 rounded-full bg-[#94d29a]"
-                  style={{ width: `${projectInfo.completion}%` }}
+                  style={{ width: `${displayProgress}%` }}
                 />
               </div>
 
@@ -212,25 +249,30 @@ export default function StudentDashboardPage() {
               </p>
 
               <div className="mt-4 space-y-3">
-                {members.map((member) => (
-                  <div
-                    key={member.email}
-                    className="rounded-xl bg-[#f8faf7] px-4 py-3"
-                  >
-                    <p className="text-sm font-semibold text-[#203028]">
-                      {member.name}
-                    </p>
+                {displayMembers.length === 0 ? (
+                  <p className="rounded-xl bg-[#f8faf7] px-4 py-3 text-sm text-[#7b877f]">
+                    No members found.
+                  </p>
+                ) : (
+                  displayMembers.map((member, index) => (
+                    <div
+                      key={`${member.email}-${member.role}-${index}`}
+                      className="rounded-xl bg-[#f8faf7] px-4 py-3"
+                    >
+                      <p className="text-sm font-semibold text-[#203028]">
+                        {member.name}
+                      </p>
 
-                    <p className="text-xs text-[#7b877f]">
-                      {member.role} • {member.email}
-                    </p>
-                  </div>
-                ))}
+                      <p className="text-xs text-[#7b877f]">
+                        {member.role} • {member.email}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           </div>
 
-          {/* Deadlines, defense schedule, and activity */}
           <div className="grid gap-5 xl:grid-cols-3">
             <Card className="p-5">
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
@@ -304,7 +346,6 @@ export default function StudentDashboardPage() {
             </Card>
           </div>
 
-          {/* Latest document states */}
           <Card className="p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -367,7 +408,6 @@ export default function StudentDashboardPage() {
           </Card>
         </div>
 
-        {/* Calendar */}
         <div className="xl:sticky xl:top-6 xl:self-start">
           <StudentCalendar />
         </div>

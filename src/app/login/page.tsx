@@ -4,22 +4,25 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db, type UserProfile, type UserRole } from "../_lib/firebase";
+import { saveStoredUserSession } from "../_utils/authStorage";
+import { addAuditLog } from "../_utils/auditLogStorage";
 import { clearStoredStudentGroup } from "../student/_utils/studentGroupStorage";
 
-const demoStaffAccounts = [
-  {
-    email: "anna.cruz@ub.edu.ph",
-    password: "adviser123",
-    role: "Adviser",
-    redirectTo: "/adviser",
-  },
-  {
-    email: "dean.office@ub.edu.ph",
-    password: "dean123",
-    role: "Dean",
-    redirectTo: "/dean",
-  },
-];
+function getRedirectByRole(role: UserRole) {
+  if (role === "Student") return "/student/setup";
+  if (role === "Adviser") return "/adviser";
+  if (role === "Dean") return "/dean";
+  if (role === "Coordinator") return "/coordinator";
+  if (role === "Panelist") return "/panelist";
+  if (role === "Grammarian") return "/grammarian";
+  if (role === "Records Staff") return "/records";
+  if (role === "Admin") return "/admin";
+
+  return "/login";
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,11 +33,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function isValidStudentEmail(value: string) {
-    return /^\d{7}@ub\.edu\.ph$/.test(value.toLowerCase());
-  }
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setError("");
@@ -49,48 +48,59 @@ export default function LoginPage() {
 
     setLoading(true);
 
-// Temporary staff login until database authentication is connected.
-    const staffAccount = demoStaffAccounts.find(
-      (account) =>
-        account.email === normalizedEmail &&
-        account.password === normalizedPassword,
-    );
-
-    if (staffAccount) {
-      localStorage.setItem("project-pulse-user-email", staffAccount.email);
-      localStorage.setItem("project-pulse-user-role", staffAccount.role);
-
-      router.push(staffAccount.redirectTo);
-      return;
-    }
-
-    if (!isValidStudentEmail(normalizedEmail)) {
-      setError(
-        "Please enter a valid UB student email or an approved staff account.",
+    try {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        normalizedPassword,
       );
+
+      const profileRef = doc(db, "users", credential.user.uid);
+      const profileSnap = await getDoc(profileRef);
+
+      if (!profileSnap.exists()) {
+        setError("Account profile was not found. Please contact the admin.");
+        setLoading(false);
+        return;
+      }
+
+      const profile = profileSnap.data() as UserProfile;
+
+      if (profile.status !== "Active") {
+        setError("Your account is not active yet.");
+        setLoading(false);
+        return;
+      }
+
+      saveStoredUserSession({
+        uid: credential.user.uid,
+        email: profile.email,
+        role: profile.role,
+      });
+
+      addAuditLog({
+        userId: credential.user.uid,
+        userEmail: profile.email,
+        role: profile.role,
+        action: "Login",
+        module: "Authentication",
+        details: `${profile.role} logged in successfully.`,
+      });
+
+      if (profile.role === "Student") {
+        clearStoredStudentGroup();
+      }
+
+      router.push(getRedirectByRole(profile.role));
+    } catch {
+      setError("Invalid email or password.");
       setLoading(false);
-      return;
     }
-
-// Temporary student login for frontend testing.
-    setTimeout(() => {
-      const user = {
-        email: normalizedEmail,
-        role: "Student",
-      };
-
-      localStorage.setItem("project-pulse-user-email", user.email);
-      localStorage.setItem("project-pulse-user-role", user.role);
-
-      clearStoredStudentGroup();
-      router.push("/student/setup");
-    }, 800);
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
       <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
-{/* Brand */}
         <div className="mb-6 flex items-center justify-center gap-3">
           <Image src="/Logo-icon.png" alt="Logo" width={34} height={34} />
           <span className="text-lg font-semibold">
@@ -98,17 +108,17 @@ export default function LoginPage() {
           </span>
         </div>
 
-{/* Heading */}
         <h2 className="text-center text-2xl font-semibold">Log in</h2>
         <p className="mt-1 text-center text-sm text-gray-500">
-          Sign in using your UB account
+          Sign in using your approved UB account
         </p>
 
         {error && (
-          <div className="mt-4 text-center text-sm text-red-500">{error}</div>
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-600">
+            {error}
+          </div>
         )}
 
-{/* Login form */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
@@ -144,7 +154,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-{/* Register link */}
         <p className="mt-6 text-center text-sm text-gray-500">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-green-600 hover:underline">

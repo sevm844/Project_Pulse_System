@@ -1,15 +1,16 @@
 "use client";
 
+import type { CapstoneGroup } from "../../_lib/firebase";
+
 export const STUDENT_GROUP_STORAGE_KEY = "project-pulse-student-group";
 
 const STUDENT_GROUP_STORAGE_EVENT = "project-pulse-student-group-change";
 
 export function getStoredStudentGroup() {
-  if (typeof window === "undefined") {
-    return null;
-  }
+  if (typeof window === "undefined") return null;
 
-  return window.localStorage.getItem(STUDENT_GROUP_STORAGE_KEY);
+  const saved = window.localStorage.getItem(STUDENT_GROUP_STORAGE_KEY);
+  return saved ? (JSON.parse(saved) as CapstoneGroup) : null;
 }
 
 export function hasStoredStudentGroup() {
@@ -17,9 +18,7 @@ export function hasStoredStudentGroup() {
 }
 
 export function subscribeToStudentGroupStorage(onStoreChange: () => void) {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
+  if (typeof window === "undefined") return () => {};
 
   function handleStorage(event: StorageEvent) {
     if (!event.key || event.key === STUDENT_GROUP_STORAGE_KEY) {
@@ -36,7 +35,7 @@ export function subscribeToStudentGroupStorage(onStoreChange: () => void) {
   };
 }
 
-export function saveStoredStudentGroup(groupData: unknown) {
+export function saveStoredStudentGroup(groupData: CapstoneGroup) {
   window.localStorage.setItem(
     STUDENT_GROUP_STORAGE_KEY,
     JSON.stringify(groupData),

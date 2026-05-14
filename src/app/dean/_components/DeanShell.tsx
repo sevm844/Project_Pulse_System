@@ -2,21 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../../_lib/firebase";
+import { clearStoredUserSession } from "../../_utils/authStorage";
 
 const DEAN_PROFILE_IMAGE_KEY = "project-pulse-dean-profile-image";
 const DEAN_SIDEBAR_COLLAPSED_KEY = "project-pulse-dean-sidebar-collapsed";
 
 const navItems = [
   ["Dashboard", "/dashbrd.png", "/dean"],
+  ["Assigned Groups", "/fold.png", "/dean/assigned-groups"],
+  ["Reviews", "/docs.png", "/dean/reviews"],
+  ["Schedule", "/calendar.png", "/dean/schedule"],
+  ["Defense", "/work.png", "/dean/defense"],
+  ["Feedback Queue", "/comment.png", "/dean/feedback-queue"],
   ["Projects Monitoring", "/fold.png", "/dean/projects"],
-  ["Defense Outcomes", "/work.png", "/dean/defense"],
   ["Final Approvals", "/checklt.png", "/dean/approvals"],
   ["Reports", "/docs.png", "/dean/reports"],
   ["Messages", "/chats.png", "/dean/messages"],
@@ -35,6 +42,9 @@ export default function DeanShell({
   children,
 }: DeanShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -43,6 +53,17 @@ export default function DeanShell({
   });
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const role = localStorage.getItem("project-pulse-user-role");
+
+    if (role !== "Dean") {
+      router.replace("/login");
+      return;
+    }
+
+    setCheckingAccess(false);
+  }, [router]);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(DEAN_PROFILE_IMAGE_KEY);
@@ -72,10 +93,23 @@ export default function DeanShell({
     reader.readAsDataURL(file);
   }
 
+  async function handleLogout() {
+    await signOut(auth);
+    clearStoredUserSession();
+    router.push("/login");
+  }
+
+  if (checkingAccess) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white text-[#1f2a24]">
+        <p className="text-sm text-[#7b877f]">Checking access...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
-        {/* Sidebar */}
         <aside
           className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white/[0.9] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[270px]"
@@ -113,7 +147,6 @@ export default function DeanShell({
               </button>
             </div>
 
-            {/* Navigation */}
             <nav className="mt-9 text-sm">
               {!sidebarCollapsed && (
                 <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
@@ -159,18 +192,18 @@ export default function DeanShell({
             </nav>
           </div>
 
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={handleLogout}
             title="Log out"
             className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
               sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
             }`}
           >
             {sidebarCollapsed ? "Out" : "Log out"}
-          </Link>
+          </button>
         </aside>
 
-        {/* Workspace */}
         <section className="relative flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
 

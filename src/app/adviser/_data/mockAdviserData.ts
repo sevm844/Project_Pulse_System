@@ -30,6 +30,7 @@ export type AssignedGroup = {
 
 export type ReviewItem = {
   id: number;
+  documentId?: number;
   groupId: number;
   course: CourseCode;
   section: string;
@@ -42,7 +43,6 @@ export type ReviewItem = {
   status: ReviewStatus;
   comments: string[];
 };
-
 
 export type DefenseEndorsement = {
   id: number;
@@ -274,6 +274,7 @@ export const scheduleItems = [
     type: "Defense",
   },
 ];
+
 export type AdviserChatType = "broadcast" | "section" | "group";
 
 export type AdviserChatThread = {

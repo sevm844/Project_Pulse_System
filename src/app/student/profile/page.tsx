@@ -1,19 +1,44 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type ChangeEvent } from "react";
-import StudentShell from "../_components/StudentShell";
+import { useEffect, useState, type ChangeEvent } from "react";
+import StudentShell, {
+  STUDENT_PROFILE_IMAGE_KEY,
+  STUDENT_PROFILE_IMAGE_UPDATED_EVENT,
+} from "../_components/StudentShell";
 import Card from "../_components/Card";
 import { members, project } from "../_data/mockStudentData";
 
 export default function ProfilePage() {
-  const [profileImage, setProfileImage] = useState("/default-avatar.png");
+  const [profileImage, setProfileImage] = useState("/default-avatar.jpg");
+
+  useEffect(() => {
+    const savedImage = localStorage.getItem(STUDENT_PROFILE_IMAGE_KEY);
+
+    if (savedImage) {
+      queueMicrotask(() => setProfileImage(savedImage));
+    }
+  }, []);
 
   function handleProfileUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setProfileImage(URL.createObjectURL(file));
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const imageData = String(reader.result);
+
+      setProfileImage(imageData);
+      localStorage.setItem(STUDENT_PROFILE_IMAGE_KEY, imageData);
+      window.dispatchEvent(
+        new CustomEvent(STUDENT_PROFILE_IMAGE_UPDATED_EVENT, {
+          detail: imageData,
+        }),
+      );
+    };
+
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -34,6 +59,7 @@ export default function ProfilePage() {
                 alt="Profile"
                 width={72}
                 height={72}
+                unoptimized={profileImage.startsWith("data:")}
                 className="h-[72px] w-[72px] rounded-2xl object-cover"
               />
 
@@ -92,12 +118,12 @@ export default function ProfilePage() {
 
                 <span className="mt-3 inline-flex rounded-full border border-[#dfe8df] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#59645d]">
                   {member.role}
-                </span>
-              </div>
+                  </span>
+                  </div>
             ))}
           </div>
         </Card>
-      </div>
+        </div>
     </StudentShell>
   );
 }
