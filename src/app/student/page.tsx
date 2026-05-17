@@ -60,7 +60,7 @@ export default function StudentDashboardPage() {
   const displayProjectTitle = studentGroup?.projectTitle || project.title;
   const displayGroupCode = studentGroup?.groupCode || project.groupCode;
   const displayStage = studentGroup?.stage || project.stage;
-  const displayProgress = studentGroup?.progress ?? project.completion;
+  const displayProgress = 60;
   const displayAdviser = studentGroup?.adviserName || project.adviser;
   const displayPanelists =
     studentGroup?.panelists && studentGroup.panelists.length > 0

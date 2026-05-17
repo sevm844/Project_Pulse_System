@@ -13,7 +13,9 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../_lib/firebase";
 import { clearStoredUserSession } from "../../_utils/authStorage";
 
-const ADVISER_PROFILE_IMAGE_KEY = "project-pulse-adviser-profile-image";
+export const ADVISER_PROFILE_IMAGE_KEY = "project-pulse-adviser-profile-image";
+export const ADVISER_PROFILE_IMAGE_UPDATED_EVENT =
+  "project-pulse-adviser-profile-image-updated";
 const ADVISER_SIDEBAR_COLLAPSED_KEY =
   "project-pulse-adviser-sidebar-collapsed";
 
@@ -26,6 +28,7 @@ const navItems = [
   ["Messages", "/chats.png", "/adviser/messages"],
   ["Schedule", "/calendar.png", "/adviser/schedule"],
   ["Notifications", "/notif.png", "/adviser/notifications"],
+  ["Profile", "/profile.png", "/adviser/profile"],
 ] as const;
 
 type AdviserShellProps = {
@@ -60,12 +63,32 @@ export default function AdviserShell({
       return;
     }
 
-    setCheckingAccess(false);
+    queueMicrotask(() => setCheckingAccess(false));
   }, [router]);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(ADVISER_PROFILE_IMAGE_KEY);
-    if (savedImage) setProfileImage(savedImage);
+
+    if (savedImage) {
+      queueMicrotask(() => setProfileImage(savedImage));
+    }
+
+    function syncProfileImage(event: Event) {
+      const imageData = (event as CustomEvent<string>).detail;
+      setProfileImage(imageData || null);
+    }
+
+    window.addEventListener(
+      ADVISER_PROFILE_IMAGE_UPDATED_EVENT,
+      syncProfileImage,
+    );
+
+    return () => {
+      window.removeEventListener(
+        ADVISER_PROFILE_IMAGE_UPDATED_EVENT,
+        syncProfileImage,
+      );
+    };
   }, []);
 
   function toggleSidebar() {
@@ -86,6 +109,11 @@ export default function AdviserShell({
 
       setProfileImage(imageData);
       localStorage.setItem(ADVISER_PROFILE_IMAGE_KEY, imageData);
+      window.dispatchEvent(
+        new CustomEvent(ADVISER_PROFILE_IMAGE_UPDATED_EVENT, {
+          detail: imageData,
+        }),
+      );
     };
 
     reader.readAsDataURL(file);
@@ -109,7 +137,7 @@ export default function AdviserShell({
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
         <aside
-          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white/[0.88] px-4 py-5 lg:flex ${
+          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[260px]"
           }`}
         >
@@ -171,7 +199,7 @@ export default function AdviserShell({
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
-                          : "text-[#59645d] hover:bg-[#f3f7f1] hover:text-[#203028]"
+                          : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
                       }`}
                     >
                       <Image
@@ -194,7 +222,7 @@ export default function AdviserShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
+            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
               sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
             }`}
           >

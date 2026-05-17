@@ -32,7 +32,7 @@ const navItems = [
   ["Chat", "/chats.png", "/student/chat"],
   ["Notifications", "/notif.png", "/student/notifications"],
   ["Resources", "/resources.png", "/student/resources"],
-  ["Profile / Group Members", "/profile.png", "/student/profile"],
+  ["Profile", "/profile.png", "/student/profile"],
 ] as const;
 
 type StudentShellProps = {
@@ -153,7 +153,7 @@ export default function StudentShell({
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
         <aside
-          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white/[0.86] px-4 py-5 lg:flex ${
+          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[260px]"
           }`}
         >
@@ -170,7 +170,7 @@ export default function StudentShell({
 
                 {!sidebarCollapsed && (
                   <div className="min-w-0">
-                    <h1 className="truncate text-sm font-semibold tracking-tight">
+                    <h1 className="truncate text-sm font-semibold tracking-tight text-[#203028]">
                       {groupName}
                     </h1>
                     <p className="truncate text-[11px] text-[#7b877f]">
@@ -191,7 +191,7 @@ export default function StudentShell({
 
             <nav className="mt-9 text-sm">
               {!sidebarCollapsed && (
-                <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
+                <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8ba093]">
                   Student Main Sidebar
                 </p>
               )}
@@ -215,7 +215,7 @@ export default function StudentShell({
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
-                          : "text-[#59645d] hover:bg-[#f3f7f1] hover:text-[#203028]"
+                          : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
                       }`}
                     >
                       <Image
@@ -238,7 +238,7 @@ export default function StudentShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
+            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
               sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
             }`}
           >

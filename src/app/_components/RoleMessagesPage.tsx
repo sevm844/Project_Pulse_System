@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   addChatMessage,
   getChatThreadsForRole,
@@ -11,6 +11,13 @@ import {
   type StoredChatMessage,
   type StoredChatThread,
 } from "../_utils/chatStorage";
+import {
+  formatScheduleWindow,
+  getStoredMessagingSchedule,
+  isMessagingAllowedNow,
+  MESSAGING_SCHEDULE_UPDATED_EVENT,
+  type MessagingSchedule,
+} from "../_utils/messagingScheduleStorage";
 
 type RoleMessagesPageProps = {
   role: ChatRole;
@@ -47,6 +54,31 @@ export default function RoleMessagesPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [input, setInput] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [schedule, setSchedule] = useState<MessagingSchedule>(() =>
+    getStoredMessagingSchedule(),
+  );
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  const scheduleApplies = role === "Student";
+  const canSendNow =
+    !scheduleApplies || isMessagingAllowedNow(schedule, currentTime);
+  const scheduleWindow = formatScheduleWindow(schedule);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 30000);
+
+    function syncSchedule() {
+      setSchedule(getStoredMessagingSchedule());
+      setCurrentTime(new Date());
+    }
+
+    window.addEventListener(MESSAGING_SCHEDULE_UPDATED_EVENT, syncSchedule);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener(MESSAGING_SCHEDULE_UPDATED_EVENT, syncSchedule);
+    };
+  }, []);
 
   const filteredThreads = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -130,6 +162,7 @@ export default function RoleMessagesPage({
   function sendMessage() {
     const nextMessage = input.trim();
 
+    if (!canSendNow) return;
     if (!nextMessage && !selectedFileName) return;
 
     addChatMessage({
@@ -320,6 +353,20 @@ export default function RoleMessagesPage({
           </div>
 
           <div className="border-t border-[#edf2ec] bg-white px-5 py-4">
+            {scheduleApplies && (
+              <div
+                className={`mb-3 rounded-xl border px-4 py-3 text-xs font-semibold ${
+                  canSendNow
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-amber-200 bg-amber-50 text-amber-700"
+                }`}
+              >
+                {canSendNow
+                  ? `Messaging is open until ${schedule.endTime}.`
+                  : `Messaging is closed. Admin availability window: ${scheduleWindow}.`}
+              </div>
+            )}
+
             {selectedFileName && (
               <div className="mb-3 flex items-center justify-between rounded-xl border border-[#dfe8df] bg-[#f8faf7] px-4 py-2 text-xs">
                 <span className="min-w-0 truncate font-semibold text-[#4f8f58]">
@@ -347,8 +394,9 @@ export default function RoleMessagesPage({
 
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg text-[#59645d] hover:bg-[#f3f7f1]"
+                onClick={() => canSendNow && fileInputRef.current?.click()}
+                disabled={!canSendNow}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg text-[#59645d] hover:bg-[#f3f7f1] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 +
               </button>
@@ -359,14 +407,20 @@ export default function RoleMessagesPage({
                 onKeyDown={(event) => {
                   if (event.key === "Enter") sendMessage();
                 }}
-                placeholder="Write a message..."
-                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
+                disabled={!canSendNow}
+                placeholder={
+                  canSendNow
+                    ? "Write a message..."
+                    : "Messaging is currently closed"
+                }
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#a0aaa3] disabled:cursor-not-allowed"
               />
 
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-full border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+                onClick={() => canSendNow && fileInputRef.current?.click()}
+                disabled={!canSendNow}
+                className="rounded-full border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Attach
               </button>
@@ -374,7 +428,8 @@ export default function RoleMessagesPage({
               <button
                 type="button"
                 onClick={sendMessage}
-                className="rounded-full bg-[#202823] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
+                disabled={!canSendNow}
+                className="rounded-full bg-[#202823] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:bg-[#aab3ad]"
               >
                 Send
               </button>

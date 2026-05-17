@@ -1,638 +1,394 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
+import type { Cell, Sheet } from "@fortune-sheet/core";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
-import StatusBadge from "../_components/StatusBadge";
-import {
-  assignedGroups,
-  courses,
-  sections,
-  type AssignedGroup,
-  type CourseCode,
-  type GroupStage,
-} from "../_data/mockAdviserData";
-import {
-  createDefensePlanForGroup,
-  getStoredDefensePlans,
-  saveStoredDefensePlan,
-  type DefenseFile,
-  type DefenseFileStatus,
-  type DefensePanelist,
-  type DefensePlan,
-  type DefenseReadinessStatus,
-  type DefenseRequirement,
-  type DefenseRequirementStatus,
-} from "../../_utils/defenseStorage";
 
-const stages: GroupStage[] = [
-  "Proposal Review",
-  "Alpha Defense",
-  "Beta Defense",
-  "Final Defense",
-];
+const Workbook = dynamic(
+  () => import("@fortune-sheet/react").then((mod) => mod.Workbook),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[640px] items-center justify-center rounded-xl border border-[#dfe8df] bg-white text-sm text-[#59645d]">
+        Loading spreadsheet...
+      </div>
+    ),
+  },
+);
 
-type SetupTab = "Overview" | "Schedule" | "Panel" | "Requirements" | "Files";
-
-const setupTabs: SetupTab[] = [
-  "Overview",
-  "Schedule",
-  "Panel",
-  "Requirements",
-  "Files",
-];
-
-type StoredStudentGroupSnapshot = {
-  course?: CourseCode;
-  section?: string;
-  groupName?: string;
-  projectTitle?: string;
-  title?: string;
-  stage?: GroupStage;
-  adviser?: string;
+type CourseOption = {
+  code: string;
+  name: string;
+  sections: number;
+  activeGroups: number;
+  icon: string;
 };
 
-const STUDENT_GROUP_STORAGE_KEY = "project-pulse-student-group";
+type DefenseRow = {
+  id: number;
+  time: string;
+  team: string;
+  members: string;
+  projectTitle: string;
+  comments: string;
+  remarks: "Approved" | "Pending" | "Needs Revision";
+  adviser: string;
+  technicalAdviser: string;
+  status: "Approved" | "Pending";
+};
 
-function getStoredStudentGroupForAdviser(): StoredStudentGroupSnapshot | null {
-  if (typeof window === "undefined") return null;
+const courseOptions: CourseOption[] = [
+  {
+    code: "BSIT",
+    name: "Bachelor of Science in Information Technology",
+    sections: 12,
+    activeGroups: 56,
+    icon: "/it.png",
+  },
+  {
+    code: "BSIS",
+    name: "Bachelor of Science in Information Systems",
+    sections: 10,
+    activeGroups: 42,
+    icon: "/is.png",
+  },
+  {
+    code: "BSCS",
+    name: "Bachelor of Science in Computer Science",
+    sections: 11,
+    activeGroups: 48,
+    icon: "/cs.png",
+  },
+  {
+    code: "ACT",
+    name: "Associate in Computer Technology",
+    sections: 8,
+    activeGroups: 31,
+    icon: "/act.png",
+  },
+  {
+    code: "BLIS",
+    name: "Bachelor of Library and Information Science",
+    sections: 6,
+    activeGroups: 22,
+    icon: "/blis.png",
+  },
+];
 
-  const saved = window.localStorage.getItem(STUDENT_GROUP_STORAGE_KEY);
-  if (!saved) return null;
-
-  return JSON.parse(saved) as StoredStudentGroupSnapshot;
-}
-
-function getDefenseGroups(): AssignedGroup[] {
-  const savedGroup = getStoredStudentGroupForAdviser();
-
-  if (!savedGroup) return assignedGroups;
-
-  const currentStudentGroup: AssignedGroup = {
+const defenseSchedule: DefenseRow[] = [
+  {
     id: 1,
-    course: savedGroup.course || "BSIT",
-    section: savedGroup.section || "4A",
-    schoolYear: "2025-2026",
-    semester: "2nd Semester",
-    groupName: savedGroup.groupName || "Project Pulse",
+    time: "8:00 - 8:30 AM",
+    team: "The Governor",
+    members: "Gian Pilar, Jef Castillo, Ben Dictalugan",
     projectTitle:
-      savedGroup.projectTitle ||
-      savedGroup.title ||
-      "Smart Capstone Monitoring System",
-    stage: savedGroup.stage || "Proposal Review",
-    adviser: savedGroup.adviser || "Anna Cruz",
-    lastSubmission: "Today",
-    progress: 68,
-    status: "Active",
+      "BG-SMART: Digitalizing Waste Management Through Geolocation and Technology in Batangas City",
+    comments:
+      "Finalize location for pilot testing and determine image placement for accident detection.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Melvin Melo",
+    status: "Approved",
+  },
+  {
+    id: 2,
+    time: "8:30 - 9:00 AM",
+    team: "Carl",
+    members: "Cabrera, Povey, Dolor, Clint Ador",
+    projectTitle: "Real-Time Accident Detection and Alert System Using Computer Vision",
+    comments: "Clarify alert workflow and emergency contact routing.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Melvin Melo",
+    status: "Approved",
+  },
+  {
+    id: 3,
+    time: "9:00 - 9:30 AM",
+    team: "Katana",
+    members: "Pujarbo, John Manuel, Chloe, John Ashley",
+    projectTitle:
+      "A-LVN: AI-Powered Learning and Video-Based Interview Navigation System for Career Readiness",
+    comments:
+      "Add dashboard for grading and specify how job recommendations are generated.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Melvin Melo",
+    status: "Approved",
+  },
+  {
+    id: 4,
+    time: "9:30 - 10:00 AM",
+    team: "Hilltop Colony",
+    members: "Delavega, Rhuellyn B., De Torres, Al Francis M.",
+    projectTitle:
+      "Brahman Radio: An AI-Powered Digital Radio and Broadcast Audio-Content Platform",
+    comments: "Remove anonymous blind chat and verify copyright handling.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Neria Macaraig",
+    status: "Approved",
+  },
+  {
+    id: 5,
+    time: "10:30 - 11:00 AM",
+    team: "Tara",
+    members: "Asilo, Kyran B., Dela Trinos, Erin R.",
+    projectTitle:
+      "Project Pulse: A Unified Research Lifecycle Management and Monitoring System",
+    comments:
+      "Start scheduling proposal defense and allow panelists to comment inside the system.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Neria Macaraig",
+    status: "Approved",
+  },
+  {
+    id: 6,
+    time: "11:30 - 12:00 PM",
+    team: "Tyreese",
+    members: "Conia, Proclou, Derfin, Myra",
+    projectTitle:
+      "Auto-eMP Plate: An Online Marketplace for Batangas City Public Market Products",
+    comments: "Define deployment scope and vendor onboarding process.",
+    remarks: "Approved",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "Sir Vinz Cruz",
+    status: "Approved",
+  },
+  {
+    id: 7,
+    time: "1:30 - 2:00 PM",
+    team: "Carol",
+    members: "Alcantara, Ace Gabriel, Macal, John Sirn",
+    projectTitle: "ArbiTe: A Tracking System for Ranking, Control and Management",
+    comments: "Review AI integration and revise title wording.",
+    remarks: "Pending",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "-",
+    status: "Pending",
+  },
+  {
+    id: 8,
+    time: "2:00 - 2:30 PM",
+    team: "Maggie",
+    members: "Arro, Luis, Santilo, Bothon",
+    projectTitle: "Pilipinas Chronicles",
+    comments: "Add more historical events and improve content validation.",
+    remarks: "Pending",
+    adviser: "Bernadet Macaraig",
+    technicalAdviser: "-",
+    status: "Pending",
+  },
+];
+
+const defenseSheetHeaders = [
+  "DAY 1",
+  "TIME",
+  "TEAM",
+  "MEMBERS",
+  "",
+  "Proposal 1",
+  "COMMENTS/SUGGESTIONS",
+  "REMARKS",
+  "Adviser",
+  "Technical Adviser",
+];
+
+function sheetCell(
+  value: string | number,
+  options: Partial<Cell> = {},
+): Cell {
+  return {
+    v: value,
+    m: value,
+    ...options,
   };
+}
 
-  return [
-    currentStudentGroup,
-    ...assignedGroups.filter((group) => group.id !== currentStudentGroup.id),
+function createDefenseSheet(name: string, order: number): Sheet {
+  const data: (Cell | null)[][] = [
+    defenseSheetHeaders.map((header) =>
+      sheetCell(header, {
+        bl: 1,
+        bg: header === "Proposal 1" ? "#fff200" : "#f8faf7",
+        ht: 0,
+        vt: 0,
+      }),
+    ),
+    ...defenseSchedule.map((row) => [
+      null,
+      sheetCell(row.time),
+      sheetCell(row.team),
+      sheetCell(row.members),
+      null,
+      sheetCell(row.projectTitle, { bg: "#fff200", tb: "2" }),
+      sheetCell(row.comments, { tb: "2" }),
+      sheetCell(row.remarks, { bl: 1 }),
+      sheetCell(row.adviser),
+      sheetCell(row.technicalAdviser),
+    ]),
   ];
+
+  return {
+    name,
+    id: `defense-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    order,
+    row: 40,
+    column: 18,
+    data,
+    defaultRowHeight: 34,
+    defaultColWidth: 120,
+    config: {
+      rowlen: {
+        1: 68,
+        2: 68,
+        3: 68,
+        4: 86,
+        5: 86,
+        12: 86,
+        13: 86,
+      },
+      columnlen: {
+        0: 90,
+        1: 220,
+        2: 130,
+        3: 230,
+        4: 230,
+        5: 250,
+        6: 270,
+        7: 140,
+        8: 140,
+        9: 150,
+      },
+    },
+    showGridLines: true,
+  };
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+function createBlankSheet(name: string, order: number): Sheet {
+  return {
+    name,
+    id: `defense-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    order,
+    row: 40,
+    column: 18,
+    defaultRowHeight: 34,
+    defaultColWidth: 120,
+    data: [[sheetCell(name, { bl: 1, bg: "#f4faee" })]],
+    showGridLines: true,
+  };
 }
 
+const initialDefenseWorkbook: Sheet[] = [
+  createBlankSheet("IT3-1", 0),
+  createBlankSheet("IT3-2", 1),
+  createBlankSheet("IT3-3", 2),
+  createDefenseSheet("SCHEDULE OF DEFENSE", 3),
+  createBlankSheet("REDEFENSE", 4),
+  createBlankSheet("REMINDERS", 5),
+  createBlankSheet("FILES and PRESENTATION LINK", 6),
+];
+
+const courseCardClass =
+  "group rounded-xl border border-[#e2f5df] bg-lime-50/50 p-5 text-left shadow-[0_14px_34px_rgba(31,42,36,0.04)] transition hover:-translate-y-0.5 hover:border-[#a3e635] hover:shadow-[0_18px_42px_rgba(163,230,53,0.1)]"
 export default function AdviserDefensePage() {
-  const [plans, setPlans] = useState<DefensePlan[]>([]);
-  const [groups, setGroups] = useState<AssignedGroup[]>(assignedGroups);
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<CourseOption | null>(
+    null,
+  );
 
-  const [course, setCourse] = useState<"All" | CourseCode>("All");
-  const [section, setSection] = useState("All");
-  const [stage, setStage] = useState<"All" | GroupStage>("All");
-  const [activeTab, setActiveTab] = useState<SetupTab>("Overview");
-
-  useEffect(() => {
-    setGroups(getDefenseGroups());
-    setPlans(getStoredDefensePlans());
+  const overview = useMemo(() => {
+    return {
+      sections: courseOptions.reduce((total, item) => total + item.sections, 0),
+      activeGroups: courseOptions.reduce(
+        (total, item) => total + item.activeGroups,
+        0,
+      ),
+      upcomingDefenses: defenseSchedule.length,
+      pendingApprovals: defenseSchedule.filter(
+        (item) => item.status === "Pending",
+      ).length,
+    };
   }, []);
 
-  const filteredGroups = useMemo(() => {
-    return groups.filter((group) => {
-      const matchesCourse = course === "All" || group.course === course;
-      const matchesSection = section === "All" || group.section === section;
-      const matchesStage = stage === "All" || group.stage === stage;
-
-      return matchesCourse && matchesSection && matchesStage;
-    });
-  }, [course, groups, section, stage]);
-
-  const selectedGroup = selectedGroupId
-    ? groups.find((group) => group.id === selectedGroupId)
-    : null;
-
-  const selectedPlan = selectedGroupId
-    ? plans.find((plan) => plan.groupId === selectedGroupId) || null
-    : null;
-
-  function openGroupSetup(groupId: number) {
-    const group = groups.find((item) => item.id === groupId);
-    if (!group) return;
-
-    const existingPlan = plans.find((plan) => plan.groupId === group.id);
-
-    if (existingPlan) {
-      setSelectedGroupId(group.id);
-      setActiveTab("Overview");
-      return;
-    }
-
-    const nextPlan = createDefensePlanForGroup(group);
-    const savedPlan = saveStoredDefensePlan(nextPlan);
-
-    setPlans((current) => [savedPlan, ...current]);
-    setSelectedGroupId(group.id);
-    setActiveTab("Overview");
-  }
-
-  function updateSelectedPlan(updates: Partial<DefensePlan>) {
-    if (!selectedPlan) return;
-
-    const savedPlan = saveStoredDefensePlan({
-      ...selectedPlan,
-      ...updates,
-    });
-
-    setPlans((current) =>
-      current.map((plan) =>
-        plan.groupId === savedPlan.groupId ? savedPlan : plan,
-      ),
-    );
-  }
-
-  function updateReadiness(status: DefenseReadinessStatus) {
-    updateSelectedPlan({ readinessStatus: status });
-  }
-
-  function updatePanelist(id: number, updates: Partial<DefensePanelist>) {
-    if (!selectedPlan) return;
-
-    updateSelectedPlan({
-      panelists: selectedPlan.panelists.map((panelist) =>
-        panelist.id === id ? { ...panelist, ...updates } : panelist,
-      ),
-    });
-  }
-
-  function updateRequirement(id: number, updates: Partial<DefenseRequirement>) {
-    if (!selectedPlan) return;
-
-    updateSelectedPlan({
-      requirements: selectedPlan.requirements.map((requirement) =>
-        requirement.id === id ? { ...requirement, ...updates } : requirement,
-      ),
-    });
-  }
-
-  function updateFile(id: number, updates: Partial<DefenseFile>) {
-    if (!selectedPlan) return;
-
-    updateSelectedPlan({
-      files: selectedPlan.files.map((file) =>
-        file.id === id ? { ...file, ...updates } : file,
-      ),
-    });
-  }
-
-  if (selectedGroup && selectedPlan) {
-    const completedRequirements = selectedPlan.requirements.filter(
-      (item) => item.status === "Completed",
-    ).length;
-
-    const uploadedFiles = selectedPlan.files.filter(
-      (item) => item.status === "Uploaded",
-    ).length;
-
-    const totalTasks =
-      selectedPlan.requirements.length + selectedPlan.files.length;
-
-    const completedTasks = completedRequirements + uploadedFiles;
-
-    const progress =
-      totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
+  if (!selectedCourse) {
     return (
-      <AdviserShell title="Defense Setup">
-        <div className="grid gap-5 md:grid-cols-[1fr_280px]">
-          <div className="space-y-5">
-            <Card className="p-5">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="text-2xl font-semibold tracking-tight text-[#203028]">
-                      {selectedPlan.groupName}
+      <AdviserShell
+        title="Defense Workspace"
+        subtitle="Select a course to manage defense schedules, approvals, redefense and reminders."
+      >
+        <div className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {courseOptions.map((course) => (
+              <button
+                key={course.code}
+                type="button"
+                onClick={() => setSelectedCourse(course)}
+                className={courseCardClass}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-19 w-19 shrink-0 items-center justify-center rounded-full bg-[#e9f8df]">
+                    <Image
+                      src={course.icon}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="opacity-80"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-semibold tracking-tight text-[#17211b]">
+                      {course.code}
                     </h2>
-                    <StatusBadge status={selectedPlan.readinessStatus} />
+                    <p className="mt-1 min-h-[38px] text-sm leading-5 text-[#59645d]">
+                      {course.name}
+                    </p>
                   </div>
-
-                  <p className="mt-2 text-sm text-[#59645d]">
-                    {selectedPlan.course} {selectedPlan.section} /{" "}
-                    {selectedPlan.stage}
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    {selectedPlan.projectTitle}
-                  </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateReadiness("Ready")}
-                    className="rounded-lg bg-[#202823] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
-                  >
-                    Mark Ready
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateReadiness("Not Ready")}
-                    className="rounded-lg border border-[#dfe8df] px-4 py-2.5 text-xs font-semibold hover:bg-[#f3f7f1]"
-                  >
-                    Mark Not Ready
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedGroupId(null)}
-                    className="rounded-lg border border-[#dfe8df] px-4 py-2.5 text-xs font-semibold hover:bg-[#f3f7f1]"
-                  >
-                    Back
-                  </button>
+                <div className="mt-7 grid grid-cols-2 gap-4">
+                  <Metric label="Sections" value={course.sections} />
+                  <Metric label="Active Groups" value={course.activeGroups} />
                 </div>
-              </div>
-            </Card>
 
-            <Card className="overflow-hidden">
-              <div className="flex gap-2 overflow-x-auto border-b border-[#edf2ec] px-4 pt-4">
-                {setupTabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setActiveTab(tab)}
-                    className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition ${
-                      activeTab === tab
-                        ? "border-[#4f8f58] text-[#203028]"
-                        : "border-transparent text-[#7b877f] hover:text-[#203028]"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              <div className="p-5">
-                {activeTab === "Overview" && (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <SummaryCard
-                      label="Schedule"
-                      value={selectedPlan.date || "Not set"}
-                      detail={selectedPlan.time || "No time yet"}
-                    />
-                    <SummaryCard
-                      label="Venue"
-                      value={selectedPlan.venue || "Not set"}
-                      detail="Defense location"
-                    />
-                    <SummaryCard
-                      label="Requirements"
-                      value={`${completedRequirements}/${selectedPlan.requirements.length} done`}
-                      detail="Completion status"
-                    />
-                    <SummaryCard
-                      label="Files"
-                      value={`${uploadedFiles}/${selectedPlan.files.length} uploaded`}
-                      detail="Required uploads"
-                    />
-
-                    <div className="md:col-span-2 xl:col-span-4">
-                      <div className="rounded-2xl border border-[#dfe8df] bg-[#fbfdfb] p-5">
-                        <h3 className="text-base font-semibold text-[#203028]">
-                          Quick edit
-                        </h3>
-                        <p className="mt-1 text-sm text-[#7b877f]">
-                          Use the tabs above to update schedule, panelists,
-                          requirements, or defense files without scrolling.
-                        </p>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <QuickTabButton
-                            label="Edit Schedule"
-                            onClick={() => setActiveTab("Schedule")}
-                          />
-                          <QuickTabButton
-                            label="Edit Panel"
-                            onClick={() => setActiveTab("Panel")}
-                          />
-                          <QuickTabButton
-                            label="Edit Requirements"
-                            onClick={() => setActiveTab("Requirements")}
-                          />
-                          <QuickTabButton
-                            label="Edit Files"
-                            onClick={() => setActiveTab("Files")}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "Schedule" && (
-                  <div>
-                    <SectionHeader
-                      title="Schedule Details"
-                      description="Set the official date, time, and venue visible to students and panelists."
-                    />
-
-                    <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                      <label className="text-xs font-semibold text-[#203028]">
-                        Defense Date
-                        <input
-                          value={selectedPlan.date}
-                          onChange={(event) =>
-                            updateSelectedPlan({ date: event.target.value })
-                          }
-                          className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                        />
-                      </label>
-
-                      <label className="text-xs font-semibold text-[#203028]">
-                        Time
-                        <input
-                          value={selectedPlan.time}
-                          onChange={(event) =>
-                            updateSelectedPlan({ time: event.target.value })
-                          }
-                          className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                        />
-                      </label>
-
-                      <label className="text-xs font-semibold text-[#203028]">
-                        Venue / Meeting Link
-                        <input
-                          value={selectedPlan.venue}
-                          onChange={(event) =>
-                            updateSelectedPlan({ venue: event.target.value })
-                          }
-                          className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "Panel" && (
-                  <div>
-                    <SectionHeader
-                      title="Defense Panel"
-                      description="Manage adviser, chairperson, and panel members in one compact list."
-                    />
-
-                    <div className="mt-5 grid gap-3">
-                      {selectedPlan.panelists.map((panelist) => (
-                        <div
-                          key={panelist.id}
-                          className="grid gap-3 rounded-2xl border border-[#dfe8df] bg-white p-4 lg:grid-cols-[42px_150px_1fr_1fr]"
-                        >
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d7f7d8] text-xs font-semibold text-[#203028]">
-                            {initials(panelist.name)}
-                          </div>
-
-                          <input
-                            value={panelist.role}
-                            onChange={(event) =>
-                              updatePanelist(panelist.id, {
-                                role: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[#dfe8df] px-3 py-2 text-sm font-semibold outline-none"
-                          />
-
-                          <input
-                            value={panelist.name}
-                            onChange={(event) =>
-                              updatePanelist(panelist.id, {
-                                name: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[#dfe8df] px-3 py-2 text-sm outline-none"
-                          />
-
-                          <input
-                            value={panelist.email}
-                            onChange={(event) =>
-                              updatePanelist(panelist.id, {
-                                email: event.target.value,
-                              })
-                            }
-                            className="rounded-lg border border-[#dfe8df] px-3 py-2 text-sm outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "Requirements" && (
-                  <div>
-                    <SectionHeader
-                      title="Requirements"
-                      description="Update requirement status without scrolling to the bottom of the page."
-                    />
-
-                    <div className="mt-5 grid gap-3">
-                      {selectedPlan.requirements.map((requirement) => (
-                        <div
-                          key={requirement.id}
-                          className="grid gap-3 rounded-2xl border border-[#dfe8df] bg-white p-4 lg:grid-cols-[1fr_160px]"
-                        >
-                          <div>
-                            <input
-                              value={requirement.title}
-                              onChange={(event) =>
-                                updateRequirement(requirement.id, {
-                                  title: event.target.value,
-                                })
-                              }
-                              className="w-full rounded-lg border border-[#dfe8df] px-3 py-2 text-sm font-semibold outline-none"
-                            />
-
-                            <input
-                              value={requirement.detail}
-                              onChange={(event) =>
-                                updateRequirement(requirement.id, {
-                                  detail: event.target.value,
-                                })
-                              }
-                              className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2 text-sm outline-none"
-                            />
-                          </div>
-
-                          <select
-                            value={requirement.status}
-                            onChange={(event) =>
-                              updateRequirement(requirement.id, {
-                                status: event.target
-                                  .value as DefenseRequirementStatus,
-                              })
-                            }
-                            className="h-10 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm outline-none"
-                          >
-                            <option>Pending</option>
-                            <option>Completed</option>
-                          </select>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "Files" && (
-                  <div>
-                    <SectionHeader
-                      title="Defense Files"
-                      description="Track required files and upload status in a compact table."
-                    />
-
-                    <div className="mt-5 overflow-x-auto">
-                      <table className="w-full min-w-[860px] text-left text-sm">
-                        <thead className="border-b border-[#edf2ec] text-xs text-[#7b877f]">
-                          <tr>
-                            <th className="py-3 font-medium">File</th>
-                            <th className="py-3 font-medium">Detail</th>
-                            <th className="py-3 font-medium">Uploaded</th>
-                            <th className="py-3 font-medium">Status</th>
-                          </tr>
-                        </thead>
-
-                        <tbody className="divide-y divide-[#edf2ec]">
-                          {selectedPlan.files.map((file) => (
-                            <tr key={file.id}>
-                              <td className="py-3 pr-3">
-                                <input
-                                  value={file.name}
-                                  onChange={(event) =>
-                                    updateFile(file.id, {
-                                      name: event.target.value,
-                                    })
-                                  }
-                                  className="w-full rounded-lg border border-[#dfe8df] px-3 py-2 text-sm font-semibold outline-none"
-                                />
-                              </td>
-
-                              <td className="py-3 pr-3">
-                                <input
-                                  value={file.detail}
-                                  onChange={(event) =>
-                                    updateFile(file.id, {
-                                      detail: event.target.value,
-                                    })
-                                  }
-                                  className="w-full rounded-lg border border-[#dfe8df] px-3 py-2 text-sm outline-none"
-                                />
-                              </td>
-
-                              <td className="py-3 pr-3">
-                                <input
-                                  value={file.uploaded}
-                                  onChange={(event) =>
-                                    updateFile(file.id, {
-                                      uploaded: event.target.value,
-                                    })
-                                  }
-                                  className="w-full rounded-lg border border-[#dfe8df] px-3 py-2 text-sm outline-none"
-                                />
-                              </td>
-
-                              <td className="py-3">
-                                <select
-                                  value={file.status}
-                                  onChange={(event) =>
-                                    updateFile(file.id, {
-                                      status: event.target
-                                        .value as DefenseFileStatus,
-                                    })
-                                  }
-                                  className="w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm outline-none"
-                                >
-                                  <option>Pending</option>
-                                  <option>Uploaded</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
+                <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition group-hover:bg-[#245329]">
+                  Open Workspace
+                  <span aria-hidden="true">-&gt;</span>
+                </div>
+              </button>
+            ))}
           </div>
 
-          <div className="space-y-5">
-            <Card className="p-5">
-              <h3 className="text-sm font-semibold text-[#203028]">
-                Overall Progress
-              </h3>
-
-              <div className="mt-5 flex items-center justify-center">
-                <div className="flex h-32 w-32 items-center justify-center rounded-full border-[10px] border-[#d7f7d8] bg-white">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-[#203028]">
-                      {progress}%
-                    </p>
-                    <p className="text-[10px] text-[#7b877f]">Complete</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-3 text-sm">
-                <ProgressRow label="Requirements" value={completedRequirements} />
-                <ProgressRow label="Files" value={uploadedFiles} />
-                <ProgressRow label="Remaining" value={totalTasks - completedTasks} />
-              </div>
-            </Card>
-
-            <Card className="p-5">
-              <h3 className="text-sm font-semibold text-[#203028]">
-                Quick Actions
-              </h3>
-
-              <div className="mt-4 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("Requirements")}
-                  className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-left text-xs font-semibold hover:bg-[#f3f7f1]"
-                >
-                  Update Requirements
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("Files")}
-                  className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-left text-xs font-semibold hover:bg-[#f3f7f1]"
-                >
-                  Check Files
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("Schedule")}
-                  className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-left text-xs font-semibold hover:bg-[#f3f7f1]"
-                >
-                  Edit Schedule
-                </button>
+          {/* 1. This wrapper pushes everything above it up, and forces the card down */}
+          <div className="mt-auto pt-6">
+            <Card className="p-4">
+              <h2 className="text-sm font-semibold text-[#203028]">Overview</h2>
+              <div className="mt-3 grid gap-3 md:grid-cols-4">
+                <OverviewTile
+                  icon="/total.png"
+                  label="Total Sections"
+                  value={overview.sections}
+                />
+                <OverviewTile
+                  icon="/group.png"
+                  label="Total Active Groups"
+                  value={overview.activeGroups}
+                />
+                <OverviewTile
+                  icon="/date.png"
+                  label="Upcoming Defenses"
+                  value={overview.upcomingDefenses}
+                />
+                <OverviewTile
+                  icon="/pending.png"
+                  label="Pending Approvals"
+                  value={overview.pendingApprovals}
+                  accent="orange"
+                />
               </div>
             </Card>
           </div>
@@ -642,193 +398,152 @@ export default function AdviserDefensePage() {
   }
 
   return (
-    <AdviserShell title="Defense">
-      <div className="space-y-5">
-        <Card className="p-5">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Course
-              </label>
-              <select
-                value={course}
-                onChange={(event) =>
-                  setCourse(event.target.value as "All" | CourseCode)
-                }
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {courses.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Section
-              </label>
-              <select
-                value={section}
-                onChange={(event) => setSection(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {sections.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Stage
-              </label>
-              <select
-                value={stage}
-                onChange={(event) =>
-                  setStage(event.target.value as "All" | GroupStage)
-                }
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {stages.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
+    <AdviserShell title={selectedCourse.code} subtitle="Defense Workspace">
+      <div className="flex min-h-[760px] flex-col">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <button
+              type="button"
+              onClick={() => setSelectedCourse(null)}
+              className="mb-2 inline-flex items-center rounded-lg border border-[#9ed58c] px-4 py-2 text-xs font-semibold text-black transition hover:border-[#7abf45]"
+              style={{ backgroundColor: "#d7f7c9" }}
+            >
+              &lt; Course selection
+            </button>
+            <p className="text-sm text-[#59645d]">{selectedCourse.name}</p>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-[#203028]">
-                Groups for Defense Setup
-              </h2>
-              <p className="mt-1 text-sm text-[#7b877f]">
-                Select a group to open its defense setup page.
-              </p>
-            </div>
-
-            <p className="text-xs font-semibold text-[#7b877f]">
-              {filteredGroups.length} group/s found
-            </p>
+        <Card className="overflow-hidden">
+          <div className="p-4 md:p-5">
+            <ScheduleView courseName={selectedCourse.code} />
           </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredGroups.map((group) => {
-              const plan = plans.find((item) => item.groupId === group.id);
-
-              return (
-                <div
-                  key={group.id}
-                  className="rounded-xl border border-[#dfe8df] bg-white p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs font-semibold text-[#4f8f58]">
-                      {group.course} {group.section}
-                    </p>
-
-                    <StatusBadge status={plan?.readinessStatus || "Pending"} />
-                  </div>
-
-                  <h3 className="mt-3 text-base font-semibold text-[#203028]">
-                    {group.groupName}
-                  </h3>
-
-                  <p className="mt-2 text-sm leading-6 text-[#59645d]">
-                    {group.projectTitle}
-                  </p>
-
-                  <p className="mt-3 text-xs text-[#7b877f]">
-                    {group.stage} / Adviser: {group.adviser}
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() => openGroupSetup(group.id)}
-                    className="mt-5 rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
-                  >
-                    Open Defense Setup
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-
-          {filteredGroups.length === 0 && (
-            <div className="mt-5 rounded-lg border border-dashed border-[#dfe8df] bg-[#fbfdfb] p-8 text-center">
-              <p className="text-sm font-semibold text-[#203028]">
-                No groups match these filters.
-              </p>
-              <p className="mt-2 text-xs text-[#7b877f]">
-                Try selecting another course, section, or stage.
-              </p>
-            </div>
-          )}
         </Card>
       </div>
     </AdviserShell>
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-}) {
+function ScheduleView({ courseName }: { courseName: string }) {
+  const [workbookData, setWorkbookData] = useState<Sheet[]>(
+    initialDefenseWorkbook,
+  );
+  const [saveStatus, setSaveStatus] = useState("Autosaved locally");
+
   return (
-    <div className="rounded-2xl border border-[#dfe8df] bg-white p-4">
-      <p className="text-xs font-semibold text-[#7b877f]">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-[#203028]">{value}</p>
-      <p className="mt-1 text-xs text-[#9ba69d]">{detail}</p>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-[#dfe8df] bg-[#fbfef8] p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7b877f]">
+            {courseName} Defense Sheet
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-[#203028]">
+            Editable defense workbook
+          </h2>
+          <p className="mt-1 text-sm text-[#59645d]">
+            Use the sheet tabs below for sections, schedule, redefense,
+            reminders, and files. Add rows or columns directly inside the
+            spreadsheet.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[#e4f8da] px-3 py-1.5 text-xs font-semibold text-[#245329]">
+            {saveStatus}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSaveStatus("Saved just now")}
+            className="rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#245329]"
+          >
+            Save Sheet
+          </button>
+          <ControlButton label="Print" icon="/docs.png" />
+        </div>
+      </div>
+
+      <div className="h-[680px] overflow-hidden rounded-xl border border-[#dfe8df] bg-white">
+        <Workbook
+          data={workbookData}
+          onChange={setWorkbookData}
+          allowEdit
+          showToolbar
+          showFormulaBar
+          showSheetTabs
+          row={40}
+          column={18}
+          defaultRowHeight={34}
+          defaultColWidth={120}
+        />
+      </div>
     </div>
   );
 }
 
-function QuickTabButton({
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <p className="text-xl font-semibold text-[#17211b]">{value}</p>
+      <p className="mt-1 text-xs text-[#59645d]">{label}</p>
+    </div>
+  );
+}
+
+function OverviewTile({
+  icon,
   label,
-  onClick,
+  value,
+  accent = "green",
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  accent?: "green" | "orange";
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-[#dfe8df] bg-white p-4">
+      <div
+        className={`flex h-14 w-14 items-center justify-center rounded-lg ${
+          accent === "orange" ? "bg-orange-50" : "bg-[#e9f8df]"
+        }`}
+      >
+        <Image src={icon} alt="" width={28} height={18} />
+      </div>
+
+      <div>
+        <p className="text-xs text-[#59645d]">{label}</p>
+        <p
+          className={`text-xl font-semibold ${
+            accent === "orange" ? "text-orange-600" : "text-[#203028]"
+          }`}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ControlButton({
+  label,
+  icon,
+  strong = false,
 }: {
   label: string;
-  onClick: () => void;
+  icon: string;
+  strong?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-xs font-semibold ${
+        strong
+          ? "border-[#cfe9c5] bg-[#f4faee] text-[#245329]"
+          : "border-[#dfe8df] bg-white text-[#203028] hover:bg-[#f8faf7]"
+      }`}
     >
+      <Image src={icon} alt="" width={14} height={14} />
       {label}
     </button>
-  );
-}
-
-function SectionHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold text-[#203028]">{title}</h3>
-      <p className="mt-1 text-sm text-[#7b877f]">{description}</p>
-    </div>
-  );
-}
-
-function ProgressRow({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-[#7b877f]">{label}</span>
-      <span className="text-xs font-semibold text-[#203028]">{value}</span>
-    </div>
   );
 }

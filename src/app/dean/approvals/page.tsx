@@ -304,9 +304,9 @@ export default function DeanFinalApprovalPage() {
           </p>
         </div>
 
-        <Card className="overflow-hidden !border-[#7dd3c7] !bg-[#ccfbf1] p-0 shadow-[0_10px_30px_rgba(20,184,166,0.14)]">
-          <div className="overflow-x-auto rounded-2xl bg-[#ccfbf1] p-4">
-            <div className="flex min-w-[920px] divide-x divide-[#7dd3c7]">
+        <Card className="overflow-hidden !border-[#bfe8b9] !bg-[#f7fff4] p-0 shadow-[0_10px_28px_rgba(32,48,40,0.08)]">
+          <div className="overflow-x-auto rounded-2xl bg-[linear-gradient(90deg,#ffffff_0%,#f2fdeb_48%,#e4f8d8_100%)] p-4">
+            <div className="flex min-w-[920px] divide-x divide-[#cfe8c8]">
               {[
                 ["Total", totalItems, "Submissions"],
                 ["Ready", readyItems, "Can approve"],
@@ -315,15 +315,15 @@ export default function DeanFinalApprovalPage() {
                 ["Returned", returnedItems, "Revision"],
               ].map(([label, value, caption]) => (
                 <div key={label} className="flex-1 px-4 py-2">
-                  <p className="text-[11px] font-semibold text-[#3f6f66]">
+                  <p className="text-[11px] font-semibold text-[#2f6f3a]">
                     {label}
                   </p>
 
                   <div className="mt-1 flex items-end gap-2 whitespace-nowrap">
-                    <p className="text-2xl font-semibold leading-none text-[#12372f]">
+                    <p className="text-2xl font-semibold leading-none text-[#0f1f16]">
                       {value}
                     </p>
-                    <p className="pb-0.5 text-[10px] leading-4 text-[#3f6f66]">
+                    <p className="pb-0.5 text-[10px] leading-4 text-[#59645d]">
                       {caption}
                     </p>
                   </div>

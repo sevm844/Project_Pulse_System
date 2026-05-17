@@ -153,7 +153,7 @@ export default function CoordinatorShell({
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
         <aside
-          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white px-4 py-5 lg:flex ${
+          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[270px]"
           }`}
         >
@@ -215,7 +215,7 @@ export default function CoordinatorShell({
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
-                          : "text-[#59645d] hover:bg-[#f3f7f1] hover:text-[#203028]"
+                          : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
                       }`}
                     >
                       <Image
@@ -238,7 +238,7 @@ export default function CoordinatorShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#f3f7f1] ${
+            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
               sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
             }`}
           >

@@ -139,10 +139,9 @@ export default function DeanProjectsPage() {
         </div>
 
         <div
-          className="overflow-x-auto rounded-2xl border border-[#86d993] p-4 shadow-[0_10px_30px_rgba(34,197,94,0.14)]"
-          style={{ backgroundColor: "#dcfce7" }}
+          className="overflow-x-auto rounded-2xl border border-[#bfe8b9] bg-[linear-gradient(90deg,#ffffff_0%,#f2fdeb_48%,#e4f8d8_100%)] p-4 shadow-[0_10px_28px_rgba(32,48,40,0.08)]"
         >
-          <div className="flex min-w-[920px] divide-x divide-[#86d993]" style={{ backgroundColor: "#dcfce7" }}>
+          <div className="flex min-w-[920px] divide-x divide-[#cfe8c8]">
 
             {[
               ["Total Projects", totalProjects, "Registered groups"],
@@ -152,13 +151,13 @@ export default function DeanProjectsPage() {
               ["Avg Progress", `${averageProgress}%`, "Across all projects"],
             ].map(([label, value, caption]) => (
               <div key={label} className="flex-1 px-4 py-2">
-                <p className="text-[11px] font-semibold text-[#7b877f]">{label}</p>
+                <p className="text-[11px] font-semibold text-[#2f6f3a]">{label}</p>
 
                 <div className="mt-1 flex items-end gap-2 whitespace-nowrap">
-                  <p className="text-2xl font-semibold leading-none text-[#203028]">
+                  <p className="text-2xl font-semibold leading-none text-[#0f1f16]">
                     {value}
                   </p>
-                  <p className="pb-0.5 text-[10px] leading-4 text-[#7b877f]">
+                  <p className="pb-0.5 text-[10px] leading-4 text-[#59645d]">
                     {caption}
                   </p>
                 </div>

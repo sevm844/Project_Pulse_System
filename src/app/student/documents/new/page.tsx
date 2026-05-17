@@ -21,6 +21,8 @@ const chapters = [
 ] as const;
 
 const fontSizes = ["12", "14", "16", "18", "20", "24", "28", "32"];
+const DELETED_CHAPTER_WORKSPACES_KEY =
+  "project-pulse-deleted-chapter-workspaces";
 
 function buildStarterContent(chapter: string, subtitle: string) {
   return `
@@ -41,6 +43,22 @@ function formatDateTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function restoreChapterWorkspace(documentId: number, documentType: string) {
+  if (typeof window === "undefined") return;
+
+  const saved = window.localStorage.getItem(DELETED_CHAPTER_WORKSPACES_KEY);
+  if (!saved) return;
+
+  const deletedKeys = new Set(JSON.parse(saved) as string[]);
+  deletedKeys.delete(String(documentId));
+  deletedKeys.delete(documentType);
+
+  window.localStorage.setItem(
+    DELETED_CHAPTER_WORKSPACES_KEY,
+    JSON.stringify([...deletedKeys]),
+  );
 }
 
 export default function NewDocumentPage() {
@@ -224,38 +242,52 @@ export default function NewDocumentPage() {
     const now = new Date().toISOString();
     const editorContent = editorRef.current?.innerHTML || content;
     const documents = getStoredDocuments();
-    const id = Date.now();
+    const existingDocument = documents.find(
+      (document) => document.documentType === documentType,
+    );
+    const timestampId = Date.parse(now);
+    const id = existingDocument?.id || timestampId;
+    const nextRevisionNumber = (existingDocument?.revisions.length || 0) + 1;
+    const nextVersion = `v${nextRevisionNumber}`;
+
+    const nextRevision = {
+      id: timestampId,
+      revisionNumber: nextRevisionNumber,
+      version: nextVersion,
+      editedBy: "Student Name",
+      editedAt: formatDateTime(now),
+      chapter: documentType,
+      beforeContent: existingDocument?.currentContent || "",
+      afterContent: editorContent,
+      revisionNote:
+        nextStatus === "Under Review"
+          ? "Workspace submitted for review"
+          : "Workspace draft saved",
+    };
 
     const newDocument: StoredDocument = {
+      ...(existingDocument || {}),
       id,
       title: title.trim() || `${selectedChapter[0]}: ${selectedChapter[1]}`,
       documentType,
-      currentVersion: "v1",
+      currentVersion: nextVersion,
       currentContent: editorContent,
-      createdAt: now,
+      createdAt: existingDocument?.createdAt || now,
       updatedAt: now,
       status: nextStatus,
       reviewer: nextStatus === "Under Review" ? reviewer : reviewer,
-      notes: "",
-      revisions: [
-        {
-          id,
-          revisionNumber: 1,
-          version: "v1",
-          editedBy: "Student Name",
-          editedAt: formatDateTime(now),
-          chapter: documentType,
-          beforeContent: "",
-          afterContent: editorContent,
-          revisionNote:
-            nextStatus === "Under Review"
-              ? "Workspace created and submitted for review"
-              : "Workspace draft created",
-        },
-      ],
+      notes: existingDocument?.notes || "",
+      revisions: [...(existingDocument?.revisions || []), nextRevision],
     };
 
-    saveStoredDocuments([newDocument, ...documents]);
+    const nextDocuments = existingDocument
+      ? documents.map((document) =>
+          document.id === existingDocument.id ? newDocument : document,
+        )
+      : [newDocument, ...documents];
+
+    saveStoredDocuments(nextDocuments);
+    restoreChapterWorkspace(id, documentType);
     setLastSavedAt(now);
 
     router.push("/student/documents");

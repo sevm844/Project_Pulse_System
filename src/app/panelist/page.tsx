@@ -1,392 +1,130 @@
-"use client";
+import PanelistShell from "./_components/PanelistShell";
+import Card from "./_components/Card";
+import PanelistCalendar from "./_components/PanelistCalendar";
+import { panelistDefenses, computeAverage } from "./_data/panelistData";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../_lib/firebase";
-import StakeholderCalendar from "../_components/StakeholderCalendar";
-import {
-  clearStoredUserSession,
-  getStoredUserEmail,
-} from "../_utils/authStorage";
-import {
-  computeDefenseAverage,
-  computeDefenseResult,
-  getStoredDefensePlan,
-  saveStoredDefensePlan,
-  type DefenseEvaluation,
-  type DefensePlan,
-} from "../_utils/defenseStorage";
+function statusClasses(status: string) {
+  if (status === "Submitted" || status === "Available") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
 
-const calendarCategories = ["Defense", "Evaluation", "Documents"];
-const PANELIST_PROFILE_IMAGE_KEY = "project-pulse-panelist-profile-image";
+  return "border-amber-200 bg-amber-50 text-amber-700";
+}
 
 export default function PanelistDashboardPage() {
-  const router = useRouter();
-  const [plan, setPlan] = useState<DefensePlan | null>(null);
-  const [checkingAccess, setCheckingAccess] = useState(true);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [panelistEmail, setPanelistEmail] = useState("panelist@ub.edu.ph");
-
-  useEffect(() => {
-    const role = localStorage.getItem("project-pulse-user-role");
-
-    if (role !== "Panelist") {
-      router.replace("/login");
-      return;
-    }
-
-    queueMicrotask(() => {
-      setPlan(getStoredDefensePlan());
-      setCheckingAccess(false);
-    });
-  }, [router]);
-
-  useEffect(() => {
-    const savedImage = localStorage.getItem(PANELIST_PROFILE_IMAGE_KEY);
-    const savedEmail = getStoredUserEmail();
-
-    if (savedImage) {
-      queueMicrotask(() => setProfileImage(savedImage));
-    }
-
-    if (savedEmail) {
-      queueMicrotask(() => setPanelistEmail(savedEmail));
-    }
-  }, []);
-
-  const submittedEvaluations = useMemo(
-    () => (plan?.evaluationStatus === "Submitted" ? 1 : 0),
-    [plan],
-  );
-
-  const pendingEvaluations = useMemo(
-    () => (plan?.evaluationStatus === "Pending" ? 1 : 0),
-    [plan],
-  );
-
-  async function handleLogout() {
-    await signOut(auth);
-    clearStoredUserSession();
-    router.push("/login");
-  }
-
-  function handleProfileUpload(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const imageData = String(reader.result);
-
-      setProfileImage(imageData);
-      localStorage.setItem(PANELIST_PROFILE_IMAGE_KEY, imageData);
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  function updateEvaluation(field: keyof DefenseEvaluation, value: string) {
-    if (!plan) return;
-
-    const nextPlan: DefensePlan = {
-      ...plan,
-      evaluationData: {
-        ...plan.evaluationData,
-        [field]:
-          field === "remarks"
-            ? value
-            : Math.min(100, Math.max(0, Number(value) || 0)),
-      },
-    };
-
-    setPlan(nextPlan);
-    saveStoredDefensePlan(nextPlan);
-  }
-
-  function submitEvaluation() {
-    if (!plan) return;
-
-    const nextPlan: DefensePlan = {
-      ...plan,
-      evaluationStatus: "Submitted",
-    };
-
-    setPlan(nextPlan);
-    saveStoredDefensePlan(nextPlan);
-  }
-
-  if (checkingAccess || !plan) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-sm text-[#7b877f]">Checking access...</p>
-      </main>
-    );
-  }
-
-  const average = computeDefenseAverage(plan.evaluationData);
-  const result = computeDefenseResult(average);
+  const assigned = panelistDefenses.length;
+  const pending = panelistDefenses.filter(
+    (item) => item.evaluationStatus === "Pending",
+  ).length;
+  const submitted = panelistDefenses.filter(
+    (item) => item.evaluationStatus === "Submitted",
+  ).length;
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-[260px] flex-col justify-between border-r border-[#dfe8df] bg-white px-5 py-6 lg:flex">
-          <div>
-            <div className="flex items-center gap-3">
-              <Image
-                src="/logotop.png"
-                alt="Project Pulse"
-                width={34}
-                height={34}
-                className="rounded-xl"
-              />
+    <PanelistShell title="Panelist Dashboard">
+      <div
+        className="grid gap-5"
+        style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
+      >
+        <div className="min-w-0 space-y-5">
+          <Card className="overflow-x-auto p-4">
+            <div className="flex min-w-[640px] divide-x divide-[#dfe8df]">
+              {[
+                ["Assigned", assigned, "Defense assignments"],
+                ["Pending", pending, "Need evaluation"],
+                ["Submitted", submitted, "Completed forms"],
+              ].map(([label, value, caption]) => (
+                <div key={label} className="flex-1 px-4 py-2">
+                  <p className="text-xs font-semibold text-[#7b877f]">
+                    {label}
+                  </p>
+                  <div className="mt-1 flex items-end gap-2">
+                    <p className="text-2xl font-semibold text-[#203028]">
+                      {value}
+                    </p>
+                    <p className="pb-1 text-xs text-[#59645d]">{caption}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-              <div>
-                <h1 className="text-sm font-semibold tracking-tight">
-                  Project Pulse
-                </h1>
-                <p className="text-xs text-[#7b877f]">Panelist Portal</p>
-              </div>
+          <Card className="overflow-hidden">
+            <div className="border-b border-[#edf2ec] px-5 py-4">
+              <h2 className="text-lg font-semibold text-[#203028]">
+                Assigned Defense Work
+              </h2>
+              <p className="mt-1 text-sm text-[#7b877f]">
+                Access documents and submit evaluation forms for assigned
+                defenses.
+              </p>
             </div>
 
-            <nav className="mt-8 space-y-2 text-sm">
-              <Link
-                href="/panelist"
-                className="flex items-center gap-3 rounded-lg bg-[#d7f7d8] px-3 py-2.5 font-semibold text-[#203028]"
-              >
-                <Image
-                  src="/dashbrd.png"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="opacity-70"
-                />
-                <span>Dashboard</span>
-              </Link>
-            </nav>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg px-3 py-2 text-left text-xs font-medium text-[#59645d] hover:bg-[#f3f7f1]"
-          >
-            Log out
-          </button>
-        </aside>
-
-        <section className="relative flex-1 overflow-hidden">
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
-
-          <div className="relative z-10 px-6 py-6 lg:px-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-[#7b877f]">
-                  Defense Management
-                </p>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  Panelist Dashboard
-                </h1>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="w-full rounded-lg border border-[#dfe8df] bg-[#f8faf7] px-3 py-2 md:w-72">
-                  <input
-                    placeholder="Search panelist workspace..."
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
-                  />
-                </div>
-
-                <Link
-                  href="/panelist"
-                  className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+            <div className="divide-y divide-[#edf2ec]">
+              {panelistDefenses.map((defense) => (
+                <div
+                  key={defense.id}
+                  className="grid gap-4 px-5 py-4 lg:grid-cols-[1.2fr_1fr_auto] lg:items-center"
                 >
-                  Notifications
-                </Link>
-
-                <div className="flex items-center gap-2 pl-1">
-                  <div className="text-right">
-                    <p className="text-xs font-semibold">Panelist</p>
-                    <p className="text-[10px] text-[#7b877f]">
-                      {panelistEmail}
+                  <div>
+                    <p className="text-sm font-semibold text-[#203028]">
+                      {defense.groupName}
+                    </p>
+                    <p className="mt-1 text-sm text-[#59645d]">
+                      {defense.projectTitle}
+                    </p>
+                    <p className="mt-1 text-xs text-[#7b877f]">
+                      {defense.stage} • {defense.date} • {defense.time} •{" "}
+                      {defense.venue}
                     </p>
                   </div>
 
-                  <label className="group relative cursor-pointer">
-                    <div
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#d7f7d8] bg-cover bg-center text-xs font-semibold text-[#203028]"
-                      style={
-                        profileImage
-                          ? { backgroundImage: `url(${profileImage})` }
-                          : undefined
-                      }
+                  <div className="flex flex-wrap gap-2">
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClasses(
+                        defense.documentStatus,
+                      )}`}
                     >
-                      {!profileImage && "PN"}
-                    </div>
-
-                    <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">
-                      Edit
+                      Document {defense.documentStatus}
                     </span>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
-              <div className="space-y-6">
-                <div className="grid gap-5 md:grid-cols-3">
-                  {[
-                    ["Assigned Defenses", 1],
-                    ["Pending Evaluations", pendingEvaluations],
-                    ["Submitted Evaluations", submittedEvaluations],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-sm"
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusClasses(
+                        defense.evaluationStatus,
+                      )}`}
                     >
-                      <p className="text-xs text-[#7b877f]">{label}</p>
-                      <p className="mt-3 text-3xl font-semibold text-[#203028]">
-                        {value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-sm">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#203028]">
-                        {plan.groupName}
-                      </h2>
-                      <p className="mt-1 text-sm text-[#59645d]">
-                        {plan.projectTitle}
-                      </p>
-                      <p className="mt-3 text-xs text-[#7b877f]">
-                        {plan.stage} • {plan.date} • {plan.time}
-                      </p>
-                      <p className="mt-1 text-xs text-[#7b877f]">
-                        Venue: {plan.venue}
-                      </p>
-                      <p className="mt-1 text-xs text-[#7b877f]">
-                        Document: {plan.files[0]?.name || "Defense Package"}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href="/student/documents"
-                        className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
-                      >
-                        Access Documents
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={submitEvaluation}
-                        className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white"
-                      >
-                        Submit Evaluation
-                      </button>
-                    </div>
+                      {defense.evaluationStatus}
+                    </span>
+                    {defense.evaluationStatus === "Submitted" && (
+                      <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-2.5 py-1 text-[11px] font-semibold text-[#59645d]">
+                        Avg {computeAverage(defense)}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_320px]">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {[
-                        ["presentation", "Presentation"],
-                        ["documentation", "Documentation"],
-                        ["systemDemo", "System Demo"],
-                        ["response", "Q&A Response"],
-                      ].map(([field, label]) => (
-                        <label
-                          key={field}
-                          className="rounded-xl bg-[#f8faf7] p-4 text-sm font-semibold text-[#203028]"
-                        >
-                          {label}
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={
-                              plan.evaluationData[
-                                field as keyof DefenseEvaluation
-                              ] as number
-                            }
-                            onChange={(event) =>
-                              updateEvaluation(
-                                field as keyof DefenseEvaluation,
-                                event.target.value,
-                              )
-                            }
-                            className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none"
-                          />
-                        </label>
-                      ))}
-
-                      <label className="rounded-xl bg-[#f8faf7] p-4 text-sm font-semibold text-[#203028] md:col-span-2">
-                        Remarks
-                        <textarea
-                          value={plan.evaluationData.remarks}
-                          onChange={(event) =>
-                            updateEvaluation("remarks", event.target.value)
-                          }
-                          placeholder="Enter panel remarks..."
-                          className="mt-2 min-h-24 w-full resize-none rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none"
-                        />
-                      </label>
-                    </div>
-
-                    <div className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-5">
-                      <p className="text-xs text-[#7b877f]">
-                        Evaluation Status
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-[#203028]">
-                        {plan.evaluationStatus}
-                      </p>
-
-                      <div className="mt-5 rounded-lg bg-white p-4">
-                        <p className="text-xs text-[#7b877f]">
-                          Computed Average
-                        </p>
-                        <p className="mt-2 text-3xl font-semibold text-[#203028]">
-                          {average}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 rounded-lg bg-white p-4">
-                        <p className="text-xs text-[#7b877f]">
-                          Computed Result
-                        </p>
-                        <p className="mt-2 text-lg font-semibold text-[#4f8f58]">
-                          {result}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="flex gap-2 lg:justify-end">
+                    <a
+                      href="/panelist/documents"
+                      className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+                    >
+                      Documents
+                    </a>
+                    <a
+                      href="/panelist/evaluations"
+                      className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                    >
+                      Evaluate
+                    </a>
                   </div>
                 </div>
-              </div>
-
-              <div className="xl:sticky xl:top-6 xl:self-start">
-                <StakeholderCalendar
-                  title="Panelist Calendar"
-                  storageKey="project-pulse-panelist-calendar-notes"
-                  categories={calendarCategories}
-                />
-              </div>
+              ))}
             </div>
-          </div>
-        </section>
+          </Card>
+        </div>
+
+        <aside className="min-w-0 self-start sticky top-6">
+          <PanelistCalendar />
+        </aside>
       </div>
-    </main>
+    </PanelistShell>
   );
 }

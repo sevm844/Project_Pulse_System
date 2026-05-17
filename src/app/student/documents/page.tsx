@@ -241,6 +241,21 @@ function metricCardClasses(status: string) {
   return "bg-blue-50 text-blue-700";
 }
 
+function documentProgress(status: DocumentStatus) {
+  if (status === "Approved") return 100;
+  if (status === "Under Review") return 72;
+  if (status === "Needs Revision") return 45;
+  return 30;
+}
+
+function getDocumentVersion(document: StoredDocument) {
+  const revisionCount = document.revisions.length;
+
+  if (revisionCount > 0) return `v${revisionCount}`;
+
+  return document.currentVersion || "v1";
+}
+
 export default function DocumentsPage() {
   const [chapters, setChapters] = useState<ChapterRow[]>([]);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -364,13 +379,14 @@ export default function DocumentsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full min-w-[1100px] text-left text-sm">
               <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                 <tr>
                   <th className="px-5 py-3 font-medium">Document</th>
                   <th className="px-5 py-3 font-medium">Current Version</th>
                   <th className="px-5 py-3 font-medium">Last Edited</th>
                   <th className="px-5 py-3 font-medium">Reviewer</th>
+                  <th className="px-5 py-3 font-medium">Progress</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Action</th>
                   <th className="px-5 py-3 font-medium">More</th>
@@ -409,7 +425,7 @@ export default function DocumentsPage() {
                     </td>
 
                     <td className="px-5 py-4 text-[#59645d]">
-                      <p>{chapter.document.currentVersion}</p>
+                      <p>{getDocumentVersion(chapter.document)}</p>
 
                       {getLatestUploadedFileName(chapter.document) && (
                         <p className="mt-1 max-w-40 truncate text-[11px] text-[#4f8f58]">
@@ -424,6 +440,24 @@ export default function DocumentsPage() {
 
                     <td className="px-5 py-4 text-[#59645d]">
                       {chapter.document.reviewer}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex min-w-32 items-center gap-3">
+                        <div className="h-2 flex-1 rounded-full bg-[#edf2ec]">
+                          <div
+                            className="h-2 rounded-full bg-[#94d29a]"
+                            style={{
+                              width: `${documentProgress(
+                                chapter.document.status,
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="w-9 text-xs font-semibold text-[#203028]">
+                          {documentProgress(chapter.document.status)}%
+                        </span>
+                      </div>
                     </td>
 
                     <td className="px-5 py-4">
@@ -472,7 +506,7 @@ export default function DocumentsPage() {
                 {chapters.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-5 py-10 text-center text-sm text-[#7b877f]"
                     >
                       No documents yet. Add a chapter workspace to get started.

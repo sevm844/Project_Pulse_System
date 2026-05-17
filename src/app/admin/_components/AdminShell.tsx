@@ -32,6 +32,7 @@ const navItems = [
   ["Panelist Assignments", "/calendar.png", "/admin/panelists"],
   ["Academic Terms", "/calendar.png", "/admin/terms"],
   ["System Audit Logs", "/docs.png", "/admin/audit-logs"],
+  ["Messaging Window", "/chats.png", "/admin/message-settings"],
   ["Notifications", "/notif.png", "/admin/notifications"],
   ["Profile", "/profile.png", "/admin/profile"],
 ] as const;
@@ -129,7 +130,7 @@ export default function AdminShell({
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[270px] shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-white px-4 py-5 lg:flex">
+        <aside className="hidden w-[270px] shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex">
           <div>
             <div className="flex items-center gap-3">
               <Image
@@ -162,7 +163,7 @@ export default function AdminShell({
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition ${
                       isActive
                         ? "bg-[#d7f7d8] font-semibold text-[#203028]"
-                        : "text-[#59645d] hover:bg-[#f3f7f1]"
+                        : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
                     }`}
                   >
                     <Image
@@ -182,7 +183,7 @@ export default function AdminShell({
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-lg px-3 py-2.5 text-left text-xs font-medium text-[#59645d] hover:bg-[#f3f7f1]"
+            className="rounded-lg px-3 py-2.5 text-left text-xs font-medium text-[#59645d] hover:bg-[#edf9e9]"
           >
             Log out
           </button>
