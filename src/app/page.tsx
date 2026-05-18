@@ -91,7 +91,7 @@ function NavIcon({ active = false }: { active?: boolean }) {
     <span
       className={`block h-9 w-9 rounded-lg border ${
         active
-          ? "border-[#c7ff5f] bg-[#c7ff5f] shadow-[0_8px_24px_rgba(199,255,95,0.4)]"
+          ? "border-[#16a34a] bg-[#16a34a] shadow-[0_8px_24px_rgba(22,163,74,0.28)]"
           : "border-[#e4e8ef] bg-white"
       }`}
     />
@@ -103,7 +103,7 @@ function MiniCalendar() {
     <div className="rounded-lg border border-[#dfe5ef] bg-white p-4">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm font-bold text-[#171c19]">Defense Week</p>
-        <span className="rounded-full bg-[#c7ff5f] px-3 py-1 text-xs font-bold text-[#171c19]">
+        <span className="rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white">
           Live
         </span>
       </div>
@@ -114,7 +114,7 @@ function MiniCalendar() {
             <div
               className={`mt-2 h-12 rounded-lg border ${
                 index === 2
-                  ? "border-[#171c19] bg-[#c7ff5f]"
+                  ? "border-[#16a34a] bg-[#16a34a]"
                   : "border-[#e5e7ef] bg-[#f9f9ff]"
               }`}
             />
@@ -197,12 +197,12 @@ export default function Home() {
             >
               Log in
             </a>
-            <a
-              href="/register"
-              className="rounded-lg border border-[#171c19] bg-[#c7ff5f] px-4 py-2 text-sm font-bold text-[#171c19] transition hover:bg-[#b8f04f]"
-            >
-              Create Account
-            </a>
+              <a
+                href="/register"
+                className="rounded-lg border border-[#16a34a] bg-[#16a34a] px-4 py-2 text-sm font-bold text-white transition hover:border-[#15803d] hover:bg-[#15803d]"
+              >
+                Create Account
+              </a>
           </div>
         </div>
       </header>
@@ -211,14 +211,14 @@ export default function Home() {
         className="relative overflow-hidden px-5 pb-28 pt-14 text-center lg:px-8 lg:pb-36 lg:pt-16"
         style={{
           background:
-            "radial-gradient(circle at 50% 62%, rgba(199, 255, 95, 0.62) 0, rgba(199, 255, 95, 0.34) 24%, rgba(199, 255, 95, 0.12) 52%, rgba(249, 249, 255, 0) 82%), radial-gradient(circle at 18% 72%, rgba(23, 28, 25, 0.08) 0, rgba(23, 28, 25, 0.04) 18%, transparent 42%), radial-gradient(circle at 82% 72%, rgba(23, 28, 25, 0.07) 0, rgba(23, 28, 25, 0.035) 20%, transparent 44%), linear-gradient(180deg, #f9f9ff 0%, #f9f9ff 100%)",
+            "radial-gradient(circle at 50% 100%, rgba(210, 255, 158, 0.65), rgba(207, 247, 236, 0.55) 46%, rgba(249, 249, 255, 0) 82%), radial-gradient(circle at 50% 28%, rgba(207, 247, 236, 0.34), rgba(249, 249, 255, 0) 58%), linear-gradient(180deg, #f9f9ff 0%, #f9f9ff 100%)",
         }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
 
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-lg bg-white shadow-[0_18px_48px_rgba(23,28,25,0.12)]">
-            <div className="absolute inset-0 -z-10 rounded-lg bg-[#c7ff5f] opacity-45 blur-2xl" />
+            <div className="absolute inset-0 -z-10 rounded-lg bg-[#16a34a] opacity-35 blur-2xl" />
             <Image
               src="/Logo-icon.png"
               alt="Project Pulse Icon"
@@ -251,7 +251,7 @@ export default function Home() {
       <section id="about" className="relative z-20 -mt-24 bg-transparent px-5 pb-12 pt-8 lg:-mt-32 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="relative overflow-hidden rounded-lg border border-white/45 bg-white/30 p-2 shadow-[0_28px_80px_rgba(23,28,25,0.10)] backdrop-blur-3xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(199,255,95,0.24),transparent_34%),radial-gradient(circle_at_94%_18%,rgba(199,255,95,0.14),transparent_30%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(22,163,74,0.18),transparent_34%),radial-gradient(circle_at_94%_18%,rgba(22,163,74,0.12),transparent_30%)]" />
             <div className="relative grid min-h-[620px] overflow-hidden rounded-lg border border-white/35 bg-white/22 backdrop-blur-3xl lg:grid-cols-[82px_minmax(0,1fr)]">
               <aside className="hidden border-r border-white/35 bg-white/38 px-4 py-7 backdrop-blur-2xl lg:flex lg:flex-col lg:justify-between">
                 <div className="space-y-5">
@@ -277,7 +277,7 @@ export default function Home() {
                       Department Capstone Command Center
                     </h2>
                   </div>
-                  <div className="rounded-lg bg-[#171c19] px-4 py-2 text-sm font-bold text-[#c7ff5f] shadow-[0_14px_32px_rgba(23,28,25,0.2)]">
+                  <div className="rounded-lg bg-[#171c19] px-4 py-2 text-sm font-bold text-[#16a34a] shadow-[0_14px_32px_rgba(23,28,25,0.2)]">
                     CICT Portal
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export default function Home() {
 
                 <div className="mt-5 rounded-lg border border-white/38 bg-white/22 p-3 backdrop-blur-2xl">
                   <div className="flex items-center gap-3 rounded-lg bg-white/34 px-4 py-3 backdrop-blur-xl">
-                    <span className="h-3 w-3 rounded-full bg-[#c7ff5f]" />
+                    <span className="h-3 w-3 rounded-full bg-[#16a34a]" />
                     <input
                       readOnly
                       value="Ask Project Pulse to find pending revisions, defense schedules, or final approval status..."
@@ -344,7 +344,7 @@ export default function Home() {
             <div className="mt-8 space-y-4">
               {leadBenefits.map((benefit, index) => (
                 <div key={benefit} className="flex gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#c7ff5f] text-sm font-bold text-[#171c19]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#16a34a] text-sm font-bold text-white">
                     {index + 1}
                   </span>
                   <p className="pt-1 text-base leading-7 text-[#4d5751]">
@@ -359,7 +359,7 @@ export default function Home() {
             <div className="rounded-lg bg-[#171c19] p-4 text-white">
               <div className="mb-5 flex items-center justify-between">
                 <p className="font-bold">Group Workflow Feed</p>
-                <span className="rounded-full bg-[#c7ff5f] px-3 py-1 text-xs font-bold text-[#171c19]">
+                <span className="rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white">
                   Active
                 </span>
               </div>
@@ -410,7 +410,7 @@ export default function Home() {
                 key={label}
                 className="rounded-lg border border-white/10 bg-white/7 p-6"
               >
-                <p className="text-5xl font-bold text-[#c7ff5f]">{value}</p>
+                <p className="text-5xl font-bold text-[#16a34a]">{value}</p>
                 <p className="mt-4 text-sm font-semibold leading-6 text-white/78">
                   {label}
                 </p>
@@ -465,7 +465,7 @@ export default function Home() {
                     className="flex items-center justify-between rounded-lg bg-[#f9f9ff] px-4 py-3"
                   >
                     <span className="text-sm font-semibold">{item}</span>
-                    <span className="h-3 w-3 rounded-full bg-[#c7ff5f]" />
+                    <span className="h-3 w-3 rounded-full bg-[#16a34a]" />
                   </div>
                 ))}
               </div>
@@ -483,7 +483,7 @@ export default function Home() {
             <article className="rounded-lg border border-[#dfe5ef] bg-[#171c19] p-6 text-white lg:col-span-4">
               <div className="grid gap-8 lg:grid-cols-2">
                 <div>
-                  <p className="text-sm font-bold text-[#c7ff5f]">
+                  <p className="text-sm font-bold text-[#16a34a]">
                     Real-Time Tracking
                   </p>
                   <h3 className="mt-3 text-3xl font-bold">
@@ -560,7 +560,7 @@ export default function Home() {
                 />
                 <button
                   type="button"
-                  className="h-12 rounded-lg bg-[#c7ff5f] px-5 text-sm font-bold text-[#171c19]"
+                  className="h-12 rounded-lg bg-[#16a34a] px-5 text-sm font-bold text-white transition hover:bg-[#15803d]"
                 >
                   Notify Me / Contact Admin
                 </button>

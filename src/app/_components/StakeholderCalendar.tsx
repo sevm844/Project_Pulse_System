@@ -13,6 +13,7 @@ type StakeholderCalendarProps = {
   title: string;
   storageKey: string;
   categories: readonly string[];
+  variant?: "default" | "glass";
 };
 
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -72,6 +73,7 @@ export default function StakeholderCalendar({
   title,
   storageKey,
   categories,
+  variant = "default",
 }: StakeholderCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
@@ -136,13 +138,29 @@ export default function StakeholderCalendar({
     saveNotes(notes.filter((note) => note.id !== id));
   }
 
+  const isGlass = variant === "glass";
+
   return (
-    <aside className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_1px_2px_rgba(31,42,36,0.04)]">
-      <div className="flex items-center justify-between border-b border-[#edf2ec] px-5 py-4">
+    <aside
+      className={`overflow-hidden rounded-2xl ${
+        isGlass
+          ? "border border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl"
+          : "border border-[#dfe8df] bg-white shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
+      }`}
+    >
+      <div
+        className={`flex items-center justify-between border-b px-5 py-4 ${
+          isGlass ? "border-white/45 bg-white/10" : "border-[#edf2ec]"
+        }`}
+      >
         <button
           type="button"
           onClick={goToPreviousMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dfe8df] bg-white text-lg text-[#203028] shadow-sm transition hover:bg-[#f3f7f1]"
+          className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg text-[#203028] shadow-sm transition ${
+            isGlass
+              ? "border border-white/55 bg-white/34 backdrop-blur-xl hover:bg-white/50"
+              : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
+          }`}
         >
           {"<"}
         </button>
@@ -154,7 +172,11 @@ export default function StakeholderCalendar({
         <button
           type="button"
           onClick={goToNextMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dfe8df] bg-white text-lg text-[#203028] shadow-sm transition hover:bg-[#f3f7f1]"
+          className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg text-[#203028] shadow-sm transition ${
+            isGlass
+              ? "border border-white/55 bg-white/34 backdrop-blur-xl hover:bg-white/50"
+              : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
+          }`}
         >
           {">"}
         </button>
@@ -196,7 +218,13 @@ export default function StakeholderCalendar({
         </div>
       </div>
 
-      <div className="border-t border-[#edf2ec] bg-[#fbfdfb] px-5 py-5">
+      <div
+        className={`border-t px-5 py-5 ${
+          isGlass
+            ? "border-white/45 bg-white/12 backdrop-blur-xl"
+            : "border-[#edf2ec] bg-[#fbfdfb]"
+        }`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-[#203028]">{title}</h3>
@@ -205,13 +233,23 @@ export default function StakeholderCalendar({
             </p>
           </div>
 
-          <span className="rounded-full border border-[#dfe8df] bg-white px-3 py-1 text-xs font-semibold text-[#59645d]">
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-semibold text-[#59645d] ${
+              isGlass ? "border-white/55 bg-white/34" : "border-[#dfe8df] bg-white"
+            }`}
+          >
             {selectedDateNotes.length} note
             {selectedDateNotes.length === 1 ? "" : "s"}
           </span>
         </div>
 
-        <div className="rounded-2xl border border-[#dfe8df] bg-white p-3">
+        <div
+          className={`rounded-2xl border p-3 ${
+            isGlass
+              ? "border-white/55 bg-white/24 backdrop-blur-xl"
+              : "border-[#dfe8df] bg-white"
+          }`}
+        >
           <input
             value={noteTitle}
             onChange={(e) => setNoteTitle(e.target.value)}
@@ -219,14 +257,22 @@ export default function StakeholderCalendar({
               if (e.key === "Enter") addNote();
             }}
             placeholder="Add note for selected date..."
-            className="w-full rounded-xl border border-[#edf2ec] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+            className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8] ${
+              isGlass
+                ? "border-white/55 bg-white/34 backdrop-blur"
+                : "border-[#edf2ec]"
+            }`}
           />
 
           <div className="mt-3 flex gap-2">
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="min-w-0 flex-1 rounded-xl border border-[#edf2ec] bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+              className={`min-w-0 flex-1 rounded-xl border px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8] ${
+                isGlass
+                  ? "border-white/55 bg-white/34 backdrop-blur"
+                  : "border-[#edf2ec] bg-white"
+              }`}
             >
               {categories.map((item) => (
                 <option key={item}>{item}</option>
@@ -245,14 +291,20 @@ export default function StakeholderCalendar({
 
         <div className="mt-4 space-y-3">
           {selectedDateNotes.length === 0 ? (
-            <div className="rounded-2xl bg-white px-4 py-5 text-center text-sm text-[#7b877f]">
+            <div
+              className={`rounded-2xl px-4 py-5 text-center text-sm text-[#7b877f] ${
+                isGlass ? "bg-white/24 backdrop-blur-xl" : "bg-white"
+              }`}
+            >
               No notes for this date.
             </div>
           ) : (
             selectedDateNotes.map((note) => (
               <div
                 key={note.id}
-                className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_1px_2px_rgba(31,42,36,0.04)] ${
+                  isGlass ? "bg-white/30 backdrop-blur-xl" : "bg-white"
+                }`}
               >
                 <div className="flex h-5 w-5 items-center justify-center rounded-md border border-[#bfc9c0]">
                   <div className="h-2.5 w-2.5 rounded-sm bg-[#d7f7d8]" />

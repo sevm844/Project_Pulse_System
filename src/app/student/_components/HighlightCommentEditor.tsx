@@ -7,10 +7,17 @@ import {
   useState,
   type MouseEvent,
 } from "react";
+import {
+  DOCUMENT_COMMENTS_UPDATED_EVENT,
+  getDocumentComments,
+  type StoredDocumentComment,
+} from "../../_utils/documentCommentStorage";
 
 type HighlightCommentEditorProps = {
   content: string;
   fontSize: string;
+  documentId?: number | null;
+  version?: string;
   onInput?: () => void;
   onFocus?: () => void;
   onKeyDown?: () => void;
@@ -26,7 +33,7 @@ const HighlightCommentEditor = forwardRef<
   HTMLDivElement,
   HighlightCommentEditorProps
 >(function HighlightCommentEditor(
-  { content, fontSize, onInput, onFocus, onKeyDown },
+  { content, fontSize, documentId, version, onInput, onFocus, onKeyDown },
   forwardedRef,
 ) {
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -44,6 +51,9 @@ const HighlightCommentEditor = forwardRef<
 
   const [commentText, setCommentText] = useState("");
   const [activeComment, setActiveComment] = useState<SavedComment | null>(null);
+  const [adviserComments, setAdviserComments] = useState<
+    StoredDocumentComment[]
+  >([]);
 
   function setRefs(node: HTMLDivElement | null) {
     editorRef.current = node;
@@ -62,8 +72,37 @@ const HighlightCommentEditor = forwardRef<
       editorRef.current.innerHTML = content;
     }
 
+    applyAdviserHighlights();
     forceEditorDirection();
-  }, [content]);
+    // The editor DOM is intentionally managed through refs for rich-text marks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adviserComments, content]);
+
+  useEffect(() => {
+    if (!documentId) {
+      setAdviserComments([]);
+      return;
+    }
+
+    function refreshAdviserComments() {
+      if (!documentId) return;
+      setAdviserComments(getDocumentComments(documentId, version));
+    }
+
+    refreshAdviserComments();
+
+    window.addEventListener(
+      DOCUMENT_COMMENTS_UPDATED_EVENT,
+      refreshAdviserComments,
+    );
+
+    return () => {
+      window.removeEventListener(
+        DOCUMENT_COMMENTS_UPDATED_EVENT,
+        refreshAdviserComments,
+      );
+    };
+  }, [documentId, version]);
 
   function forceEditorDirection() {
     if (!editorRef.current) return;
@@ -73,6 +112,64 @@ const HighlightCommentEditor = forwardRef<
     editorRef.current.style.unicodeBidi = "normal";
     editorRef.current.style.writingMode = "horizontal-tb";
     editorRef.current.style.transform = "none";
+  }
+
+  function wrapTextRange(comment: StoredDocumentComment) {
+    const editor = editorRef.current;
+    if (!editor || comment.endOffset <= comment.startOffset) return;
+
+    if (editor.querySelector(`[data-comment-id="${comment.id}"]`)) {
+      return;
+    }
+
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let offset = 0;
+    const textNodes: Text[] = [];
+
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode as Text);
+    }
+
+    textNodes.forEach((node) => {
+      const length = node.textContent?.length || 0;
+      const nodeStart = offset;
+      const nodeEnd = offset + length;
+      offset = nodeEnd;
+
+      if (comment.endOffset <= nodeStart || comment.startOffset >= nodeEnd) {
+        return;
+      }
+
+      const start = Math.max(0, comment.startOffset - nodeStart);
+      const end = Math.min(length, comment.endOffset - nodeStart);
+
+      if (end <= start) return;
+
+      const range = document.createRange();
+      range.setStart(node, start);
+      range.setEnd(node, end);
+
+      const mark = document.createElement("mark");
+      mark.dataset.commentId = comment.id;
+      mark.dataset.documentCommentId = comment.id;
+      mark.dataset.comment = comment.comment;
+      mark.dataset.selectedText = comment.selectedText;
+      mark.dataset.authorName = comment.authorName;
+      mark.className = "document-comment-highlight";
+      mark.title = "Click to view adviser comment";
+
+      try {
+        range.surroundContents(mark);
+      } catch {
+        const selectedContent = range.extractContents();
+        mark.appendChild(selectedContent);
+        range.insertNode(mark);
+      }
+    });
+  }
+
+  function applyAdviserHighlights() {
+    adviserComments.forEach((comment) => wrapTextRange(comment));
   }
 
   function getHighlightFromTarget(target: EventTarget | null) {

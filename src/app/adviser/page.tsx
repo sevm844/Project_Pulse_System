@@ -69,7 +69,7 @@ export default function AdviserDashboardPage() {
               ],
             ].map(([label, value, href]) => (
               <Link key={label} href={String(href)}>
-                <Card className="p-5 transition hover:bg-[#fbfdfb]">
+                <Card className="border-white/55 bg-white/24 p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)] backdrop-blur-2xl transition hover:bg-white/38">
                   <p className="text-xs font-medium text-[#7b877f]">{label}</p>
                   <p className="mt-3 text-3xl font-semibold text-[#203028]">
                     {value}
@@ -79,9 +79,9 @@ export default function AdviserDashboardPage() {
             ))}
           </div>
 
-          <Card className="overflow-hidden border-[#d6efcf] bg-[#fbfff7]">
+          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute" />
-            <div className="bg-[radial-gradient(circle_at_18%_0%,rgba(215,247,200,0.9),rgba(251,255,247,0)_36%),linear-gradient(135deg,rgba(244,252,238,0.95),rgba(255,255,255,0.92))] p-5">
+            <div className="bg-white/10 p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6d7b72]">
@@ -104,7 +104,7 @@ export default function AdviserDashboardPage() {
             </div>
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[260px_1fr]">
-              <div className="rounded-xl border border-[#d6efcf] bg-white/80 p-5 shadow-[0_14px_34px_rgba(31,42,36,0.04)]">
+              <div className="rounded-xl border border-white/55 bg-white/34 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_rgba(31,42,36,0.04)] backdrop-blur-xl">
                 <div className="flex items-center justify-center">
                   <div
                     className="flex h-36 w-36 items-center justify-center rounded-full"
@@ -112,7 +112,7 @@ export default function AdviserDashboardPage() {
                       background: `conic-gradient(#74bd6b ${averageProgress * 3.6}deg, #edf2ec 0deg)`,
                     }}
                   >
-                    <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white">
+                    <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white/82 backdrop-blur">
                       <p className="text-3xl font-bold text-[#203028]">
                         {averageProgress}%
                       </p>
@@ -133,7 +133,7 @@ export default function AdviserDashboardPage() {
                   <Link
                     key={group.id}
                     href="/adviser/assigned-groups"
-                    className="rounded-xl border border-[#dfe8df] bg-white/90 p-4 shadow-[0_10px_24px_rgba(31,42,36,0.035)] transition hover:-translate-y-0.5 hover:border-[#a3d89a] hover:bg-white"
+                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.035)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[#c7ff5f] hover:bg-white/48"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -162,7 +162,7 @@ export default function AdviserDashboardPage() {
           </Card>
 
           {/* Course and section grouping */}
-          <Card className="p-5">
+          <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
             <h2 className="text-lg font-semibold text-[#203028]">
               Assigned Groups by Course and Section
             </h2>
@@ -172,7 +172,10 @@ export default function AdviserDashboardPage() {
 
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               {Object.entries(courseSections).map(([section, groups]) => (
-                <div key={section} className="rounded-xl bg-[#f8faf7] p-4">
+                <div
+                  key={section}
+                  className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_rgba(31,42,36,0.035)] backdrop-blur-xl"
+                >
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-[#203028]">
                       {section}
@@ -187,7 +190,7 @@ export default function AdviserDashboardPage() {
                       <Link
                         key={group.id}
                         href="/adviser/assigned-groups"
-                        className="block rounded-lg bg-white px-3 py-3 transition hover:bg-[#eff6ee]"
+                        className="block rounded-lg border border-white/50 bg-white/42 px-3 py-3 backdrop-blur transition hover:bg-white/58"
                       >
                         <p className="text-sm font-medium text-[#203028]">
                           {group.groupName}
@@ -205,7 +208,7 @@ export default function AdviserDashboardPage() {
 
           <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
             {/* Review queue */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <div className="flex items-center justify-between border-b border-[#edf2ec] p-5">
                 <div>
                   <h2 className="text-lg font-semibold text-[#203028]">
@@ -224,9 +227,9 @@ export default function AdviserDashboardPage() {
                 </Link>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto bg-white/10">
                 <table className="w-full min-w-[760px] text-left text-sm">
-                  <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
+                  <thead className="border-b border-white/50 bg-white/28 text-xs text-[#7b877f] backdrop-blur">
                     <tr>
                       <th className="px-5 py-3 font-medium">
                         Course / Section
@@ -237,7 +240,7 @@ export default function AdviserDashboardPage() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-[#edf2ec]">
+                  <tbody className="divide-y divide-white/45">
                     {reviewQueue.map((review) => (
                       <tr key={review.id}>
                         <td className="px-5 py-4 text-[#59645d]">
@@ -260,7 +263,7 @@ export default function AdviserDashboardPage() {
             </Card>
 
             {/* Recent submissions */}
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Recent Student Submissions
               </h2>
@@ -270,7 +273,7 @@ export default function AdviserDashboardPage() {
                   <Link
                     key={submission.id}
                     href={submission.href}
-                    className="block rounded-xl bg-[#f8faf7] p-4 transition hover:bg-[#eff6ee]"
+                    className="block rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
                   >
                     <p className="text-sm font-medium text-[#203028]">
                       {submission.title}

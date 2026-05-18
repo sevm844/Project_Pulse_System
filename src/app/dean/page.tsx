@@ -36,7 +36,7 @@ export default function DeanDashboardPage() {
               ["Defense Outcomes", defenseOutcomes.length, "/dean/defense"],
             ].map(([label, value, href]) => (
               <Link key={label} href={String(href)}>
-                <Card className="p-5 transition hover:bg-[#fbfdfb]">
+                <Card className="border-white/55 bg-white/24 p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)] backdrop-blur-2xl transition hover:bg-white/38">
                   <p className="text-xs font-medium text-[#7b877f]">{label}</p>
                   <p className="mt-3 text-3xl font-semibold text-[#203028]">
                     {value}
@@ -47,8 +47,8 @@ export default function DeanDashboardPage() {
           </div>
 
           {/* Project monitoring */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#edf2ec] p-5">
+          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/45 bg-white/12 p-5">
               <div>
                 <h2 className="text-lg font-semibold text-[#203028]">
                   Project Monitoring
@@ -60,7 +60,7 @@ export default function DeanDashboardPage() {
 
               <Link
                 href="/dean/projects"
-                className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
+                className="rounded-lg border border-white/55 bg-white/28 px-4 py-2 text-xs font-semibold shadow-[0_10px_24px_rgba(31,42,36,0.05)] backdrop-blur-xl hover:bg-white/42"
               >
                 View All
               </Link>
@@ -68,7 +68,7 @@ export default function DeanDashboardPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-sm">
-                <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
+                <thead className="border-b border-white/45 bg-white/18 text-xs text-[#7b877f]">
                   <tr>
                     <th className="px-5 py-3 font-medium">
                       Course / Section
@@ -80,9 +80,9 @@ export default function DeanDashboardPage() {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#edf2ec]">
+                <tbody className="divide-y divide-white/45 bg-white/8">
                   {deanProjects.map((project) => (
-                    <tr key={project.id}>
+                    <tr key={project.id} className="transition hover:bg-white/22">
                       <td className="px-5 py-4 text-[#59645d]">
                         {project.course} {project.section}
                       </td>
@@ -107,14 +107,17 @@ export default function DeanDashboardPage() {
 
           <div className="grid gap-5 lg:grid-cols-2">
             {/* Adviser workloads */}
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Adviser Workloads
               </h2>
 
               <div className="mt-4 space-y-3">
                 {adviserWorkloads.map(([name, groups, pending]) => (
-                  <div key={name} className="rounded-xl bg-[#f8faf7] p-4">
+                  <div
+                    key={name}
+                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
+                  >
                     <p className="text-sm font-semibold text-[#203028]">
                       {name}
                     </p>
@@ -127,14 +130,17 @@ export default function DeanDashboardPage() {
             </Card>
 
             {/* Defense outcomes */}
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Recent Defense Outcomes
               </h2>
 
               <div className="mt-4 space-y-3">
                 {defenseOutcomes.map(([group, stage, outcome, date]) => (
-                  <div key={group} className="rounded-xl bg-[#f8faf7] p-4">
+                  <div
+                    key={group}
+                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-[#203028]">

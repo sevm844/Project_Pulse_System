@@ -1,4 +1,4 @@
-export type CourseCode = "BSIT" | "BSCS" | "BSIS";
+export type CourseCode = "BSIT" | "BSIS" | "BSCS" | "BLIS" | "ACT";
 
 export type GroupStage =
   | "Proposal Review"
@@ -65,7 +65,7 @@ export type AdviserNotification = {
   date: string;
 };
 
-export const courses: CourseCode[] = ["BSIT", "BSCS", "BSIS"];
+export const courses: CourseCode[] = ["BSIT", "BSIS", "BSCS", "BLIS", "ACT"];
 
 export const sections = ["4A", "4B", "4C"];
 

@@ -8,6 +8,7 @@ export default function StudentCalendar() {
       title="My Calendar"
       storageKey="project-pulse-student-calendar-notes"
       categories={categories}
+      variant="glass"
     />
   );
 }

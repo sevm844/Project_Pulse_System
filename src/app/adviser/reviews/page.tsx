@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
@@ -23,6 +29,11 @@ import {
   type StoredDocument,
 } from "../../student/documents/_utils/documentStorage";
 import { getStoredStudentGroup } from "../../student/_utils/studentGroupStorage";
+import {
+  addStoredDocumentComment,
+  getDocumentComments,
+  type StoredDocumentComment,
+} from "../../_utils/documentCommentStorage";
 
 const stages: GroupStage[] = [
   "Proposal Review",
@@ -151,7 +162,7 @@ function getSelectedDocumentContent(selected: ReviewItem) {
   if (!selected.documentId) {
     return `
       <p><strong>${selected.projectTitle}</strong></p>
-      <p>This is a sample adviser review item. No student document content is linked to this mock submission.</p>
+      <p>This is a sample adviser document item. No student document content is linked to this mock submission.</p>
     `;
   }
 
@@ -175,9 +186,122 @@ function getSelectedDocumentContent(selected: ReviewItem) {
   );
 }
 
+type TextSelectionAnchor = {
+  selectedText: string;
+  startOffset: number;
+  endOffset: number;
+  prefix: string;
+  suffix: string;
+};
+
+function getTextOffset(
+  root: HTMLElement,
+  targetNode: Node,
+  targetOffset: number,
+) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let offset = 0;
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+
+    if (node === targetNode) {
+      return offset + targetOffset;
+    }
+
+    offset += node.textContent?.length || 0;
+  }
+
+  return offset;
+}
+
+function captureTextSelection(root: HTMLElement): TextSelectionAnchor | null {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    return null;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  if (!root.contains(range.commonAncestorContainer)) {
+    return null;
+  }
+
+  const selectedText = selection.toString().trim();
+  if (!selectedText) return null;
+
+  const startOffset = getTextOffset(root, range.startContainer, range.startOffset);
+  const endOffset = getTextOffset(root, range.endContainer, range.endOffset);
+  const fullText = root.innerText;
+
+  return {
+    selectedText,
+    startOffset,
+    endOffset,
+    prefix: fullText.slice(Math.max(0, startOffset - 40), startOffset),
+    suffix: fullText.slice(endOffset, endOffset + 40),
+  };
+}
+
+function wrapTextRange(root: HTMLElement, comment: StoredDocumentComment) {
+  if (comment.endOffset <= comment.startOffset) return;
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let offset = 0;
+  const textNodes: Text[] = [];
+
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode as Text);
+  }
+
+  textNodes.forEach((node) => {
+    const length = node.textContent?.length || 0;
+    const nodeStart = offset;
+    const nodeEnd = offset + length;
+    offset = nodeEnd;
+
+    if (comment.endOffset <= nodeStart || comment.startOffset >= nodeEnd) {
+      return;
+    }
+
+    const start = Math.max(0, comment.startOffset - nodeStart);
+    const end = Math.min(length, comment.endOffset - nodeStart);
+
+    if (end <= start) return;
+
+    const range = document.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, end);
+
+    const mark = document.createElement("mark");
+    mark.dataset.documentCommentId = comment.id;
+    mark.dataset.selectedText = comment.selectedText;
+    mark.dataset.comment = comment.comment;
+    mark.className = "adviser-document-highlight";
+    mark.title = "Click to view adviser comment";
+
+    try {
+      range.surroundContents(mark);
+    } catch {
+      const selectedContent = range.extractContents();
+      mark.appendChild(selectedContent);
+      range.insertNode(mark);
+    }
+  });
+}
+
 export default function ReviewsPage() {
+  const viewerRef = useRef<HTMLDivElement | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>(reviewQueue);
   const [selected, setSelected] = useState<ReviewItem>(reviewQueue[0]);
+  const [documentComments, setDocumentComments] = useState<
+    StoredDocumentComment[]
+  >([]);
+  const [selectedAnchor, setSelectedAnchor] =
+    useState<TextSelectionAnchor | null>(null);
+  const [activeDocumentComment, setActiveDocumentComment] =
+    useState<StoredDocumentComment | null>(null);
 
   const [course, setCourse] = useState<"All" | CourseCode>("All");
   const [section, setSection] = useState("All");
@@ -193,8 +317,10 @@ export default function ReviewsPage() {
       documents,
     );
 
-    setReviews(nextReviews);
-    setSelected(nextReviews[0] || reviewQueue[0]);
+    queueMicrotask(() => {
+      setReviews(nextReviews);
+      setSelected(nextReviews[0] || reviewQueue[0]);
+    });
   }, []);
 
   const filteredReviews = useMemo(() => {
@@ -211,6 +337,33 @@ export default function ReviewsPage() {
     () => getSelectedDocumentContent(selected),
     [selected],
   );
+
+  useEffect(() => {
+    const documentId = selected.documentId;
+
+    if (!documentId) {
+      queueMicrotask(() => {
+        setDocumentComments([]);
+        setSelectedAnchor(null);
+        setActiveDocumentComment(null);
+      });
+      return;
+    }
+
+    queueMicrotask(() => {
+      setDocumentComments(getDocumentComments(documentId, selected.version));
+      setSelectedAnchor(null);
+      setActiveDocumentComment(null);
+    });
+  }, [selected]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    viewer.innerHTML = selectedDocumentContent;
+    documentComments.forEach((item) => wrapTextRange(viewer, item));
+  }, [documentComments, selectedDocumentContent]);
 
   function updateStatus(status: ReviewItem["status"]) {
     const nextSelected = { ...selected, status };
@@ -244,6 +397,27 @@ export default function ReviewsPage() {
 
     updateStoredDocumentStatus(selected.id, "Needs Revision");
 
+    let anchoredComment: StoredDocumentComment | null = null;
+
+    if (selected.documentId && selectedAnchor) {
+      anchoredComment = addStoredDocumentComment({
+        documentId: selected.documentId,
+        version: selected.version,
+        groupName: selected.groupName,
+        course: selected.course,
+        section: selected.section,
+        documentTitle: selected.documentTitle,
+        selectedText: selectedAnchor.selectedText,
+        startOffset: selectedAnchor.startOffset,
+        endOffset: selectedAnchor.endOffset,
+        prefix: selectedAnchor.prefix,
+        suffix: selectedAnchor.suffix,
+        comment: nextComment,
+        authorName: "Anna Cruz",
+        authorRole: "Adviser",
+      });
+    }
+
     addStoredFeedbackItem({
       reviewId: selected.id,
       groupName: selected.groupName,
@@ -254,17 +428,60 @@ export default function ReviewsPage() {
       chapter: getChapterFromDocumentTitle(selected.documentTitle),
       version: selected.version,
       comment: nextComment,
+      documentCommentId: anchoredComment?.id,
+      selectedText: anchoredComment?.selectedText,
+      startOffset: anchoredComment?.startOffset,
+      endOffset: anchoredComment?.endOffset,
       detail:
-        "Please revise the linked document based on the adviser comment, then mark the feedback as addressed after updating the chapter workspace.",
+        anchoredComment
+          ? `Highlighted text: "${anchoredComment.selectedText}". Please revise this exact part in the linked document, then mark the feedback as addressed.`
+          : "Please revise the linked document based on the adviser comment, then mark the feedback as addressed after updating the chapter workspace.",
       adviserName: "Anna Cruz",
     });
 
     setSelected(nextReview);
     setComment("");
+    setSelectedAnchor(null);
+    setActiveDocumentComment(anchoredComment);
+
+    if (selected.documentId) {
+      setDocumentComments(
+        getDocumentComments(selected.documentId, selected.version),
+      );
+    }
+  }
+
+  function handleViewerMouseUp() {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    const anchor = captureTextSelection(viewer);
+    if (!anchor) return;
+
+    setSelectedAnchor(anchor);
+    setActiveDocumentComment(null);
+  }
+
+  function handleViewerClick(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement)) return;
+
+    const highlight = target.closest("mark[data-document-comment-id]");
+    if (!(highlight instanceof HTMLElement)) return;
+
+    const found = documentComments.find(
+      (item) => item.id === highlight.dataset.documentCommentId,
+    );
+
+    if (found) {
+      setActiveDocumentComment(found);
+      setSelectedAnchor(null);
+    }
   }
 
   return (
-    <AdviserShell title="Reviews">
+    <AdviserShell title="Documents">
       <div className="space-y-5">
         <Card className="p-5">
           <div className="grid gap-4 md:grid-cols-3">
@@ -324,10 +541,10 @@ export default function ReviewsPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-[#edf2ec] p-5">
               <h2 className="text-lg font-semibold text-[#203028]">
-                Review Queue
+                Document Queue
               </h2>
               <p className="mt-1 text-sm text-[#7b877f]">
-                Select a submission by course, section, or stage.
+                Select a submitted document by course, section, or stage.
               </p>
             </div>
 
@@ -364,7 +581,7 @@ export default function ReviewsPage() {
 
               {filteredReviews.length === 0 && (
                 <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
-                  No reviews found for the selected filters.
+                  No documents found for the selected filters.
                 </p>
               )}
             </div>
@@ -415,11 +632,24 @@ export default function ReviewsPage() {
                   Document Viewer
                 </h3>
 
+                <style jsx global>{`
+                  .adviser-document-highlight {
+                    background: #fef08a;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    padding: 0 2px;
+                  }
+
+                  .adviser-document-highlight:hover {
+                    background: #fde047;
+                  }
+                `}</style>
+
                 <div
+                  ref={viewerRef}
+                  onMouseUp={handleViewerMouseUp}
+                  onClick={handleViewerClick}
                   className="mt-5 min-h-[520px] rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-6 text-sm leading-7 text-[#59645d]"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedDocumentContent,
-                  }}
                 />
               </Card>
 
@@ -430,6 +660,31 @@ export default function ReviewsPage() {
                   </h3>
 
                   <div className="mt-4 space-y-3">
+                    {selectedAnchor && (
+                      <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#16a34a]">
+                          Selected text
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[#203028]">
+                          {selectedAnchor.selectedText}
+                        </p>
+                      </div>
+                    )}
+
+                    {activeDocumentComment && (
+                      <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-yellow-700">
+                          Linked highlight
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-[#203028]">
+                          {activeDocumentComment.selectedText}
+                        </p>
+                        <p className="mt-3 text-sm leading-6 text-[#59645d]">
+                          {activeDocumentComment.comment}
+                        </p>
+                      </div>
+                    )}
+
                     {selected.comments.length === 0 ? (
                       <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
                         No comments added yet.
@@ -446,7 +701,11 @@ export default function ReviewsPage() {
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Add adviser comment..."
+                    placeholder={
+                      selectedAnchor
+                        ? "Write a comment for the highlighted text..."
+                        : "Add adviser comment..."
+                    }
                     className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
                   />
 

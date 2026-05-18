@@ -187,54 +187,55 @@ export default function StudentSetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
+    <main className="min-h-screen bg-[#f9f9ff] text-[#171c19]">
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-10">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(249,249,255,0)_82%),radial-gradient(circle_at_50%_28%,rgba(207,247,236,0.34),rgba(249,249,255,0)_58%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
 
         <div className="relative z-10 w-full max-w-6xl">
-          <div className="mb-10 flex items-center gap-3">
+          <div className="mb-12 flex items-center gap-4">
             <Image
               src="/logotop.png"
               alt="Project Pulse Logo"
-              width={38}
-              height={38}
-              className="rounded-xl"
+              width={58}
+              height={58}
+              className="rounded-lg"
             />
             <div>
-              <p className="text-base font-semibold tracking-tight">
-                Project Pulse
+              <p className="text-3xl font-extrabold tracking-tight text-[#171c19]">
+                Project <span className="text-[#3a7f35]">Pulse</span>
               </p>
-              <p className="text-xs font-medium text-[#7b877f]">
+              <p className="mt-1 text-sm font-semibold text-[#4d5751]">
                 Student Workspace Setup
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              <span className="inline-flex rounded-full border border-[#16a34a] bg-[#16a34a] px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] text-white">
                 Student Setup
               </span>
 
-              <h1 className="mt-5 max-w-xl text-4xl font-semibold tracking-tight text-[#203028] md:text-6xl">
+              <h1 className="mt-5 max-w-xl text-4xl font-extrabold tracking-tight text-[#171c19] md:text-6xl">
                 Set up your capstone group.
               </h1>
 
-              <p className="mt-5 max-w-xl text-base leading-8 text-[#59645d]">
+              <p className="mt-5 max-w-xl text-base leading-8 text-[#4d5751]">
                 Groups are saved to Firebase and can be assigned advisers and
                 panelists by the Admin.
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold tracking-tight">
+              <Card className="rounded-lg border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <h2 className="text-xl font-extrabold tracking-tight text-[#171c19]">
                   Create Group
                 </h2>
 
@@ -243,21 +244,21 @@ export default function StudentSetupPage() {
                     placeholder="Group name"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
-                    className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                   />
 
                   <input
                     placeholder="Project title"
                     value={projectTitle}
                     onChange={(e) => setProjectTitle(e.target.value)}
-                    className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                   />
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <select
                       value={course}
                       onChange={(e) => setCourse(e.target.value as CourseCode)}
-                      className="rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none"
+                      className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                     >
                       {courses.map((item) => (
                         <option key={item}>{item}</option>
@@ -267,7 +268,7 @@ export default function StudentSetupPage() {
                     <select
                       value={section}
                       onChange={(e) => setSection(e.target.value)}
-                      className="rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none"
+                      className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                     >
                       {sections.map((item) => (
                         <option key={item}>{item}</option>
@@ -279,10 +280,10 @@ export default function StudentSetupPage() {
                     placeholder="Members' UB emails, separated by comma or new line"
                     value={members}
                     onChange={(e) => setMembers(e.target.value)}
-                    className="min-h-24 w-full resize-none rounded-xl border border-[#dfe8df] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                    className="min-h-24 w-full resize-none rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                   />
 
-                  <p className="text-xs text-[#7b877f]">
+                  <p className="text-xs font-medium text-[#4d5751]">
                     Members added: {memberCount}
                   </p>
 
@@ -291,22 +292,22 @@ export default function StudentSetupPage() {
                       type="button"
                       disabled={loading}
                       onClick={handleCreateGroup}
-                      className="w-full rounded-xl bg-[#202823] py-3 text-sm font-semibold text-white disabled:opacity-60"
+                      className="w-full rounded-lg bg-[#171c19] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(23,28,25,0.18)] transition hover:bg-[#2a302c] disabled:opacity-60"
                     >
                       {loading ? "Creating..." : "Create Group"}
                     </button>
                   ) : (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                      <p className="text-xs font-medium text-emerald-700">
+                    <div className="rounded-lg border border-[#16a34a] bg-[#16a34a] p-4">
+                      <p className="text-xs font-bold text-white">
                         Group created successfully
                       </p>
-                      <p className="mt-2 text-2xl font-semibold text-emerald-800">
+                      <p className="mt-2 text-2xl font-extrabold text-white">
                         {generatedCode}
                       </p>
                       <button
                         type="button"
                         onClick={() => router.push("/student")}
-                        className="mt-4 w-full rounded-xl bg-[#202823] py-3 text-sm font-semibold text-white"
+                        className="mt-4 w-full rounded-lg bg-[#171c19] py-3 text-sm font-bold text-white"
                       >
                         Continue to Dashboard
                       </button>
@@ -315,11 +316,11 @@ export default function StudentSetupPage() {
                 </div>
               </Card>
 
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold tracking-tight">
+              <Card className="rounded-lg border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <h2 className="text-xl font-extrabold tracking-tight text-[#171c19]">
                   Join Group
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[#7b877f]">
+                <p className="mt-2 text-sm leading-6 text-[#4d5751]">
                   Enter the group code provided by your leader.
                 </p>
 
@@ -328,14 +329,14 @@ export default function StudentSetupPage() {
                     placeholder="Group code"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-[#dfe8df] px-4 py-3 text-sm uppercase outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm uppercase outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
                   />
 
                   <button
                     type="button"
                     disabled={loading}
                     onClick={handleJoinGroup}
-                    className="w-full rounded-xl border border-[#dfe8df] py-3 text-sm font-semibold text-[#203028] disabled:opacity-60"
+                    className="w-full rounded-lg border border-[#16a34a] bg-[#16a34a] py-3 text-sm font-bold text-white transition hover:border-[#15803d] hover:bg-[#15803d] disabled:opacity-60"
                   >
                     {loading ? "Joining..." : "Join Group"}
                   </button>

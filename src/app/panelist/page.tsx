@@ -27,8 +27,8 @@ export default function PanelistDashboardPage() {
         style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
       >
         <div className="min-w-0 space-y-5">
-          <Card className="overflow-x-auto p-4">
-            <div className="flex min-w-[640px] divide-x divide-[#dfe8df]">
+          <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex min-w-[640px] divide-x divide-white/45">
               {[
                 ["Assigned", assigned, "Defense assignments"],
                 ["Pending", pending, "Need evaluation"],
@@ -49,8 +49,8 @@ export default function PanelistDashboardPage() {
             </div>
           </Card>
 
-          <Card className="overflow-hidden">
-            <div className="border-b border-[#edf2ec] px-5 py-4">
+          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="border-b border-white/45 bg-white/12 px-5 py-4">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Assigned Defense Work
               </h2>
@@ -60,11 +60,11 @@ export default function PanelistDashboardPage() {
               </p>
             </div>
 
-            <div className="divide-y divide-[#edf2ec]">
+            <div className="divide-y divide-white/45 bg-white/8">
               {panelistDefenses.map((defense) => (
                 <div
                   key={defense.id}
-                  className="grid gap-4 px-5 py-4 lg:grid-cols-[1.2fr_1fr_auto] lg:items-center"
+                  className="grid gap-4 px-5 py-4 transition hover:bg-white/22 lg:grid-cols-[1.2fr_1fr_auto] lg:items-center"
                 >
                   <div>
                     <p className="text-sm font-semibold text-[#203028]">
@@ -95,7 +95,7 @@ export default function PanelistDashboardPage() {
                       {defense.evaluationStatus}
                     </span>
                     {defense.evaluationStatus === "Submitted" && (
-                      <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-2.5 py-1 text-[11px] font-semibold text-[#59645d]">
+                      <span className="rounded-full border border-white/55 bg-white/34 px-2.5 py-1 text-[11px] font-semibold text-[#59645d] backdrop-blur">
                         Avg {computeAverage(defense)}
                       </span>
                     )}
@@ -104,7 +104,7 @@ export default function PanelistDashboardPage() {
                   <div className="flex gap-2 lg:justify-end">
                     <a
                       href="/panelist/documents"
-                      className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+                      className="rounded-lg border border-white/55 bg-white/34 px-3 py-2 text-xs font-semibold text-[#203028] backdrop-blur hover:bg-white/50"
                     >
                       Documents
                     </a>

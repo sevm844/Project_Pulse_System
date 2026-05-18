@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
+import SidebarToggle from "../../_components/SidebarToggle";
 import {
   useEffect,
   useState,
@@ -20,6 +22,8 @@ export const GRAMMARIAN_PROFILE_IMAGE_KEY =
   "project-pulse-grammarian-profile-image";
 export const GRAMMARIAN_PROFILE_IMAGE_UPDATED_EVENT =
   "project-pulse-grammarian-profile-image-updated";
+const GRAMMARIAN_SIDEBAR_COLLAPSED_KEY =
+  "project-pulse-grammarian-sidebar-collapsed";
 
 const navItems = [
   ["Dashboard", "/dashbrd.png", "/grammarian"],
@@ -44,6 +48,11 @@ export default function GrammarianShell({
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [email, setEmail] = useState("grammarian.office@ub.edu.ph");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return localStorage.getItem(GRAMMARIAN_SIDEBAR_COLLAPSED_KEY) === "true";
+  });
 
   useEffect(() => {
     const role = localStorage.getItem("project-pulse-user-role");
@@ -53,15 +62,15 @@ export default function GrammarianShell({
       return;
     }
 
-    setCheckingAccess(false);
+    queueMicrotask(() => setCheckingAccess(false));
   }, [router]);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(GRAMMARIAN_PROFILE_IMAGE_KEY);
     const savedEmail = getStoredUserEmail();
 
-    if (savedImage) setProfileImage(savedImage);
-    if (savedEmail) setEmail(savedEmail);
+    if (savedImage) queueMicrotask(() => setProfileImage(savedImage));
+    if (savedEmail) queueMicrotask(() => setEmail(savedEmail));
 
     function syncProfileImage(event: Event) {
       setProfileImage((event as CustomEvent<string>).detail || null);
@@ -107,6 +116,13 @@ export default function GrammarianShell({
     router.push("/login");
   }
 
+  function toggleSidebar() {
+    const nextValue = !sidebarCollapsed;
+
+    setSidebarCollapsed(nextValue);
+    localStorage.setItem(GRAMMARIAN_SIDEBAR_COLLAPSED_KEY, String(nextValue));
+  }
+
   if (checkingAccess) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white">
@@ -118,21 +134,34 @@ export default function GrammarianShell({
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[270px] shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex">
+        <aside
+          className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
+            sidebarCollapsed ? "w-20" : "w-[270px]"
+          }`}
+        >
+          <SidebarToggle
+            collapsed={sidebarCollapsed}
+            onClick={toggleSidebar}
+          />
           <div>
             <div className="flex items-center gap-3">
               <Image src="/logotop.png" alt="Project Pulse" width={34} height={34} />
+              {!sidebarCollapsed && (
               <div>
                 <h1 className="text-sm font-semibold">Project Pulse</h1>
                 <p className="text-[11px] text-[#7b877f]">Grammarian Portal</p>
               </div>
+              )}
             </div>
 
-            <nav className="mt-9 space-y-1 text-sm">
+            <nav className="mt-9 text-sm">
+              {!sidebarCollapsed && (
               <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
                 Grammarian Menu
               </p>
+              )}
 
+              <div className="space-y-1">
               {navItems.map(([label, icon, href]) => {
                 const isActive =
                   href === "/grammarian"
@@ -143,26 +172,35 @@ export default function GrammarianShell({
                   <Link
                     key={href}
                     href={href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition ${
+                    title={label}
+                    className={`flex items-center rounded-lg transition ${
+                      sidebarCollapsed
+                        ? "justify-center px-0 py-3"
+                        : "gap-3 px-3 py-2.5"
+                    } ${
                       isActive
                         ? "bg-[#d7f7d8] font-semibold text-[#203028]"
                         : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
                     }`}
                   >
                     <Image src={icon} alt="" width={16} height={16} className="opacity-70" />
-                    <span>{label}</span>
+                    {!sidebarCollapsed && <span>{label}</span>}
                   </Link>
                 );
               })}
+              </div>
             </nav>
           </div>
 
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-lg px-3 py-2.5 text-left text-xs font-medium text-[#59645d] hover:bg-[#edf9e9]"
+            title="Log out"
+            className={`flex rounded-lg text-xs font-medium text-[#59645d] hover:bg-[#edf9e9] ${
+              sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
+            }`}
           >
-            Log out
+            {sidebarCollapsed ? "Out" : "Log out"}
           </button>
         </aside>
 
@@ -179,19 +217,16 @@ export default function GrammarianShell({
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="w-full rounded-lg border border-[#dfe8df] bg-[#f8faf7] px-3 py-2 md:w-72">
-                  <input
-                    placeholder="Search grammarian workspace..."
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
-                  />
-                </div>
+                  <DashboardSearchIcon />
 
-                <Link
-                  href="/grammarian/notifications"
-                  className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
-                >
-                  Notifications
-                </Link>
+                  <Link
+                    href="/grammarian/notifications"
+                    aria-label="Notifications"
+                    title="Notifications"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
+                  >
+                    <Image src="/notif.png" alt="" width={18} height={18} />
+                  </Link>
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">

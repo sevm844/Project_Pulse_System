@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import StudentShell from "../../_components/StudentShell";
 import HighlightCommentEditor from "../../_components/HighlightCommentEditor";
@@ -19,6 +19,8 @@ const chapters = [
   ["Chapter 4", "Results and Discussion"],
   ["Chapter 5", "Conclusion and Recommendations"],
 ] as const;
+
+type ChapterType = (typeof chapters)[number][0];
 
 const fontSizes = ["12", "14", "16", "18", "20", "24", "28", "32"];
 const DELETED_CHAPTER_WORKSPACES_KEY =
@@ -67,6 +69,7 @@ export default function NewDocumentPage() {
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   const initialType = searchParams.get("type") || "Chapter 1";
+  const initialDocumentId = Number(searchParams.get("documentId")) || null;
   const initialChapter =
     chapters.find(([chapter]) => chapter === initialType) || chapters[1];
 
@@ -78,6 +81,10 @@ export default function NewDocumentPage() {
   const [status, setStatus] = useState<"Draft" | "Under Review">("Draft");
   const [fontSize, setFontSize] = useState("16");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [activeDocumentId, setActiveDocumentId] = useState<number | null>(
+    initialDocumentId,
+  );
+  const [activeVersion, setActiveVersion] = useState("v1");
   const [content, setContent] = useState(
     buildStarterContent(initialChapter[0], initialChapter[1]),
   );
@@ -85,6 +92,34 @@ export default function NewDocumentPage() {
   const selectedChapter = useMemo(() => {
     return chapters.find(([chapter]) => chapter === documentType) || chapters[0];
   }, [documentType]);
+
+  useEffect(() => {
+    const documents = getStoredDocuments();
+    const existingDocument =
+      (initialDocumentId
+        ? documents.find((document) => document.id === initialDocumentId)
+        : null) ||
+      documents.find((document) => document.documentType === initialType);
+
+    if (!existingDocument) return;
+
+    queueMicrotask(() => {
+      setActiveDocumentId(existingDocument.id);
+      setActiveVersion(existingDocument.currentVersion);
+      setDocumentType(existingDocument.documentType as ChapterType);
+      setTitle(existingDocument.title);
+      setReviewer(existingDocument.reviewer);
+      setStatus(
+        existingDocument.status === "Under Review" ? "Under Review" : "Draft",
+      );
+      setContent(existingDocument.currentContent);
+
+      if (!editorRef.current) return;
+
+      editorRef.current.innerHTML = existingDocument.currentContent;
+      forceEditorDirection();
+    });
+  }, [initialDocumentId, initialType]);
 
   function forceEditorDirection() {
     if (!editorRef.current) return;
@@ -225,6 +260,9 @@ export default function NewDocumentPage() {
     setDocumentType(chapter[0]);
     setTitle(`${chapter[0]}: ${chapter[1]}`);
     setContent(nextContent);
+    setActiveDocumentId(null);
+    setActiveVersion("v1");
+    setStatus("Draft");
 
     queueMicrotask(() => {
       if (editorRef.current) {
@@ -242,9 +280,11 @@ export default function NewDocumentPage() {
     const now = new Date().toISOString();
     const editorContent = editorRef.current?.innerHTML || content;
     const documents = getStoredDocuments();
-    const existingDocument = documents.find(
-      (document) => document.documentType === documentType,
-    );
+    const existingDocument =
+      (activeDocumentId
+        ? documents.find((document) => document.id === activeDocumentId)
+        : null) ||
+      documents.find((document) => document.documentType === documentType);
     const timestampId = Date.parse(now);
     const id = existingDocument?.id || timestampId;
     const nextRevisionNumber = (existingDocument?.revisions.length || 0) + 1;
@@ -287,6 +327,8 @@ export default function NewDocumentPage() {
       : [newDocument, ...documents];
 
     saveStoredDocuments(nextDocuments);
+    setActiveDocumentId(id);
+    setActiveVersion(nextVersion);
     restoreChapterWorkspace(id, documentType);
     setLastSavedAt(now);
 
@@ -552,6 +594,8 @@ export default function NewDocumentPage() {
               ref={editorRef}
               content={content}
               fontSize={fontSize}
+              documentId={activeDocumentId}
+              version={activeVersion}
               onInput={handleEditorInput}
               onFocus={forceEditorDirection}
               onKeyDown={forceEditorDirection}

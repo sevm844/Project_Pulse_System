@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
+import SidebarToggle from "../../_components/SidebarToggle";
 import {
   useEffect,
   useState,
@@ -66,15 +68,15 @@ export default function PanelistShell({
       return;
     }
 
-    setCheckingAccess(false);
+    queueMicrotask(() => setCheckingAccess(false));
   }, [router]);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(PANELIST_PROFILE_IMAGE_KEY);
     const savedEmail = getStoredUserEmail();
 
-    if (savedImage) setProfileImage(savedImage);
-    if (savedEmail) setPanelistEmail(savedEmail);
+    if (savedImage) queueMicrotask(() => setProfileImage(savedImage));
+    if (savedEmail) queueMicrotask(() => setPanelistEmail(savedEmail));
 
     function syncProfileImage(event: Event) {
       setProfileImage((event as CustomEvent<string>).detail || null);
@@ -134,12 +136,16 @@ export default function PanelistShell({
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen w-full overflow-hidden bg-white">
-        <aside
-          className={`hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
-            sidebarCollapsed ? "w-20" : "w-[270px]"
-          }`}
-        >
-          <div>
+          <aside
+            className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
+              sidebarCollapsed ? "w-20" : "w-[270px]"
+            }`}
+          >
+            <SidebarToggle
+              collapsed={sidebarCollapsed}
+              onClick={toggleSidebar}
+            />
+            <div>
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-3">
                 <Image
@@ -162,13 +168,6 @@ export default function PanelistShell({
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="rounded-full border border-[#dfe8df] bg-white px-2 py-1 text-xs font-medium text-[#7b877f] hover:bg-[#f3f7f1]"
-              >
-                {sidebarCollapsed ? ">" : "<"}
-              </button>
             </div>
 
             <nav className="mt-9 text-sm">
@@ -241,19 +240,16 @@ export default function PanelistShell({
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="w-full rounded-lg border border-[#dfe8df] bg-[#f8faf7] px-3 py-2 md:w-72">
-                  <input
-                    placeholder="Search panelist workspace..."
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
-                  />
-                </div>
+                  <DashboardSearchIcon />
 
-                <Link
-                  href="/panelist/notifications"
-                  className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
-                >
-                  Notifications
-                </Link>
+                  <Link
+                    href="/panelist/notifications"
+                    aria-label="Notifications"
+                    title="Notifications"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
+                  >
+                    <Image src="/notif.png" alt="" width={18} height={18} />
+                  </Link>
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">

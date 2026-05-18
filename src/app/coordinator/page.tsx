@@ -57,8 +57,8 @@ export default function CoordinatorDashboardPage() {
         style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
       >
         <div className="min-w-0 space-y-5">
-          <Card className="overflow-x-auto p-4">
-            <div className="flex min-w-[720px] divide-x divide-[#dfe8df]">
+          <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex min-w-[720px] divide-x divide-white/45">
               {[
                 ["Folders", totalFolders, "Active group folders"],
                 ["Complete", completeFolders, "Ready for archive"],
@@ -81,8 +81,8 @@ export default function CoordinatorDashboardPage() {
             </div>
           </Card>
 
-          <Card className="overflow-hidden">
-            <div className="border-b border-[#edf2ec] px-5 py-4">
+          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="border-b border-white/45 bg-white/12 px-5 py-4">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Final Requirement Collection
               </h2>
@@ -94,7 +94,7 @@ export default function CoordinatorDashboardPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full min-w-[880px] text-left text-sm">
-                <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
+                <thead className="border-b border-white/45 bg-white/18 text-xs text-[#7b877f]">
                   <tr>
                     <th className="px-5 py-3 font-medium">Group</th>
                     <th className="px-5 py-3 font-medium">Course</th>
@@ -106,7 +106,7 @@ export default function CoordinatorDashboardPage() {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#edf2ec]">
+                <tbody className="divide-y divide-white/45 bg-white/8">
                   {groupFolders.map((folder) => {
                     const counts = getRequirementCounts(folder);
                     const status =
@@ -117,7 +117,7 @@ export default function CoordinatorDashboardPage() {
                           : "Incomplete";
 
                     return (
-                      <tr key={folder.id} className="hover:bg-[#fbfdfb]">
+                      <tr key={folder.id} className="transition hover:bg-white/22">
                         <td className="px-5 py-4">
                           <p className="font-semibold text-[#203028]">
                             {folder.groupName}
@@ -175,7 +175,7 @@ export default function CoordinatorDashboardPage() {
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Follow-up Focus
               </h2>
@@ -187,7 +187,7 @@ export default function CoordinatorDashboardPage() {
                   return (
                     <div
                       key={folder.id}
-                      className="rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4"
+                      className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -209,7 +209,7 @@ export default function CoordinatorDashboardPage() {
               </div>
             </Card>
 
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Quick Actions
               </h2>
@@ -223,7 +223,7 @@ export default function CoordinatorDashboardPage() {
                 ].map(([title, caption]) => (
                   <div
                     key={title}
-                    className="rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4"
+                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
                   >
                     <p className="text-sm font-semibold text-[#203028]">
                       {title}

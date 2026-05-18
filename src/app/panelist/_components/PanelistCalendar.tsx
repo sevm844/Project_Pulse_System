@@ -8,6 +8,7 @@ export default function PanelistCalendar() {
       title="Panelist Calendar"
       storageKey="project-pulse-panelist-calendar-notes"
       categories={categories}
+      variant="glass"
     />
   );
 }

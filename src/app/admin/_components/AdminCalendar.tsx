@@ -8,6 +8,7 @@ export default function AdminCalendar() {
       title="Admin Calendar"
       storageKey="project-pulse-admin-calendar-notes"
       categories={categories}
+      variant="glass"
     />
   );
 }

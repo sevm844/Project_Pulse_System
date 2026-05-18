@@ -61,8 +61,8 @@ export default function GrammarianDashboardPage() {
         style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
       >
         <div className="min-w-0 space-y-5">
-          <Card className="overflow-x-auto border-[#bfe9c5] bg-[#f0fff4] p-4 shadow-[0_10px_30px_rgba(79,143,88,0.08)]">
-            <div className="flex min-w-[820px] divide-x divide-[#bfe9c5]">
+          <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex min-w-[820px] divide-x divide-white/45">
               {[
                 ["For Review", summary.forReview, "Need grammar check"],
                 ["Feedback Sent", summary.feedbackProvided, "With comments"],
@@ -87,8 +87,8 @@ export default function GrammarianDashboardPage() {
             </div>
           </Card>
 
-          <Card className="overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex flex-col gap-3 border-b border-white/45 bg-white/12 px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-[#203028]">
                   Grammar Review Workbench
@@ -106,7 +106,7 @@ export default function GrammarianDashboardPage() {
               </Link>
             </div>
 
-            <div className="divide-y divide-[#edf2ec]">
+            <div className="divide-y divide-white/45 bg-white/8">
               {grammarReviews.map((item) => {
                 const priority = getPriorityLabel(
                   item.reviewStatus,
@@ -114,7 +114,10 @@ export default function GrammarianDashboardPage() {
                 );
 
                 return (
-                  <div key={item.id} className="p-5">
+                  <div
+                    key={item.id}
+                    className="p-5 transition hover:bg-white/22"
+                  >
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_190px]">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -178,7 +181,7 @@ export default function GrammarianDashboardPage() {
           </Card>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Review Flow
               </h2>
@@ -194,7 +197,7 @@ export default function GrammarianDashboardPage() {
                 ].map(([step, title, detail]) => (
                   <div
                     key={step}
-                    className="grid grid-cols-[34px_1fr] gap-3 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-3"
+                    className="grid grid-cols-[34px_1fr] gap-3 rounded-xl border border-white/55 bg-white/34 p-3 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d7f7d8] text-xs font-semibold text-[#203028]">
                       {step}
@@ -212,7 +215,7 @@ export default function GrammarianDashboardPage() {
               </div>
             </Card>
 
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Recent Certificates
               </h2>
@@ -222,14 +225,14 @@ export default function GrammarianDashboardPage() {
 
               <div className="mt-5 space-y-3">
                 {issuedCertificates.length === 0 ? (
-                  <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
+                  <p className="rounded-xl border border-white/55 bg-white/34 p-4 text-sm text-[#7b877f] shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl">
                     No certificates issued yet.
                   </p>
                 ) : (
                   issuedCertificates.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4"
+                      className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl"
                     >
                       <p className="text-sm font-semibold text-[#203028]">
                         {item.groupName}
@@ -255,7 +258,7 @@ export default function GrammarianDashboardPage() {
 
 function InfoBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-[#f8faf7] p-4">
+    <div className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[0_14px_36px_rgba(31,42,36,0.06)] backdrop-blur-xl">
       <p className="text-xs text-[#7b877f]">{label}</p>
       <p className="mt-1 text-sm font-semibold leading-5 text-[#203028]">
         {value}

@@ -3,15 +3,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type ChangeEvent } from "react";
+import DashboardSearchIcon from "../_components/DashboardSearchIcon";
+import SidebarToggle from "../_components/SidebarToggle";
 import StakeholderCalendar from "../_components/StakeholderCalendar";
 import { getStoredUserEmail } from "../_utils/authStorage";
 
 const calendarCategories = ["Validation", "Archive", "Repository"];
 const RECORDS_PROFILE_IMAGE_KEY = "project-pulse-records-profile-image";
+const RECORDS_SIDEBAR_COLLAPSED_KEY = "project-pulse-records-sidebar-collapsed";
 
 export default function RecordsPage() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [recordsEmail, setRecordsEmail] = useState("records@ub.edu.ph");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return localStorage.getItem(RECORDS_SIDEBAR_COLLAPSED_KEY) === "true";
+  });
 
   useEffect(() => {
     const savedImage = localStorage.getItem(RECORDS_PROFILE_IMAGE_KEY);
@@ -42,10 +50,25 @@ export default function RecordsPage() {
     reader.readAsDataURL(file);
   }
 
+  function toggleSidebar() {
+    const nextValue = !sidebarCollapsed;
+
+    setSidebarCollapsed(nextValue);
+    localStorage.setItem(RECORDS_SIDEBAR_COLLAPSED_KEY, String(nextValue));
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#1f2a24]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[260px] border-r border-[#dfe8df] bg-white px-5 py-6 lg:block">
+        <aside
+          className={`relative hidden shrink-0 border-r border-[#dfe8df] bg-white px-5 py-6 lg:block ${
+            sidebarCollapsed ? "w-20" : "w-[260px]"
+          }`}
+        >
+          <SidebarToggle
+            collapsed={sidebarCollapsed}
+            onClick={toggleSidebar}
+          />
           <div className="flex items-center gap-3">
             <Image
               src="/logotop.png"
@@ -54,18 +77,25 @@ export default function RecordsPage() {
               height={34}
               className="rounded-xl"
             />
+            {!sidebarCollapsed && (
             <div>
               <h1 className="text-sm font-semibold tracking-tight">
                 Project Pulse
               </h1>
               <p className="text-xs text-[#7b877f]">Records Staff Portal</p>
             </div>
+            )}
           </div>
 
           <nav className="mt-8 space-y-2 text-sm">
             <Link
               href="/records"
-              className="flex items-center gap-3 rounded-lg bg-[#d7f7d8] px-3 py-2.5 font-semibold text-[#203028]"
+              title="Dashboard"
+              className={`flex items-center rounded-lg bg-[#d7f7d8] font-semibold text-[#203028] ${
+                sidebarCollapsed
+                  ? "justify-center px-0 py-3"
+                  : "gap-3 px-3 py-2.5"
+              }`}
             >
               <Image
                 src="/dashbrd.png"
@@ -74,31 +104,46 @@ export default function RecordsPage() {
                 height={16}
                 className="opacity-70"
               />
-              <span>Dashboard</span>
+              {!sidebarCollapsed && <span>Dashboard</span>}
             </Link>
 
             <Link
               href="/records/final-approval"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-semibold hover:bg-[#f3f7f1]"
+              title="Final Validation"
+              className={`flex items-center rounded-lg font-semibold hover:bg-[#f3f7f1] ${
+                sidebarCollapsed
+                  ? "justify-center px-0 py-3"
+                  : "gap-3 px-3 py-2.5"
+              }`}
             >
               <Image src="/checklt.png" alt="" width={16} height={16} className="opacity-70" />
-              <span>Final Validation</span>
+              {!sidebarCollapsed && <span>Final Validation</span>}
             </Link>
 
             <Link
               href="/records/archive"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-semibold hover:bg-[#f3f7f1]"
+              title="Archive"
+              className={`flex items-center rounded-lg font-semibold hover:bg-[#f3f7f1] ${
+                sidebarCollapsed
+                  ? "justify-center px-0 py-3"
+                  : "gap-3 px-3 py-2.5"
+              }`}
             >
               <Image src="/fold.png" alt="" width={16} height={16} className="opacity-70" />
-              <span>Archive</span>
+              {!sidebarCollapsed && <span>Archive</span>}
             </Link>
 
             <Link
               href="/records/repository"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-semibold hover:bg-[#f3f7f1]"
+              title="Repository"
+              className={`flex items-center rounded-lg font-semibold hover:bg-[#f3f7f1] ${
+                sidebarCollapsed
+                  ? "justify-center px-0 py-3"
+                  : "gap-3 px-3 py-2.5"
+              }`}
             >
               <Image src="/docs.png" alt="" width={16} height={16} className="opacity-70" />
-              <span>Repository</span>
+              {!sidebarCollapsed && <span>Repository</span>}
             </Link>
           </nav>
         </aside>
@@ -118,19 +163,16 @@ export default function RecordsPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="w-full rounded-lg border border-[#dfe8df] bg-[#f8faf7] px-3 py-2 md:w-72">
-                  <input
-                    placeholder="Search records workspace..."
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-[#a0aaa3]"
-                  />
-                </div>
+                  <DashboardSearchIcon />
 
-                <Link
-                  href="/records"
-                  className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
-                >
-                  Notifications
-                </Link>
+                  <Link
+                    href="/records"
+                    aria-label="Notifications"
+                    title="Notifications"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
+                  >
+                    <Image src="/notif.png" alt="" width={18} height={18} />
+                  </Link>
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">

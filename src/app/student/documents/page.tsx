@@ -466,7 +466,9 @@ export default function DocumentsPage() {
 
                     <td className="px-5 py-4">
                       <Link
-                        href={`/student/documents/new?type=${encodeURIComponent(
+                        href={`/student/documents/new?documentId=${
+                          chapter.document.id
+                        }&type=${encodeURIComponent(
                           chapter.document.documentType,
                         )}`}
                         className="inline-flex rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"

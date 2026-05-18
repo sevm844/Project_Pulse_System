@@ -51,12 +51,12 @@ export default function AdminDashboardPage() {
   return (
     <AdminShell title="Admin Dashboard">
       <div
-  className="grid gap-5"
-  style={{ gridTemplateColumns: "minmax(0, 1fr) 360px" }}
->
+        className="grid gap-5"
+        style={{ gridTemplateColumns: "minmax(0, 1fr) 360px" }}
+      >
         <div className="min-w-0 space-y-5">
-          <Card className="overflow-x-auto p-4">
-            <div className="flex min-w-[640px] divide-x divide-[#edf2ec]">
+          <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <div className="flex min-w-[640px] divide-x divide-white/45">
               {overviewStats.map(([label, value, caption]) => (
                 <div key={label} className="flex-1 px-4 py-2">
                   <p className="text-[11px] font-semibold text-[#7b877f]">
@@ -75,7 +75,7 @@ export default function AdminDashboardPage() {
             </div>
           </Card>
 
-          <Card className="p-5">
+          <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
             <h2 className="text-lg font-semibold text-[#203028]">
               Admin Actions
             </h2>
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {quickActions.map(([title, caption, href]) => (
                 <Link key={href} href={href}>
-                  <div className="rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4 transition hover:border-[#bfe9c5] hover:bg-[#f3fff4]">
+                  <div className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:border-[#c7ff5f] hover:bg-white/50">
                     <p className="text-sm font-semibold text-[#203028]">
                       {title}
                     </p>
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Registration Queue
               </h2>
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
                 {recentRequests.map(([name, role, status]) => (
                   <div
                     key={name}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-[#f8faf7] px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/55 bg-white/34 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl"
                   >
                     <div>
                       <p className="text-sm font-semibold text-[#203028]">
@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
               </div>
             </Card>
 
-            <Card className="p-5">
+            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
               <h2 className="text-lg font-semibold text-[#203028]">
                 System Setup Status
               </h2>
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
                 {setupStatus.map(([label, detail, status]) => (
                   <div
                     key={label}
-                    className="rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4"
+                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[#203028]">

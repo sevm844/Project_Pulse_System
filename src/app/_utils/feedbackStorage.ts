@@ -12,6 +12,10 @@ export type StoredFeedbackItem = {
   version: string;
   comment: string;
   detail: string;
+  documentCommentId?: string;
+  selectedText?: string;
+  startOffset?: number;
+  endOffset?: number;
   adviserName: string;
   date: string;
   status: StoredFeedbackStatus;

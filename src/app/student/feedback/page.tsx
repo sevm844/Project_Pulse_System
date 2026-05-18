@@ -72,7 +72,9 @@ export default function FeedbackPage() {
         );
 
         if (document) {
-          nextLinks[chapter] = `/student/documents/${document.id}/edit`;
+          nextLinks[chapter] = `/student/documents/new?documentId=${
+            document.id
+          }&type=${encodeURIComponent(document.documentType)}`;
         }
       });
 
