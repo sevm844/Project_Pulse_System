@@ -9,12 +9,20 @@ import {
   updateFinalSubmission,
   type FinalSubmission,
 } from "../../_utils/finalSubmissionStorage";
+import {
+  registeredGrammarians,
+  routeFinalSubmissionToGrammarian,
+  syncCertifiedSubmissionsForDean,
+} from "../../_utils/grammarReviewStorage";
 import { addCurrentUserAuditLog } from "../../_utils/auditLogStorage";
 
 type CourseFilter = "All" | "BSIT" | "BSIS" | "BSCS" | "BLIS" | "ACT";
 type StatusFilter =
   | "All"
   | "For Records Validation"
+  | "Ready for Grammar Review"
+  | "Sent to Grammarian"
+  | "Grammar Certified"
   | "For Dean Approval"
   | "Approved"
   | "Rejected";
@@ -42,6 +50,14 @@ function statusClasses(status: string) {
     return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
+  if (
+    status === "Ready for Grammar Review" ||
+    status === "Sent to Grammarian" ||
+    status === "Grammar Certified"
+  ) {
+    return "border-violet-200 bg-violet-50 text-violet-700";
+  }
+
   return "border-amber-200 bg-amber-50 text-amber-700";
 }
 
@@ -52,6 +68,8 @@ function chipClasses(value: string) {
     normalized.includes("approved") ||
     normalized.includes("uploaded") ||
     normalized.includes("verified") ||
+    normalized.includes("generated") ||
+    normalized.includes("certified") ||
     normalized.includes("validated") ||
     normalized.includes("complete") ||
     normalized === "ready" ||
@@ -84,10 +102,16 @@ function canDeanApprove(item: FinalSubmission) {
   );
 }
 
+function canSendToGrammarian(item: FinalSubmission) {
+  return (
+    isFinalSubmissionComplete(item) &&
+    item.grammarReviewStatus === "Ready for Grammar Review"
+  );
+}
+
 function getCompletionCount(item: FinalSubmission) {
   return [
     item.finalManuscript,
-    item.grammarCertificate,
     item.approvalForm,
     item.recordsClearance,
   ].filter(Boolean).length;
@@ -97,7 +121,6 @@ function getMissingItems(item: FinalSubmission) {
   const missing = [];
 
   if (!item.finalManuscript) missing.push("Final manuscript");
-  if (!item.grammarCertificate) missing.push("Grammar certificate");
   if (!item.approvalForm) missing.push("Approval form");
   if (!item.recordsClearance) missing.push("Records clearance");
   if (item.grammarianCertificateStatus !== "Verified") {
@@ -141,9 +164,15 @@ export default function DeanFinalApprovalPage() {
   const [openItemId, setOpenItemId] = useState<number | null>(null);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<EditableSubmission | null>(null);
+  const [selectedGrammarians, setSelectedGrammarians] = useState<
+    Record<number, string>
+  >({});
 
   useEffect(() => {
-    setItems(getStoredFinalSubmissions());
+    queueMicrotask(() => {
+      syncCertifiedSubmissionsForDean();
+      setItems(getStoredFinalSubmissions());
+    });
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -187,6 +216,9 @@ export default function DeanFinalApprovalPage() {
   const pendingItems = items.filter(
     (item) =>
       item.status === "For Records Validation" ||
+      item.status === "Ready for Grammar Review" ||
+      item.status === "Sent to Grammarian" ||
+      item.status === "Grammar Certified" ||
       item.status === "For Dean Approval",
   ).length;
   const approvedItems = items.filter(
@@ -235,6 +267,55 @@ export default function DeanFinalApprovalPage() {
       action: "Reject",
       module: "Dean Final Approval",
       details: `Dean rejected final submission ${id}. Reason: ${reason.trim()}`,
+    });
+  }
+
+  function markReadyForGrammarReview(id: number) {
+    setItems(
+      updateFinalSubmission(id, {
+        grammarReviewStatus: "Ready for Grammar Review",
+        status: "Ready for Grammar Review",
+        remarks: "Dean reviewed the manuscript and marked it ready for grammar review.",
+      }),
+    );
+
+    addCurrentUserAuditLog({
+      action: "Update",
+      module: "Dean Final Approval",
+      details: `Dean marked final submission ${id} ready for grammar review.`,
+    });
+  }
+
+  function sendToGrammarian(item: FinalSubmission) {
+    const selectedEmail =
+      selectedGrammarians[item.id] || registeredGrammarians[0].email;
+    const grammarian =
+      registeredGrammarians.find((entry) => entry.email === selectedEmail) ||
+      registeredGrammarians[0];
+
+    routeFinalSubmissionToGrammarian(item, grammarian);
+    setItems(getStoredFinalSubmissions());
+
+    addCurrentUserAuditLog({
+      action: "Update",
+      module: "Dean Final Approval",
+      details: `Dean sent final submission ${item.id} to ${grammarian.name}.`,
+    });
+  }
+
+  function verifyGrammarCertificate(id: number) {
+    setItems(
+      updateFinalSubmission(id, {
+        grammarianCertificateStatus: "Verified",
+        status: "For Dean Approval",
+        remarks: "Dean verified the grammarian Certification of Editing.",
+      }),
+    );
+
+    addCurrentUserAuditLog({
+      action: "Verify",
+      module: "Dean Final Approval",
+      details: `Dean verified grammar certificate for final submission ${id}.`,
     });
   }
 
@@ -371,6 +452,9 @@ export default function DeanFinalApprovalPage() {
       >
         <option>All</option>
         <option>For Records Validation</option>
+        <option>Ready for Grammar Review</option>
+        <option>Sent to Grammarian</option>
+        <option>Grammar Certified</option>
         <option>For Dean Approval</option>
         <option>Approved</option>
         <option>Rejected</option>
@@ -455,14 +539,14 @@ export default function DeanFinalApprovalPage() {
                     </div>
 
                     <div className="grid gap-2 md:grid-cols-4">
-                      <InlineStatus
-                        label="Files"
-                        value={`${getCompletionCount(item)}/4`}
-                      />
-                      <InlineStatus
-                        label="Grammar"
-                        value={item.grammarianCertificateStatus}
-                      />
+                        <InlineStatus
+                          label="Files"
+                          value={`${getCompletionCount(item)}/3`}
+                        />
+                        <InlineStatus
+                          label="Grammar"
+                          value={item.grammarReviewStatus || "Not Routed"}
+                        />
                       <InlineStatus
                         label="Records"
                         value={item.recordsValidation}
@@ -511,6 +595,90 @@ export default function DeanFinalApprovalPage() {
                         Return
                       </button>
                     </div>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4">
+                    <div className="grid gap-3 lg:grid-cols-[1fr_260px_auto_auto] lg:items-end">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7b877f]">
+                          Dean to Grammarian Routing
+                        </p>
+                        <p className="mt-1 text-sm text-[#59645d]">
+                          Step 1: Mark Ready after checking the manuscript.
+                          Step 2: choose a grammarian and send it.
+                        </p>
+                      </div>
+
+                      <label className="text-xs font-semibold text-[#59645d]">
+                        Select Grammarian
+                        <select
+                          value={
+                            selectedGrammarians[item.id] ||
+                            item.assignedGrammarianEmail ||
+                            registeredGrammarians[0].email
+                          }
+                          onChange={(event) =>
+                            setSelectedGrammarians((current) => ({
+                              ...current,
+                              [item.id]: event.target.value,
+                            }))
+                          }
+                          className="mt-1.5 h-10 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                        >
+                          {registeredGrammarians.map((grammarian) => (
+                            <option
+                              key={grammarian.email}
+                              value={grammarian.email}
+                            >
+                              {grammarian.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => markReadyForGrammarReview(item.id)}
+                        disabled={!isFinalSubmissionComplete(item)}
+                        className="h-10 rounded-lg border border-[#dfe8df] bg-white px-4 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Mark Ready
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => sendToGrammarian(item)}
+                        disabled={!canSendToGrammarian(item)}
+                        className="h-10 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Send to Grammarian
+                      </button>
+                    </div>
+
+                    <div className="mt-3 grid gap-2 md:grid-cols-3">
+                      <DetailBox
+                        label="Assigned Grammarian"
+                        value={item.assignedGrammarian || "Not assigned"}
+                      />
+                      <DetailBox
+                        label="Grammar Review"
+                        value={item.grammarReviewStatus || "Not Routed"}
+                      />
+                      <DetailBox
+                        label="Returned Certificate"
+                        value={item.grammarCertificate || "Not returned yet"}
+                      />
+                    </div>
+
+                    {item.grammarianCertificateStatus === "Generated" && (
+                      <button
+                        type="button"
+                        onClick={() => verifyGrammarCertificate(item.id)}
+                        className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        Verify Returned Certificate
+                      </button>
+                    )}
                   </div>
 
                   {open && !editing && (
@@ -653,6 +821,9 @@ export default function DeanFinalApprovalPage() {
                           value={editDraft.status}
                           options={[
                             "For Records Validation",
+                            "Ready for Grammar Review",
+                            "Sent to Grammarian",
+                            "Grammar Certified",
                             "For Dean Approval",
                             "Approved",
                             "Rejected",
@@ -696,7 +867,7 @@ export default function DeanFinalApprovalPage() {
                         <SelectField
                           label="Grammar Certificate Status"
                           value={editDraft.grammarianCertificateStatus}
-                          options={["Pending", "Verified", "Rejected"]}
+                          options={["Pending", "Generated", "Verified"]}
                           onChange={(value) =>
                             updateDraft(
                               "grammarianCertificateStatus",

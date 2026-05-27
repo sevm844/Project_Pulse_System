@@ -52,10 +52,7 @@ export default function CoordinatorDashboardPage() {
 
   return (
     <CoordinatorShell title="Coordinator Dashboard">
-      <div
-        className="grid gap-5"
-        style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
-      >
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="min-w-0 space-y-5">
           <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
             <div className="flex min-w-[720px] divide-x divide-white/45">
@@ -238,7 +235,7 @@ export default function CoordinatorDashboardPage() {
           </div>
         </div>
 
-        <aside className="min-w-0 self-start sticky top-6">
+        <aside className="min-w-0 self-start xl:sticky xl:top-6">
           <CoordinatorCalendar />
         </aside>
       </div>

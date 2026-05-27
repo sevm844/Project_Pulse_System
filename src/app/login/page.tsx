@@ -99,8 +99,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f9f9ff] px-6">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_26%,rgba(207,247,236,0.32),rgba(249,249,255,0)_58%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
+
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/60 bg-white/72 p-8 shadow-[0_24px_70px_rgba(31,42,36,0.12)] backdrop-blur-2xl">
         <div className="mb-6 flex items-center justify-center gap-3">
           <Image src="/Logo-icon.png" alt="Logo" width={34} height={34} />
           <span className="text-lg font-semibold">

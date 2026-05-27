@@ -1,14 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import GrammarianShell from "./_components/GrammarianShell";
 import GrammarianCalendar from "./_components/GrammarianCalendar";
 import Card from "./_components/Card";
 import {
-  getGrammarSummary,
-  grammarReviews,
-} from "./_data/grammarianData";
+  getStoredGrammarReviews,
+  type GrammarReviewAssignment,
+} from "../_utils/grammarReviewStorage";
 
 function statusClasses(status: string) {
-  if (status === "Reviewed" || status === "Issued") {
+  if (status === "Certified" || status === "Issued") {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
@@ -21,6 +24,7 @@ function statusClasses(status: string) {
 
 function getPriorityLabel(status: string, certificateStatus: string) {
   if (status === "For Grammar Review") return "Review Needed";
+  if (status === "Under Review") return "In Progress";
   if (status === "Returned for Revision") return "Waiting Revision";
   if (certificateStatus === "Not Issued") return "Certificate Pending";
   return "Complete";
@@ -35,6 +39,10 @@ function priorityClasses(priority: string) {
     return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
+  if (priority === "In Progress") {
+    return "border-violet-200 bg-violet-50 text-violet-700";
+  }
+
   if (priority === "Complete") {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
@@ -43,23 +51,39 @@ function priorityClasses(priority: string) {
 }
 
 export default function GrammarianDashboardPage() {
-  const summary = getGrammarSummary();
+  const [items, setItems] = useState<GrammarReviewAssignment[]>([]);
 
-  const activeReviews = grammarReviews.filter(
-    (item) =>
-      item.reviewStatus !== "Reviewed" || item.certificateStatus !== "Issued",
+  useEffect(() => {
+    queueMicrotask(() => setItems(getStoredGrammarReviews()));
+  }, []);
+
+  const summary = useMemo(
+    () => ({
+      forReview: items.filter((item) => item.reviewStatus === "For Grammar Review")
+        .length,
+      feedbackProvided: items.filter((item) => item.feedback.trim()).length,
+      certificatesIssued: items.filter(
+        (item) => item.certificateStatus === "Issued",
+      ).length,
+      returned: items.filter(
+        (item) => item.reviewStatus === "Returned for Revision",
+      ).length,
+    }),
+    [items],
   );
 
-  const issuedCertificates = grammarReviews.filter(
+  const activeReviews = items.filter(
+    (item) =>
+      item.reviewStatus !== "Certified" || item.certificateStatus !== "Issued",
+  );
+
+  const issuedCertificates = items.filter(
     (item) => item.certificateStatus === "Issued",
   );
 
   return (
     <GrammarianShell title="Grammarian Dashboard">
-      <div
-        className="grid gap-5"
-        style={{ gridTemplateColumns: "minmax(0, 1fr) 380px" }}
-      >
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="min-w-0 space-y-5">
           <Card className="overflow-x-auto border-white/55 bg-white/24 p-4 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
             <div className="flex min-w-[820px] divide-x divide-white/45">
@@ -107,7 +131,7 @@ export default function GrammarianDashboardPage() {
             </div>
 
             <div className="divide-y divide-white/45 bg-white/8">
-              {grammarReviews.map((item) => {
+              {items.map((item) => {
                 const priority = getPriorityLabel(
                   item.reviewStatus,
                   item.certificateStatus,
@@ -140,7 +164,7 @@ export default function GrammarianDashboardPage() {
 
                         <p className="mt-2 text-xs text-[#7b877f]">
                           {item.course} {item.section} / {item.documentTitle} /{" "}
-                          Submitted {item.submittedAt}
+                          Sent by {item.sentBy} on {item.sentAt}
                         </p>
                       </div>
 
@@ -192,8 +216,8 @@ export default function GrammarianDashboardPage() {
               <div className="mt-5 space-y-3">
                 {[
                   ["1", "Receive Final Manuscript", "Student submits the revised manuscript for grammar checking."],
-                  ["2", "Provide Grammar Feedback", "Mark corrections or confirm that the manuscript is acceptable."],
-                  ["3", "Issue Certificate", "Release the grammarian certificate after the final check."],
+                  ["2", "Review Inside System", "Open the routed manuscript, add grammar feedback, or certify it."],
+                  ["3", "Send Certificate to Dean", "The system generates the Certification of Editing and returns it to the Dean."],
                 ].map(([step, title, detail]) => (
                   <div
                     key={step}
@@ -248,7 +272,7 @@ export default function GrammarianDashboardPage() {
           </div>
         </div>
 
-        <aside className="min-w-0 self-start sticky top-6">
+        <aside className="min-w-0 self-start xl:sticky xl:top-6">
           <GrammarianCalendar />
         </aside>
       </div>

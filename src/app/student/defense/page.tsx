@@ -1,13 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import type { Sheet } from "@fortune-sheet/core";
 import StudentShell from "../_components/StudentShell";
 import StatusBadge from "../_components/StatusBadge";
 import {
   getStoredDefensePlan,
   type DefensePlan,
 } from "../../_utils/defenseStorage";
+import {
+  getStoredDefenseWorkbook,
+  saveStoredDefenseWorkbook,
+} from "../../_utils/defenseWorkbookStorage";
+
+const Workbook = dynamic(
+  () => import("@fortune-sheet/react").then((mod) => mod.Workbook),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[620px] items-center justify-center rounded-lg border border-[#dfe8df] bg-white text-sm text-[#59645d]">
+        Loading defense sheet...
+      </div>
+    ),
+  },
+);
 
 function statusDot(status: string) {
   if (
@@ -33,10 +51,28 @@ function initials(name: string) {
 
 export default function DefensePage() {
   const [plan, setPlan] = useState<DefensePlan | null>(null);
+  const [showDefenseSheet, setShowDefenseSheet] = useState(false);
+  const [workbookData, setWorkbookData] = useState<Sheet[]>([]);
+  const [sheetSaveStatus, setSheetSaveStatus] = useState("Ready to edit");
 
   useEffect(() => {
-    setPlan(getStoredDefensePlan());
+    queueMicrotask(() => {
+      const storedPlan = getStoredDefensePlan();
+
+      setPlan(storedPlan);
+
+      if (!storedPlan) return;
+
+      setWorkbookData(getStoredDefenseWorkbook(storedPlan.course));
+    });
   }, []);
+
+  function saveDefenseSheet() {
+    if (!plan) return;
+
+    saveStoredDefenseWorkbook(plan.course, workbookData);
+    setSheetSaveStatus("Saved just now");
+  }
 
   if (!plan) {
     return (
@@ -81,6 +117,75 @@ export default function DefensePage() {
             files set by the adviser.
           </p>
         </div>
+
+        <section className="rounded-lg border border-[#dfe8df] bg-white p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-[#203028]">
+                Defense Sheet
+              </h2>
+              <p className="mt-1 text-sm text-[#59645d]">
+                Open the same defense workbook your adviser uses and fill in
+                the details your group was asked to update.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowDefenseSheet((current) => !current)}
+              className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+            >
+              {showDefenseSheet ? "Close Defense Sheet" : "Open Defense Sheet"}
+            </button>
+          </div>
+
+          {showDefenseSheet && (
+            <div className="mt-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7b877f]">
+                    Shared adviser defense workbook
+                  </p>
+                  <p className="mt-1 text-sm text-[#59645d]">
+                    This is the same sheet layout from the adviser Defense
+                    workspace.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-[#e4f8da] px-3 py-1.5 text-xs font-semibold text-[#245329]">
+                    {sheetSaveStatus}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={saveDefenseSheet}
+                    className="rounded-lg border border-[#cfe9c5] bg-white px-4 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+                  >
+                    Save Sheet
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-[620px] overflow-hidden rounded-lg border border-[#dfe8df] bg-white">
+                <Workbook
+                  data={workbookData}
+                  onChange={(nextWorkbook) => {
+                    setWorkbookData(nextWorkbook);
+                    setSheetSaveStatus("Unsaved changes");
+                  }}
+                  allowEdit
+                  showToolbar
+                  showFormulaBar
+                  showSheetTabs
+                  row={40}
+                  column={18}
+                  defaultRowHeight={34}
+                  defaultColWidth={120}
+                />
+              </div>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-lg border border-[#dfe8df] bg-white p-5">
           <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr_1fr_auto] lg:items-center">

@@ -109,29 +109,6 @@ export default function CoordinatorGroupFoldersPage() {
     });
   }, [courseFilter, searchQuery, sectionFilter, statusFilter]);
 
-  const totals = filteredFolders.reduce(
-    (summary, folder) => {
-      const counts = getRequirementCounts(folder);
-
-      return {
-        checked: summary.checked + counts.checked,
-        submitted: summary.submitted + counts.submitted,
-        missing: summary.missing + counts.missing,
-        returned: summary.returned + counts.returned,
-        total: summary.total + counts.total,
-        complete: summary.complete + (counts.progress === 100 ? 1 : 0),
-      };
-    },
-    {
-      checked: 0,
-      submitted: 0,
-      missing: 0,
-      returned: 0,
-      total: 0,
-      complete: 0,
-    },
-  );
-
   function resetFilters() {
     setSearchQuery("");
     setCourseFilter("All");
@@ -147,29 +124,6 @@ export default function CoordinatorGroupFoldersPage() {
   return (
     <CoordinatorShell title="Group Folders">
       <div className="space-y-5">
-        <Card className="overflow-x-auto p-4">
-          <div className="flex min-w-[860px] divide-x divide-[#dfe8df]">
-            {[
-              ["Folders", filteredFolders.length, "Filtered groups"],
-              ["Complete", totals.complete, "Ready for archive"],
-              ["Checked", totals.checked, "Accepted files"],
-              ["Submitted", totals.submitted, "Need checking"],
-              ["Missing", totals.missing, "Need follow-up"],
-              ["Returned", totals.returned, "Need replacement"],
-            ].map(([label, value, caption]) => (
-              <div key={label} className="flex-1 px-4 py-2">
-                <p className="text-xs font-semibold text-[#7b877f]">{label}</p>
-                <div className="mt-1 flex items-end gap-2 whitespace-nowrap">
-                  <p className="text-2xl font-semibold text-[#203028]">
-                    {value}
-                  </p>
-                  <p className="pb-1 text-xs text-[#59645d]">{caption}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
         <Card className="overflow-x-auto p-4">
           <div className="flex min-w-[980px] items-end gap-3">
             <label className="min-w-[280px] flex-1 text-xs font-semibold text-[#59645d]">

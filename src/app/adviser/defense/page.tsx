@@ -3,9 +3,14 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import type { Cell, Sheet } from "@fortune-sheet/core";
+import type { Sheet } from "@fortune-sheet/core";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
+import {
+  defenseSchedule,
+  getStoredDefenseWorkbook,
+  saveStoredDefenseWorkbook,
+} from "../../_utils/defenseWorkbookStorage";
 
 const Workbook = dynamic(
   () => import("@fortune-sheet/react").then((mod) => mod.Workbook),
@@ -25,19 +30,6 @@ type CourseOption = {
   sections: number;
   activeGroups: number;
   icon: string;
-};
-
-type DefenseRow = {
-  id: number;
-  time: string;
-  team: string;
-  members: string;
-  projectTitle: string;
-  comments: string;
-  remarks: "Approved" | "Pending" | "Needs Revision";
-  adviser: string;
-  technicalAdviser: string;
-  status: "Approved" | "Pending";
 };
 
 const courseOptions: CourseOption[] = [
@@ -76,221 +68,6 @@ const courseOptions: CourseOption[] = [
     activeGroups: 22,
     icon: "/blis.png",
   },
-];
-
-const defenseSchedule: DefenseRow[] = [
-  {
-    id: 1,
-    time: "8:00 - 8:30 AM",
-    team: "The Governor",
-    members: "Gian Pilar, Jef Castillo, Ben Dictalugan",
-    projectTitle:
-      "BG-SMART: Digitalizing Waste Management Through Geolocation and Technology in Batangas City",
-    comments:
-      "Finalize location for pilot testing and determine image placement for accident detection.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Melvin Melo",
-    status: "Approved",
-  },
-  {
-    id: 2,
-    time: "8:30 - 9:00 AM",
-    team: "Carl",
-    members: "Cabrera, Povey, Dolor, Clint Ador",
-    projectTitle: "Real-Time Accident Detection and Alert System Using Computer Vision",
-    comments: "Clarify alert workflow and emergency contact routing.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Melvin Melo",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    time: "9:00 - 9:30 AM",
-    team: "Katana",
-    members: "Pujarbo, John Manuel, Chloe, John Ashley",
-    projectTitle:
-      "A-LVN: AI-Powered Learning and Video-Based Interview Navigation System for Career Readiness",
-    comments:
-      "Add dashboard for grading and specify how job recommendations are generated.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Melvin Melo",
-    status: "Approved",
-  },
-  {
-    id: 4,
-    time: "9:30 - 10:00 AM",
-    team: "Hilltop Colony",
-    members: "Delavega, Rhuellyn B., De Torres, Al Francis M.",
-    projectTitle:
-      "Brahman Radio: An AI-Powered Digital Radio and Broadcast Audio-Content Platform",
-    comments: "Remove anonymous blind chat and verify copyright handling.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Neria Macaraig",
-    status: "Approved",
-  },
-  {
-    id: 5,
-    time: "10:30 - 11:00 AM",
-    team: "Tara",
-    members: "Asilo, Kyran B., Dela Trinos, Erin R.",
-    projectTitle:
-      "Project Pulse: A Unified Research Lifecycle Management and Monitoring System",
-    comments:
-      "Start scheduling proposal defense and allow panelists to comment inside the system.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Neria Macaraig",
-    status: "Approved",
-  },
-  {
-    id: 6,
-    time: "11:30 - 12:00 PM",
-    team: "Tyreese",
-    members: "Conia, Proclou, Derfin, Myra",
-    projectTitle:
-      "Auto-eMP Plate: An Online Marketplace for Batangas City Public Market Products",
-    comments: "Define deployment scope and vendor onboarding process.",
-    remarks: "Approved",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "Sir Vinz Cruz",
-    status: "Approved",
-  },
-  {
-    id: 7,
-    time: "1:30 - 2:00 PM",
-    team: "Carol",
-    members: "Alcantara, Ace Gabriel, Macal, John Sirn",
-    projectTitle: "ArbiTe: A Tracking System for Ranking, Control and Management",
-    comments: "Review AI integration and revise title wording.",
-    remarks: "Pending",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "-",
-    status: "Pending",
-  },
-  {
-    id: 8,
-    time: "2:00 - 2:30 PM",
-    team: "Maggie",
-    members: "Arro, Luis, Santilo, Bothon",
-    projectTitle: "Pilipinas Chronicles",
-    comments: "Add more historical events and improve content validation.",
-    remarks: "Pending",
-    adviser: "Bernadet Macaraig",
-    technicalAdviser: "-",
-    status: "Pending",
-  },
-];
-
-const defenseSheetHeaders = [
-  "DAY 1",
-  "TIME",
-  "TEAM",
-  "MEMBERS",
-  "",
-  "Proposal 1",
-  "COMMENTS/SUGGESTIONS",
-  "REMARKS",
-  "Adviser",
-  "Technical Adviser",
-];
-
-function sheetCell(
-  value: string | number,
-  options: Partial<Cell> = {},
-): Cell {
-  return {
-    v: value,
-    m: value,
-    ...options,
-  };
-}
-
-function createDefenseSheet(name: string, order: number): Sheet {
-  const data: (Cell | null)[][] = [
-    defenseSheetHeaders.map((header) =>
-      sheetCell(header, {
-        bl: 1,
-        bg: header === "Proposal 1" ? "#fff200" : "#f8faf7",
-        ht: 0,
-        vt: 0,
-      }),
-    ),
-    ...defenseSchedule.map((row) => [
-      null,
-      sheetCell(row.time),
-      sheetCell(row.team),
-      sheetCell(row.members),
-      null,
-      sheetCell(row.projectTitle, { bg: "#fff200", tb: "2" }),
-      sheetCell(row.comments, { tb: "2" }),
-      sheetCell(row.remarks, { bl: 1 }),
-      sheetCell(row.adviser),
-      sheetCell(row.technicalAdviser),
-    ]),
-  ];
-
-  return {
-    name,
-    id: `defense-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-    order,
-    row: 40,
-    column: 18,
-    data,
-    defaultRowHeight: 34,
-    defaultColWidth: 120,
-    config: {
-      rowlen: {
-        1: 68,
-        2: 68,
-        3: 68,
-        4: 86,
-        5: 86,
-        12: 86,
-        13: 86,
-      },
-      columnlen: {
-        0: 90,
-        1: 220,
-        2: 130,
-        3: 230,
-        4: 230,
-        5: 250,
-        6: 270,
-        7: 140,
-        8: 140,
-        9: 150,
-      },
-    },
-    showGridLines: true,
-  };
-}
-
-function createBlankSheet(name: string, order: number): Sheet {
-  return {
-    name,
-    id: `defense-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-    order,
-    row: 40,
-    column: 18,
-    defaultRowHeight: 34,
-    defaultColWidth: 120,
-    data: [[sheetCell(name, { bl: 1, bg: "#f4faee" })]],
-    showGridLines: true,
-  };
-}
-
-const initialDefenseWorkbook: Sheet[] = [
-  createBlankSheet("IT3-1", 0),
-  createBlankSheet("IT3-2", 1),
-  createBlankSheet("IT3-3", 2),
-  createDefenseSheet("SCHEDULE OF DEFENSE", 3),
-  createBlankSheet("REDEFENSE", 4),
-  createBlankSheet("REMINDERS", 5),
-  createBlankSheet("FILES and PRESENTATION LINK", 6),
 ];
 
 const courseCardClass =
@@ -426,9 +203,14 @@ export default function AdviserDefensePage() {
 
 function ScheduleView({ courseName }: { courseName: string }) {
   const [workbookData, setWorkbookData] = useState<Sheet[]>(
-    initialDefenseWorkbook,
+    () => getStoredDefenseWorkbook(courseName),
   );
   const [saveStatus, setSaveStatus] = useState("Autosaved locally");
+
+  function saveSheet() {
+    saveStoredDefenseWorkbook(courseName, workbookData);
+    setSaveStatus("Saved just now");
+  }
 
   return (
     <div className="space-y-4">
@@ -453,7 +235,7 @@ function ScheduleView({ courseName }: { courseName: string }) {
           </span>
           <button
             type="button"
-            onClick={() => setSaveStatus("Saved just now")}
+            onClick={saveSheet}
             className="rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#245329]"
           >
             Save Sheet
@@ -465,7 +247,10 @@ function ScheduleView({ courseName }: { courseName: string }) {
       <div className="h-[680px] overflow-hidden rounded-xl border border-[#dfe8df] bg-white">
         <Workbook
           data={workbookData}
-          onChange={setWorkbookData}
+          onChange={(nextWorkbook) => {
+            setWorkbookData(nextWorkbook);
+            setSaveStatus("Unsaved changes");
+          }}
           allowEdit
           showToolbar
           showFormulaBar

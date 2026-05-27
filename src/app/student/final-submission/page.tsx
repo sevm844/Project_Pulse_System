@@ -22,11 +22,6 @@ const requirements: Array<{
     detail: "Upload the approved final manuscript.",
   },
   {
-    key: "grammarCertificate",
-    label: "Grammar Certificate",
-    detail: "Upload the certificate issued by the grammarian.",
-  },
-  {
     key: "approvalForm",
     label: "Adviser Approval Form",
     detail: "Upload the signed adviser approval form.",
@@ -58,12 +53,11 @@ export default function StudentFinalSubmissionPage() {
     submittedBy: "Student Name",
     submittedAt: "",
     finalManuscript: files.finalManuscript,
-    grammarCertificate: files.grammarCertificate,
+    grammarCertificate: "",
     approvalForm: files.approvalForm,
     recordsClearance: files.recordsClearance,
-    grammarianCertificateStatus: files.grammarCertificate
-      ? "Uploaded"
-      : "Pending",
+    grammarianCertificateStatus: "Pending",
+    grammarReviewStatus: "Not Routed",
     recordsValidation: "Pending",
     deanApproval: "Pending",
     status: "Draft",
@@ -127,15 +121,16 @@ export default function StudentFinalSubmissionPage() {
             Submit Final Requirements
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59645d]">
-            Upload all required final documents. The system prevents incomplete
-            submission before forwarding the package to records validation.
+            Upload the final manuscript package for dean review. The grammar
+            certificate is generated later after the Dean routes the manuscript
+            to a grammarian.
           </p>
         </section>
 
         <div className="grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
           <section className="rounded-lg border border-[#dfe8df] bg-white p-5">
             <h3 className="text-base font-semibold text-[#203028]">
-              Required Final Documents
+              Required Manuscript Package
             </h3>
 
             <div className="mt-5 space-y-4">

@@ -4,6 +4,9 @@ export type FinalSubmissionStatus =
   | "Incomplete"
   | "For Records Validation"
   | "Records Validated"
+  | "Ready for Grammar Review"
+  | "Sent to Grammarian"
+  | "Grammar Certified"
   | "For Dean Approval"
   | "Approved"
   | "Rejected";
@@ -25,7 +28,16 @@ export type FinalSubmission = {
   grammarCertificate: string;
   approvalForm: string;
   recordsClearance: string;
-  grammarianCertificateStatus: "Pending" | "Uploaded" | "Verified";
+  assignedGrammarian?: string;
+  assignedGrammarianEmail?: string;
+  grammarReviewStatus?:
+    | "Not Routed"
+    | "Ready for Grammar Review"
+    | "Sent to Grammarian"
+    | "Under Grammar Review"
+    | "Returned for Revision"
+    | "Certified";
+  grammarianCertificateStatus: "Pending" | "Generated" | "Verified";
   recordsValidation: "Pending" | "Validated" | "Rejected";
   deanApproval: "Pending" | "Approved" | "Rejected";
   status: FinalSubmissionStatus;
@@ -43,13 +55,16 @@ const defaultFinalSubmissions: FinalSubmission[] = [
     submittedBy: "Student Name",
     submittedAt: "May 10, 2026",
     finalManuscript: "project-pulse-final-manuscript.pdf",
-    grammarCertificate: "grammar-certificate.pdf",
+    grammarCertificate: "",
     approvalForm: "adviser-approval-form.pdf",
     recordsClearance: "records-clearance.pdf",
-    grammarianCertificateStatus: "Uploaded",
-    recordsValidation: "Pending",
+    assignedGrammarian: "",
+    assignedGrammarianEmail: "",
+    grammarReviewStatus: "Not Routed",
+    grammarianCertificateStatus: "Pending",
+    recordsValidation: "Validated",
     deanApproval: "Pending",
-    status: "For Records Validation",
+    status: "Ready for Grammar Review",
     remarks: "",
   },
 ];
@@ -58,10 +73,22 @@ function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
 }
 
+function normalizeFinalSubmission(submission: FinalSubmission): FinalSubmission {
+  if (submission.grammarReviewStatus) return submission;
+
+  return {
+    ...submission,
+    grammarCertificate: "",
+    assignedGrammarian: "",
+    assignedGrammarianEmail: "",
+    grammarReviewStatus: "Not Routed",
+    grammarianCertificateStatus: "Pending",
+  };
+}
+
 export function isFinalSubmissionComplete(submission: FinalSubmission) {
   return Boolean(
     submission.finalManuscript &&
-      submission.grammarCertificate &&
       submission.approvalForm &&
       submission.recordsClearance,
   );
@@ -77,7 +104,9 @@ export function getStoredFinalSubmissions() {
     return defaultFinalSubmissions;
   }
 
-  return JSON.parse(saved) as FinalSubmission[];
+  const submissions = JSON.parse(saved) as FinalSubmission[];
+
+  return submissions.map(normalizeFinalSubmission);
 }
 
 export function saveStoredFinalSubmissions(submissions: FinalSubmission[]) {
