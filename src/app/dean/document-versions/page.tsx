@@ -275,7 +275,7 @@ function actionButtonClass(variant: "primary" | "neutral" | "danger") {
   return "border border-[#dfe8df] bg-white text-[#59645d] hover:bg-[#f3f7f1]";
 }
 
-function VersionActions() {
+function VersionActions({ onView }: { onView?: () => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       {[
@@ -287,6 +287,7 @@ function VersionActions() {
         <button
           key={label}
           type="button"
+          onClick={label === "View File" ? onView : undefined}
           className={`rounded-full px-3 py-2 text-xs font-semibold ${actionButtonClass(
             variant as "primary" | "neutral" | "danger",
           )}`}
@@ -490,6 +491,8 @@ export default function DeanDocumentVersionsPage() {
     (document) =>
       document.course === selectedCourse && document.section === selectedSection,
   );
+
+  const [previewVersion, setPreviewVersion] = useState<DocumentVersion | null>(null);
 
   const previousVersion =
     selectedVersions.find((document) => document.id === previousId) ||
@@ -720,7 +723,7 @@ export default function DeanDocumentVersionsPage() {
                         <StatusBadge status={version.status} />
                       </td>
                       <td className="px-5 py-4">
-                        <VersionActions />
+                        <VersionActions onView={() => setPreviewVersion(version)} />
                       </td>
                     </tr>
                   ))}
@@ -811,18 +814,81 @@ export default function DeanDocumentVersionsPage() {
                   tone="previous"
                   version={previousVersion}
                   analysis={comparisonAnalysis}
+                  onView={() => setPreviewVersion(previousVersion)}
                 />
                 <ComparisonPanel
                   label="Current/New Version"
                   tone="current"
                   version={currentVersion}
                   analysis={comparisonAnalysis}
+                  onView={() => setPreviewVersion(currentVersion)}
                 />
               </div>
             </div>
           </Card>
         )}
       </div>
+
+      {previewVersion && (
+        <div className="fixed inset-0 z-50 bg-[#d0d5cf]">
+          <div className="flex h-full w-full flex-col">
+            <div className="border-b border-[#bcc5bb] bg-white px-6 py-4 shadow-sm">
+              <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7b877f]">
+                    Document Viewer
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-[#203028]">
+                    {previewVersion.documentTitle} {previewVersion.version}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewVersion(null)}
+                  className="rounded-full border border-[#dfe8df] bg-white px-4 py-2 text-sm font-semibold text-[#59645d] shadow-sm hover:bg-[#f8faf7]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-[#d0d5cf] p-8 flex justify-center">
+              <div className="w-[850px] min-h-[1400px]">
+                <div className="mx-auto min-h-full rounded-[32px] border border-[#dfe8df] bg-[#fbfdf9] px-8 py-10 shadow-[0_30px_90px_rgba(15,23,18,0.08)]">
+                  <div className="mx-auto min-h-[1280px] max-w-[720px] rounded-[24px] border border-[#e6ece4] bg-white px-14 py-14 shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+                    <div className="mb-12 border-b-2 border-[#e8efe7] pb-12">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#7b877f]">
+                        {previewVersion.documentTitle}
+                      </p>
+                      <h1 className="mt-6 text-5xl font-bold text-[#203028] leading-tight">
+                        {previewVersion.documentTitle}
+                      </h1>
+                      <p className="mt-6 text-base leading-8 text-[#59645d]">
+                        <strong>Submitted by:</strong> {previewVersion.submittedBy} on {previewVersion.submittedAt}
+                      </p>
+                      <p className="mt-4 text-base leading-8 text-[#59645d]">
+                        <strong>Group:</strong> {previewVersion.groupName} | <strong>Adviser:</strong> {previewVersion.adviser}
+                      </p>
+                      <p className="mt-4 text-base leading-8 text-[#59645d]">
+                        <strong>Student:</strong> {previewVersion.studentName} | <strong>Course:</strong> {previewVersion.course} {previewVersion.section}
+                      </p>
+                    </div>
+
+                    <div className="space-y-10 text-[#222f24] pb-20">
+                      {previewVersion.content.map((paragraph, index) => (
+                        <p key={index} className="text-lg leading-9">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DeanShell>
   );
 }
@@ -885,11 +951,13 @@ function ComparisonPanel({
   tone,
   version,
   analysis,
+  onView,
 }: {
   label: string;
   tone: "previous" | "current";
   version: DocumentVersion;
   analysis: ComparisonAnalysis;
+  onView?: () => void;
 }) {
   const visibleItems = analysis.items.filter((item) =>
     tone === "previous" ? item.type !== "added" : item.type !== "removed",
@@ -967,7 +1035,7 @@ function ComparisonPanel({
           </div>
         </div>
 
-        <VersionActions />
+        <VersionActions onView={onView} />
       </div>
     </div>
   );
