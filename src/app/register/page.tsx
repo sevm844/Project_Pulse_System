@@ -93,8 +93,8 @@ export default function RegisterPage() {
 
   return (
     <main className="grid min-h-screen bg-white text-gray-900 lg:grid-cols-2">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-black px-16 py-12 text-white lg:flex">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#064e3b_0%,#022c22_25%,#000_65%)]" />
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-[#123f2b] px-16 py-12 text-white lg:flex">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,#1f6b4d_0%,#123f2b_34%,#0f3324_72%)]" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
@@ -217,7 +217,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white hover:bg-gray-900 disabled:opacity-60"
+              className="w-full rounded-lg bg-[#123f2b] px-4 py-3 font-medium text-white hover:bg-[#0f3324] disabled:opacity-60"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </button>

@@ -75,11 +75,11 @@ export default function StudentDashboardPage() {
     })) || [];
 
   return (
-    <StudentShell title="Dashboard" subtitle="Student Management">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
+    <StudentShell title="Student Overview" subtitle="Student Management">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-6">
-          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
-            <div className="border-b border-white/45 bg-white/12 p-6">
+          <Card className="overflow-hidden border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
+            <div className="border-b border-[#edf2ec] bg-[#fbfdfb] p-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
                   Student Dashboard
@@ -90,7 +90,7 @@ export default function StudentDashboardPage() {
                     {displayProjectTitle}
                   </h1>
 
-                  <span className="rounded-full border border-white/55 bg-white/34 px-3 py-1 text-xs font-semibold text-[#59645d] backdrop-blur">
+                  <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1 text-xs font-semibold text-[#59645d]">
                     {displayGroupName}
                   </span>
                 </div>
@@ -106,7 +106,7 @@ export default function StudentDashboardPage() {
                   </span>
 
                   {studentGroup && (
-                    <span className="rounded-full border border-white/55 bg-white/34 px-3 py-1.5 font-semibold text-[#59645d] backdrop-blur">
+                    <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
                       {studentGroup.course} {studentGroup.section}
                     </span>
                   )}
@@ -114,7 +114,7 @@ export default function StudentDashboardPage() {
               </div>
             </div>
 
-            <div className="grid divide-y divide-white/45 bg-white/8 md:grid-cols-4 md:divide-x md:divide-y-0">
+            <div className="grid divide-y divide-[#edf2ec] bg-white md:grid-cols-4 md:divide-x md:divide-y-0">
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
@@ -124,7 +124,7 @@ export default function StudentDashboardPage() {
 
               <Link
                 href="/student/defense"
-                className="p-5 transition hover:bg-white/28"
+                className="p-5 transition hover:bg-[#fbfdfb]"
               >
                 <p className="text-xs font-medium text-[#7b877f]">
                   Current Stage
@@ -136,7 +136,7 @@ export default function StudentDashboardPage() {
 
               <Link
                 href="/student/feedback?filter=pending"
-                className="p-5 transition hover:bg-white/28"
+                className="p-5 transition hover:bg-[#fbfdfb]"
               >
                 <p className="text-xs font-medium text-[#7b877f]">
                   Pending Feedback
@@ -148,7 +148,7 @@ export default function StudentDashboardPage() {
 
               <Link
                 href="/student/defense"
-                className="p-5 transition hover:bg-white/28"
+                className="p-5 transition hover:bg-[#fbfdfb]"
               >
                 <p className="text-xs font-medium text-[#7b877f]">
                   Upcoming Defense
@@ -159,7 +159,7 @@ export default function StudentDashboardPage() {
               </Link>
             </div>
 
-            <div className="border-t border-white/45 bg-white/10 p-5">
+            <div className="border-t border-[#edf2ec] bg-white p-5">
               <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4f8f58]">
@@ -170,13 +170,13 @@ export default function StudentDashboardPage() {
                   </h2>
                 </div>
 
-                <div className="rounded-2xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_rgba(31,42,36,0.035)] backdrop-blur-xl">
+                <div className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4">
                   {displayPanelists.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {displayPanelists.map((panelist) => (
                         <span
                           key={panelist}
-                          className="rounded-full border border-white/55 bg-white/42 px-3 py-1.5 text-xs font-semibold text-[#203028] backdrop-blur"
+                          className="rounded-full border border-[#dfe8df] bg-white px-3 py-1.5 text-xs font-semibold text-[#203028]"
                         >
                           {panelist}
                         </span>
@@ -193,7 +193,7 @@ export default function StudentDashboardPage() {
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
@@ -221,7 +221,7 @@ export default function StudentDashboardPage() {
                   <Link
                     key={chapter.title}
                     href="/student/documents"
-                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
+                    className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4 transition hover:bg-[#f3f7f1]"
                   >
                     <p className="text-sm font-semibold text-[#203028]">
                       {chapter.title}
@@ -239,7 +239,7 @@ export default function StudentDashboardPage() {
               </div>
             </Card>
 
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Group Members
               </h2>
@@ -250,14 +250,14 @@ export default function StudentDashboardPage() {
 
               <div className="mt-4 space-y-3">
                 {displayMembers.length === 0 ? (
-                  <p className="rounded-xl border border-white/55 bg-white/34 px-4 py-3 text-sm text-[#7b877f] backdrop-blur-xl">
+                  <p className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 text-sm text-[#7b877f]">
                     No members found.
                   </p>
                 ) : (
                   displayMembers.map((member, index) => (
                     <div
                       key={`${member.email}-${member.role}-${index}`}
-                      className="rounded-xl border border-white/55 bg-white/34 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl"
+                      className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3"
                     >
                       <p className="text-sm font-semibold text-[#203028]">
                         {member.name}
@@ -274,7 +274,7 @@ export default function StudentDashboardPage() {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-3">
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Upcoming Deadlines
               </h2>
@@ -284,7 +284,7 @@ export default function StudentDashboardPage() {
                   <Link
                     key={task.id}
                     href="/student/checklist"
-                    className="block rounded-xl border border-white/55 bg-white/34 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
+                    className="block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 transition hover:bg-[#f3f7f1]"
                   >
                     <p className="text-sm font-medium text-[#203028]">
                       {task.title}
@@ -298,14 +298,14 @@ export default function StudentDashboardPage() {
               </div>
             </Card>
 
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Defense Schedule
               </h2>
 
               <Link
                 href="/student/defense"
-                className="mt-4 block rounded-xl border border-white/55 bg-white/34 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
+                className="mt-4 block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-4 transition hover:bg-[#f3f7f1]"
               >
                 <p className="text-sm font-semibold text-[#203028]">
                   {defenseSchedule.stage}
@@ -321,7 +321,7 @@ export default function StudentDashboardPage() {
               </Link>
             </Card>
 
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Recent Activity
               </h2>
@@ -331,7 +331,7 @@ export default function StudentDashboardPage() {
                   <Link
                     key={activity.id}
                     href={activity.href}
-                    className="block rounded-xl border border-white/55 bg-white/34 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
+                    className="block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 transition hover:bg-[#f3f7f1]"
                   >
                     <p className="text-sm font-medium text-[#203028]">
                       {activity.title}
@@ -346,7 +346,7 @@ export default function StudentDashboardPage() {
             </Card>
           </div>
 
-          <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+          <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
@@ -360,7 +360,7 @@ export default function StudentDashboardPage() {
 
               <Link
                 href="/student/documents"
-                className="rounded-lg border border-white/55 bg-white/34 px-4 py-2 text-xs font-semibold text-[#203028] backdrop-blur transition hover:bg-white/50"
+                className="rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-4 py-2 text-xs font-semibold text-[#203028] transition hover:bg-[#f3f7f1]"
               >
                 View All Documents
               </Link>
@@ -368,7 +368,7 @@ export default function StudentDashboardPage() {
 
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="border-b border-white/45 bg-white/18 text-xs text-[#7b877f]">
+                <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                   <tr>
                     <th className="px-3 py-3 font-medium">Document</th>
                     <th className="px-3 py-3 font-medium">Version</th>
@@ -378,7 +378,7 @@ export default function StudentDashboardPage() {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-white/45">
+                <tbody className="divide-y divide-[#edf2ec]">
                   {documents.slice(0, 4).map((document) => (
                     <tr key={document.id}>
                       <td className="px-3 py-4 font-medium text-[#203028]">

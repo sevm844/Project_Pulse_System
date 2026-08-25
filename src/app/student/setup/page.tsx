@@ -2,187 +2,83 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { CapstoneGroup } from "../../_lib/firebase";
 import {
-  addDoc,
-  collection,
-  getDocs,
-  limit,
-  query,
-  updateDoc,
-  where,
-} from "firebase/firestore";
-import Card from "../_components/Card";
-import { db, type CapstoneGroup, type CourseCode } from "../../_lib/firebase";
+  acceptGroupInvitation,
+  findGroupInvitationForEmail,
+  hasAcceptedGroupInvitation,
+} from "../../_utils/groupAssignmentStorage";
 import {
   getStoredUserEmail,
   getStoredUserUid,
 } from "../../_utils/authStorage";
-import { saveStoredStudentGroup } from "../_utils/studentGroupStorage";
+import {
+  getStoredStudentGroup,
+  saveStoredStudentGroup,
+} from "../_utils/studentGroupStorage";
+import Card from "../_components/Card";
 
-const courses: CourseCode[] = ["BSIT", "BSCS", "BSIS"];
-const sections = ["4A", "4B", "4C"];
-
-function generateGroupCode() {
-  return `PP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+function getInitialInvitation() {
+  return findGroupInvitationForEmail(getStoredUserEmail());
 }
 
-function parseMembers(value: string) {
-  return value
-    .split(/[\n,]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((email) => ({
-      email,
-      name: email.split("@")[0],
-      role: "Member" as const,
-    }));
+function getMemberName(email: string) {
+  return email
+    .split("@")[0]
+    .replace(/[._-]/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default function StudentSetupPage() {
   const router = useRouter();
+  const [studentEmail] = useState(() => getStoredUserEmail());
+  const [studentUid] = useState(() => getStoredUserUid());
+  const [invitation, setInvitation] = useState<CapstoneGroup | null>(() =>
+    getInitialInvitation(),
+  );
+  const [acceptedGroup] = useState(() => getStoredStudentGroup());
 
-  const [groupName, setGroupName] = useState("");
-  const [projectTitle, setProjectTitle] = useState("");
-  const [course, setCourse] = useState<CourseCode>("BSIT");
-  const [section, setSection] = useState("4A");
-  const [members, setMembers] = useState("");
-  const [joinCode, setJoinCode] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const invitationAccepted = invitation
+    ? hasAcceptedGroupInvitation(invitation.id)
+    : false;
 
-  const memberCount = useMemo(() => parseMembers(members).length, [members]);
-
-  async function handleCreateGroup() {
-    setError("");
-
-    const uid = getStoredUserUid();
-    const email = getStoredUserEmail();
-
-    if (!uid || !email) {
-      setError("Please log in again before creating a group.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const code = generateGroupCode();
-      const now = new Date().toISOString();
-
-      const groupPayload: Omit<CapstoneGroup, "id"> = {
-        groupName: groupName || "Untitled Group",
-        projectTitle: projectTitle || "Untitled Project",
-        groupCode: code,
-        course,
-        section,
-        members: [
-          {
-            uid,
-            email,
-            name: email.split("@")[0],
-            role: "Group Leader",
-          },
-          ...parseMembers(members),
-        ],
-        leaderId: uid,
-        adviserId: "",
-        adviserName: "Unassigned",
-        panelists: [],
-        stage: "Proposal Defense",
-        progress: 0,
-        status: "Active",
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      const groupRef = await addDoc(collection(db, "groups"), groupPayload);
-
-      const savedGroup: CapstoneGroup = {
-        id: groupRef.id,
-        ...groupPayload,
-      };
-
-      saveStoredStudentGroup(savedGroup);
-      setGeneratedCode(code);
-    } catch {
-      setError("Something went wrong while creating the group.");
-    } finally {
-      setLoading(false);
-    }
+  function refreshAssignmentStatus() {
+    setInvitation(findGroupInvitationForEmail(studentEmail));
   }
 
-  async function handleJoinGroup() {
-    setError("");
+  function handleAcceptInvitation() {
+    if (!invitation || !studentEmail) return;
 
-    const uid = getStoredUserUid();
-    const email = getStoredUserEmail();
-    const normalizedCode = joinCode.trim().toUpperCase();
+    const normalizedEmail = studentEmail.toLowerCase();
+    const nextGroup: CapstoneGroup = {
+      ...invitation,
+      members: invitation.members.map((member) =>
+        member.email.toLowerCase() === normalizedEmail
+          ? {
+              ...member,
+              uid: studentUid || member.uid,
+              name: member.name || getMemberName(member.email),
+            }
+          : member,
+      ),
+      updatedAt: new Date().toISOString(),
+    };
 
-    if (!uid || !email) {
-      setError("Please log in again before joining a group.");
-      return;
-    }
+    acceptGroupInvitation(invitation.id);
+    saveStoredStudentGroup(nextGroup);
+    router.push("/student");
+  }
 
-    if (!normalizedCode) {
-      setError("Group code is required.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const groupQuery = query(
-        collection(db, "groups"),
-        where("groupCode", "==", normalizedCode),
-        limit(1),
-      );
-
-      const snapshot = await getDocs(groupQuery);
-
-      if (snapshot.empty) {
-        setError("No group found with that code.");
-        return;
-      }
-
-      const groupDoc = snapshot.docs[0];
-      const groupData = groupDoc.data() as Omit<CapstoneGroup, "id">;
-
-      const member = {
-        uid,
-        email,
-        name: email.split("@")[0],
-        role: "Member" as const,
-      };
-
-      const existingMembers = groupData.members || [];
-      const isAlreadyMember = existingMembers.some(
-        (item) => item.email.toLowerCase() === email.toLowerCase(),
-      );
-
-      const nextMembers = isAlreadyMember
-        ? existingMembers
-        : [...existingMembers, member];
-
-      if (!isAlreadyMember) {
-        await updateDoc(groupDoc.ref, {
-          members: nextMembers,
-          updatedAt: new Date().toISOString(),
-        });
-      }
-
-      saveStoredStudentGroup({
-        id: groupDoc.id,
-        ...groupData,
-        members: nextMembers,
-      });
-
+  function continueToDashboard() {
+    if (acceptedGroup) {
       router.push("/student");
-    } catch {
-      setError("Something went wrong while joining the group.");
-    } finally {
-      setLoading(false);
+      return;
+    }
+
+    if (invitation && invitationAccepted) {
+      saveStoredStudentGroup(invitation);
+      router.push("/student");
     }
   }
 
@@ -192,8 +88,8 @@ export default function StudentSetupPage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(249,249,255,0)_82%),radial-gradient(circle_at_50%_28%,rgba(207,247,236,0.34),rgba(249,249,255,0)_58%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
 
-        <div className="relative z-10 w-full max-w-6xl">
-          <div className="mb-12 flex items-center gap-4">
+        <div className="relative z-10 w-full max-w-5xl">
+          <div className="mb-10 flex items-center gap-4">
             <Image
               src="/logotop.png"
               alt="Project Pulse Logo"
@@ -206,143 +102,142 @@ export default function StudentSetupPage() {
                 Project <span className="text-[#3a7f35]">Pulse</span>
               </p>
               <p className="mt-1 text-sm font-semibold text-[#4d5751]">
-                Student Workspace Setup
+                Student Group Assignment
               </p>
             </div>
           </div>
 
-          {error && (
-            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
             <div>
-              <span className="inline-flex rounded-full border border-[#16a34a] bg-[#16a34a] px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] text-white">
-                Student Setup
-              </span>
-
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
+                Adviser-managed grouping
+              </p>
               <h1 className="mt-5 max-w-xl text-4xl font-extrabold tracking-tight text-[#171c19] md:text-6xl">
-                Set up your capstone group.
+                Your capstone group starts with your adviser.
               </h1>
-
               <p className="mt-5 max-w-xl text-base leading-8 text-[#4d5751]">
-                Groups are saved to Firebase and can be assigned advisers and
-                panelists by the Admin.
+                Group creation is handled by the adviser during the AppDev
+                proposal phase. Once your adviser adds you to a group, your
+                invitation will appear here and your dashboard will open after
+                confirmation.
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="rounded-lg border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
-                <h2 className="text-xl font-extrabold tracking-tight text-[#171c19]">
-                  Create Group
+            {!invitation && !acceptedGroup && (
+              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
+                  Pending Group Assignment
+                </p>
+                <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#171c19]">
+                  You have not been added to a capstone group yet.
                 </h2>
-
-                <div className="mt-6 space-y-3">
-                  <input
-                    placeholder="Group name"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                  />
-
-                  <input
-                    placeholder="Project title"
-                    value={projectTitle}
-                    onChange={(e) => setProjectTitle(e.target.value)}
-                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                  />
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <select
-                      value={course}
-                      onChange={(e) => setCourse(e.target.value as CourseCode)}
-                      className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                    >
-                      {courses.map((item) => (
-                        <option key={item}>{item}</option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={section}
-                      onChange={(e) => setSection(e.target.value)}
-                      className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                    >
-                      {sections.map((item) => (
-                        <option key={item}>{item}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <textarea
-                    placeholder="Members' UB emails, separated by comma or new line"
-                    value={members}
-                    onChange={(e) => setMembers(e.target.value)}
-                    className="min-h-24 w-full resize-none rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                  />
-
-                  <p className="text-xs font-medium text-[#4d5751]">
-                    Members added: {memberCount}
-                  </p>
-
-                  {!generatedCode ? (
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={handleCreateGroup}
-                      className="w-full rounded-lg bg-[#171c19] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(23,28,25,0.18)] transition hover:bg-[#2a302c] disabled:opacity-60"
-                    >
-                      {loading ? "Creating..." : "Create Group"}
-                    </button>
-                  ) : (
-                    <div className="rounded-lg border border-[#16a34a] bg-[#16a34a] p-4">
-                      <p className="text-xs font-bold text-white">
-                        Group created successfully
-                      </p>
-                      <p className="mt-2 text-2xl font-extrabold text-white">
-                        {generatedCode}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => router.push("/student")}
-                        className="mt-4 w-full rounded-lg bg-[#171c19] py-3 text-sm font-bold text-white"
-                      >
-                        Continue to Dashboard
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </Card>
-
-              <Card className="rounded-lg border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
-                <h2 className="text-xl font-extrabold tracking-tight text-[#171c19]">
-                  Join Group
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-[#4d5751]">
-                  Enter the group code provided by your leader.
+                <p className="mt-4 text-sm leading-7 text-[#4d5751]">
+                  Your account is active, but your student dashboard will become
+                  available after your adviser creates your group and adds your
+                  registered email.
                 </p>
 
-                <div className="mt-6 space-y-3">
-                  <input
-                    placeholder="Group code"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="w-full rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] px-4 py-3 text-sm uppercase outline-none focus:border-[#16a34a] focus:ring-2 focus:ring-[#bbf7d0]"
-                  />
-
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleJoinGroup}
-                    className="w-full rounded-lg border border-[#16a34a] bg-[#16a34a] py-3 text-sm font-bold text-white transition hover:border-[#15803d] hover:bg-[#15803d] disabled:opacity-60"
-                  >
-                    {loading ? "Joining..." : "Join Group"}
-                  </button>
+                <div className="mt-6 rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b877f]">
+                    Logged-in student
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[#171c19]">
+                    {studentEmail || "No student email found"}
+                  </p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={refreshAssignmentStatus}
+                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+                >
+                  Refresh Assignment Status
+                </button>
               </Card>
-            </div>
+            )}
+
+            {invitation && !invitationAccepted && (
+              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
+                  Group Invitation
+                </p>
+                <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#171c19]">
+                  Your adviser added you to a capstone group.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-[#4d5751]">
+                  Review the group details below. Accepting confirms that this
+                  is your official group for the proposal defense phase.
+                </p>
+
+                <div className="mt-6 grid gap-3 text-sm">
+                  <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b877f]">
+                      Group
+                    </p>
+                    <p className="mt-2 font-bold text-[#171c19]">
+                      {invitation.groupName}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b877f]">
+                      Project Title
+                    </p>
+                    <p className="mt-2 font-bold text-[#171c19]">
+                      {invitation.projectTitle}
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b877f]">
+                        Adviser
+                      </p>
+                      <p className="mt-2 font-bold text-[#171c19]">
+                        {invitation.adviserName}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b877f]">
+                        Course & Section
+                      </p>
+                      <p className="mt-2 font-bold text-[#171c19]">
+                        {invitation.course} {invitation.section}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAcceptInvitation}
+                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+                >
+                  Accept and Continue to Dashboard
+                </button>
+              </Card>
+            )}
+
+            {(acceptedGroup || (invitation && invitationAccepted)) && (
+              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
+                  Group Assignment Confirmed
+                </p>
+                <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#171c19]">
+                  Your capstone group is already confirmed.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-[#4d5751]">
+                  You can continue to your dashboard and access your project
+                  workspace, submissions, feedback, and defense preparation.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={continueToDashboard}
+                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+                >
+                  Continue to Dashboard
+                </button>
+              </Card>
+            )}
           </div>
         </div>
       </section>

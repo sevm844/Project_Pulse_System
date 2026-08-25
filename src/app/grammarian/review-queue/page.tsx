@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import GrammarianShell from "../_components/GrammarianShell";
 import Card from "../_components/Card";
 import {
@@ -9,9 +9,7 @@ import {
   returnGrammarReviewForRevision,
   updateGrammarReview,
   type GrammarReviewAssignment,
-  type CertificateDetails,
 } from "../../_utils/grammarReviewStorage";
-import HighlightCommentEditor from "../../student/_components/HighlightCommentEditor";
 
 function statusClasses(status: string) {
   if (status === "Certified") {
@@ -45,72 +43,6 @@ export default function GrammarianReviewQueuePage() {
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<number, string>>(
     {},
   );
-  const [certificateEditingId, setCertificateEditingId] = useState<
-    number | null
-  >(null);
-  const [certificateDrafts, setCertificateDrafts] = useState<
-    Record<number, CertificateDetails>
-  >({});
-  const certificateEditorRef = useRef<HTMLDivElement | null>(null);
-
-  function buildCertificateHtml(details: CertificateDetails | undefined) {
-    const d = details || {
-      projectTitle: "",
-      authorNames: "",
-      degreeType: "",
-      dateSigned: "",
-      certifiedByName: "",
-      certifiedByTitle: "",
-    };
-
-    return `
-      <div style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: #212121; min-height:1060px; display:flex; flex-direction:column; justify-content:space-between;">
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px;">
-            <div style="font-size:12px; color:#5f7063;">F-RPO-09</div>
-            <div style="text-align:right; max-width:280px;">
-              <img src="/ub.png" alt="University of Batangas" style="max-width:100%; height:auto; display:inline-block;" />
-            </div>
-          </div>
-
-        <div style="text-align:center; margin-bottom:28px;">
-          <div style="font-size:13px; letter-spacing:0.3em; text-transform:uppercase; color:#4f6054; margin-bottom:12px;">Certification of Editing/Originality</div>
-        </div>
-
-        <div style="max-width:760px; margin:0 auto; font-size:14px; line-height:1.9;">
-          <p style="text-align:justify; text-indent:2rem;"><strong>This is to certify that this thesis/dissertation/capstone project entitled “${escapeHtml(d.projectTitle)}”:</strong> in partial fulfillment of the requirements for the degree <strong>${escapeHtml(d.degreeType)}</strong> was properly edited and that no part lifted verbatim from the references, theses, and dissertations used or examined was unacknowledged; hence, no issue of plagiarism can be raised. The manuscript has been subjected to similarity/plagiarism check by Turnitin software.</p>
-
-          <p style="margin-top:36px; text-align:center;"><strong>Done this ${escapeHtml(d.dateSigned)}.</strong></p>
-
-          <div style="margin-top:44px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
-            <div style="font-size:14px; font-weight:700;">Certified by:</div>
-            <div style="margin-top:18px;">
-              <img src="/mamB.png" alt="Grammarian signature logo" style="max-width:180px; width:100%; height:auto; display:block;" />
-            </div>
-            <div style="font-size:12px; color:#4a4a4a;">Printed Name and Signature of Editor</div>
-            <div style="margin-top:8px; font-size:12px;">Date Signed: _________________________</div>
-          </div>
-        </div>
-        </div>
-
-        <div style="width:100%; max-width:760px; margin:80px auto 0; padding:0 20px; box-sizing:border-box; display:flex; justify-content:space-between; font-size:11px; color:#6a6f6c;">
-          <div style="width:33%; text-align:left;">Revision No.: 0</div>
-          <div style="width:33%; text-align:center;">Issue Date: June 9, 2021</div>
-          <div style="width:33%; text-align:right;">Revision Date: N/A</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function escapeHtml(input: string) {
-    return input
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -118,25 +50,6 @@ export default function GrammarianReviewQueuePage() {
       setItems(reviews);
       setFeedbackDrafts(
         Object.fromEntries(reviews.map((item) => [item.id, item.feedback])),
-      );
-      setCertificateDrafts(
-        Object.fromEntries(
-          reviews.map((item) => [
-            item.id,
-            item.certificateDetails || {
-              projectTitle: item.projectTitle || "",
-              authorNames: "",
-              degreeType: "Bachelor of Science",
-              dateSigned: new Date().toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              }),
-              certifiedByName: item.assignedGrammarian || "",
-              certifiedByTitle: "Editor",
-            },
-          ]),
-        ),
       );
     });
   }, []);
@@ -190,19 +103,7 @@ export default function GrammarianReviewQueuePage() {
 
   function certify(id: number) {
     const feedback = feedbackDrafts[id]?.trim();
-    const details = certificateDrafts[id];
-    const editorHtml = certificateEditorRef.current?.innerHTML;
-    const nextDetails = {
-      ...details,
-      bodyHtml: editorHtml || details?.bodyHtml,
-    };
-    setCertificateDrafts((current) => ({
-      ...current,
-      [id]: nextDetails,
-    }));
-    const next = certifyGrammarReview(id, feedback || "", nextDetails);
-    setItems(next);
-    setCertificateEditingId(null);
+    setItems(certifyGrammarReview(id, feedback || ""));
   }
 
   return (
@@ -355,7 +256,7 @@ export default function GrammarianReviewQueuePage() {
                         onClick={() =>
                           setExpandedId(expanded ? null : item.id)
                         }
-                        className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                        className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                       >
                         {expanded ? "Close" : "Open"}
                       </button>
@@ -370,14 +271,6 @@ export default function GrammarianReviewQueuePage() {
                         className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f1] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Start Review
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setCertificateEditingId(item.id)}
-                        className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                      >
-                        Edit Certificate
                       </button>
 
                       <button
@@ -437,75 +330,17 @@ export default function GrammarianReviewQueuePage() {
                           type="button"
                           onClick={() => certify(item.id)}
                           disabled={item.reviewStatus === "Certified"}
-                          className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Generate Certification and Send to Dean
                         </button>
                       </div>
                     </div>
                   )}
-
-                  {certificateEditingId === item.id && (
-                    <div className="mt-4 rounded-[32px] bg-white p-8 shadow-[0_10px_35px_rgba(31,42,36,0.12)]">
-                      <div className="mx-auto max-w-[820px]">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.36em] text-[#7b877f]">
-                              Certificate Preview
-                            </p>
-                            <h3 className="mt-3 text-2xl font-semibold text-[#203028]">
-                              Certificate of Editing (F-RPO-09)
-                            </h3>
-                            <p className="mt-2 text-sm text-[#59645d]">
-                              The certificate is rendered as a document page, not a form.
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setCertificateEditingId(null)}
-                            className="text-[#4d6c52] hover:text-[#203028]"
-                          >
-                            ✕
-                          </button>
-                        </div>
-
-                        <div className="mt-8 overflow-auto rounded-xl bg-[#e9eee9] px-4 py-8">
-                          <HighlightCommentEditor
-                            key={`certificate-editor-${item.id}-${certificateDrafts[item.id]?.bodyHtml ? 'saved' : 'new'}`}
-                            ref={certificateEditorRef}
-                            content={certificateDrafts[item.id]?.bodyHtml || buildCertificateHtml(certificateDrafts[item.id])}
-                            fontSize="16"
-                            documentId={item.id}
-                            version="v1"
-                            onInput={() => {}}
-                            onFocus={() => {}}
-                            onKeyDown={() => {}}
-                          />
-                        </div>
-
-                        <div className="mt-6 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setCertificateEditingId(null)}
-                            className="rounded-lg border border-[#d1e4d3] bg-white px-4 py-2 text-xs font-semibold text-[#4d6c52] hover:bg-[#f7f9f6]"
-                          >
-                            Done Editing
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => certify(item.id)}
-                            className="rounded-lg bg-[#4d6c52] px-4 py-2 text-xs font-semibold text-white hover:bg-[#203028]"
-                          >
-                            Save & Send Certificate to Dean
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              );
-            })
-          )}
+                  );
+                })
+            )}
           </div>
         </Card>
       </div>
@@ -523,4 +358,3 @@ function DetailBox({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-

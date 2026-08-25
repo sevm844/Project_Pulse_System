@@ -582,7 +582,7 @@ export default function DeanFinalApprovalPage() {
                         type="button"
                         onClick={() => approveSubmission(item.id)}
                         disabled={!approveReady}
-                        className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Approve
                       </button>
@@ -649,7 +649,7 @@ export default function DeanFinalApprovalPage() {
                         type="button"
                         onClick={() => sendToGrammarian(item)}
                         disabled={!canSendToGrammarian(item)}
-                        className="h-10 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-10 rounded-lg bg-[#123f2b] px-4 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Send to Grammarian
                       </button>
@@ -777,7 +777,7 @@ export default function DeanFinalApprovalPage() {
                           <button
                             type="button"
                             onClick={() => saveEdit(item.id)}
-                            className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                           >
                             Save Changes
                           </button>

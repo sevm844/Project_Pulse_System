@@ -43,7 +43,7 @@ const featureSummaries = [
     body: "Connect students, advisers, panelists, grammarians, coordinators, records staff, and admins.",
   },
   {
-    title: "Support & Administration",
+    title: "Support and Administration",
     body: "Manage accounts, deadlines, announcements, notifications, and audit-ready activity logs.",
   },
 ];
@@ -56,7 +56,7 @@ const leadBenefits = [
 
 const stats = [
   ["100%", "System Document Tracking Accuracy"],
-  ["7+", "Role-Based Dashboard Workflows"],
+  ["2+", "Role-Based Dashboard Workflows"],
   ["24/7", "Milestone and Deadline Availability"],
 ];
 
@@ -86,15 +86,18 @@ function SectionTag({ children }: { children: React.ReactNode }) {
   );
 }
 
-function NavIcon({ active = false }: { active?: boolean }) {
+function PulseMark() {
   return (
-    <span
-      className={`block h-9 w-9 rounded-lg border ${
-        active
-          ? "border-[#16a34a] bg-[#16a34a] shadow-[0_8px_24px_rgba(22,163,74,0.28)]"
-          : "border-[#e4e8ef] bg-white"
-      }`}
-    />
+    <div
+      className="mx-auto mb-5 grid h-20 w-20 grid-cols-2 gap-2"
+      aria-label="Project Pulse logo mark"
+      role="img"
+    >
+      <span className="rounded-full bg-[#4ac214] shadow-[inset_-8px_-10px_18px_rgba(58,127,53,0.28)]" />
+      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
+      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
+      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
+    </div>
   );
 }
 
@@ -103,7 +106,7 @@ function MiniCalendar() {
     <div className="rounded-lg border border-[#dfe5ef] bg-white p-4">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm font-bold text-[#171c19]">Defense Week</p>
-        <span className="rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white">
+        <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#3a7f35]">
           Live
         </span>
       </div>
@@ -114,7 +117,7 @@ function MiniCalendar() {
             <div
               className={`mt-2 h-12 rounded-lg border ${
                 index === 2
-                  ? "border-[#16a34a] bg-[#16a34a]"
+                  ? "border-[#123f2b] bg-[#123f2b]"
                   : "border-[#e5e7ef] bg-[#f9f9ff]"
               }`}
             />
@@ -146,7 +149,7 @@ function FAQAccordion() {
               <span className="text-sm font-bold text-[#171c19]">
                 {item.question}
               </span>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#171c19] text-lg font-semibold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#123f2b] text-lg font-semibold text-white">
                 {isOpen ? "-" : "+"}
               </span>
             </button>
@@ -199,7 +202,7 @@ export default function Home() {
             </a>
               <a
                 href="/register"
-                className="rounded-lg border border-[#16a34a] bg-[#16a34a] px-4 py-2 text-sm font-bold text-white transition hover:border-[#15803d] hover:bg-[#15803d]"
+                className="rounded-lg border border-[#123f2b] bg-[#123f2b] px-4 py-2 text-sm font-bold text-white transition hover:border-[#0f3324] hover:bg-[#0f3324]"
               >
                 Create Account
               </a>
@@ -217,16 +220,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
 
         <div className="relative z-10 mx-auto max-w-5xl">
-          <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-lg bg-white shadow-[0_18px_48px_rgba(23,28,25,0.12)]">
-            <div className="absolute inset-0 -z-10 rounded-lg bg-[#16a34a] opacity-35 blur-2xl" />
-            <Image
-              src="/Logo-icon.png"
-              alt="Project Pulse Icon"
-              width={42}
-              height={42}
-              priority
-            />
-          </div>
+          <PulseMark />
 
           <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold leading-tight md:text-6xl">
             Unified Capstone Lifecycle Management
@@ -240,7 +234,7 @@ export default function Home() {
           <div className="relative z-30 mt-10">
             <a
               href="/login"
-              className="relative z-30 inline-flex rounded-lg bg-[#171c19] px-7 py-3.5 text-sm font-bold text-white shadow-[0_16px_40px_rgba(23,28,25,0.2)] transition hover:bg-[#2a302c]"
+              className="relative z-30 inline-flex rounded-lg bg-[#123f2b] px-7 py-3.5 text-sm font-bold text-white shadow-[0_16px_40px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
             >
               Access Your Dashboard
             </a>
@@ -253,17 +247,9 @@ export default function Home() {
           <div className="relative overflow-hidden rounded-lg border border-white/45 bg-white/30 p-2 shadow-[0_28px_80px_rgba(23,28,25,0.10)] backdrop-blur-3xl">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(22,163,74,0.18),transparent_34%),radial-gradient(circle_at_94%_18%,rgba(22,163,74,0.12),transparent_30%)]" />
             <div className="relative grid min-h-[620px] overflow-hidden rounded-lg border border-white/35 bg-white/22 backdrop-blur-3xl lg:grid-cols-[82px_minmax(0,1fr)]">
-              <aside className="hidden border-r border-white/35 bg-white/38 px-4 py-7 backdrop-blur-2xl lg:flex lg:flex-col lg:justify-between">
-                <div className="space-y-5">
-                  <NavIcon active />
-                  <NavIcon />
-                  <NavIcon />
-                  <NavIcon />
-                  <NavIcon />
-                </div>
-                <div className="space-y-4">
-                  <span className="block h-8 w-8 rounded-full border border-white/45 bg-white/45 backdrop-blur-xl" />
-                  <span className="block h-9 w-9 rounded-full bg-[#171c19]/90" />
+              <aside className="hidden border-r border-white/35 bg-white/38 px-4 py-7 backdrop-blur-2xl lg:block">
+                <div className="h-full rounded-lg border border-white/35 bg-white/24 p-3">
+                  <div className="h-full rounded bg-[linear-gradient(180deg,rgba(22,163,74,0.28),rgba(255,255,255,0.32)_34%,rgba(23,28,25,0.12))]" />
                 </div>
               </aside>
 
@@ -277,7 +263,7 @@ export default function Home() {
                       Department Capstone Command Center
                     </h2>
                   </div>
-                  <div className="rounded-lg bg-[#171c19] px-4 py-2 text-sm font-bold text-[#16a34a] shadow-[0_14px_32px_rgba(23,28,25,0.2)]">
+                  <div className="border-l-4 border-[#123f2b] pl-4 text-sm font-bold text-[#3a7f35]">
                     CICT Portal
                   </div>
                 </div>
@@ -301,18 +287,14 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="mt-5 rounded-lg border border-white/38 bg-white/22 p-3 backdrop-blur-2xl">
-                  <div className="flex items-center gap-3 rounded-lg bg-white/34 px-4 py-3 backdrop-blur-xl">
-                    <span className="h-3 w-3 rounded-full bg-[#16a34a]" />
-                    <input
-                      readOnly
-                      value="Ask Project Pulse to find pending revisions, defense schedules, or final approval status..."
-                      className="min-w-0 flex-1 bg-transparent text-sm text-[#4d5751] outline-none"
-                    />
-                    <button className="rounded-lg bg-[#171c19] px-4 py-2 text-xs font-bold text-white shadow-[0_10px_24px_rgba(23,28,25,0.18)]">
-                      Search
-                    </button>
-                  </div>
+                <div className="mt-5 rounded-lg border border-white/38 bg-white/22 p-5 backdrop-blur-2xl">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3a7f35]">
+                    Workspace Overview
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-[#4d5751]">
+                    Pending revisions, defense schedules, final approval status,
+                    and archive readiness are shown in one organized dashboard.
+                  </p>
                 </div>
               </div>
             </div>
@@ -344,7 +326,7 @@ export default function Home() {
             <div className="mt-8 space-y-4">
               {leadBenefits.map((benefit, index) => (
                 <div key={benefit} className="flex gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#16a34a] text-sm font-bold text-white">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#123f2b] text-sm font-bold text-white">
                     {index + 1}
                   </span>
                   <p className="pt-1 text-base leading-7 text-[#4d5751]">
@@ -356,10 +338,10 @@ export default function Home() {
           </div>
 
           <div className="rounded-lg border border-[#dfe5ef] bg-white p-5 shadow-[0_24px_70px_rgba(23,28,25,0.08)]">
-            <div className="rounded-lg bg-[#171c19] p-4 text-white">
+            <div className="rounded-lg bg-[#123f2b] p-4 text-white">
               <div className="mb-5 flex items-center justify-between">
                 <p className="font-bold">Group Workflow Feed</p>
-                <span className="rounded-full bg-[#16a34a] px-3 py-1 text-xs font-bold text-white">
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#86efac]">
                   Active
                 </span>
               </div>
@@ -378,7 +360,7 @@ export default function Home() {
                       <p className="font-semibold">{title}</p>
                       <p className="mt-1 text-xs text-white/65">{owner}</p>
                     </div>
-                    <span className="self-start rounded-full bg-white px-3 py-1 text-xs font-bold text-[#171c19]">
+                    <span className="self-start text-xs font-bold uppercase tracking-[0.12em] text-white/72">
                       {status}
                     </span>
                   </div>
@@ -389,7 +371,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#171c19] px-5 py-20 text-white lg:px-8">
+      <section className="bg-[#123f2b] px-5 py-20 text-white lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionTag>System Reliability</SectionTag>
           <div className="mt-4 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
@@ -410,7 +392,7 @@ export default function Home() {
                 key={label}
                 className="rounded-lg border border-white/10 bg-white/7 p-6"
               >
-                <p className="text-5xl font-bold text-[#16a34a]">{value}</p>
+                <p className="text-5xl font-bold text-white">{value}</p>
                 <p className="mt-4 text-sm font-semibold leading-6 text-white/78">
                   {label}
                 </p>
@@ -435,18 +417,12 @@ export default function Home() {
                 Built-in Document Editor
               </p>
               <div className="mt-5 rounded-lg border border-[#dfe5ef] bg-[#f9f9ff] p-4">
-                <div className="mb-4 flex gap-2">
-                  {["B", "I", "H1", "List"].map((tool) => (
-                    <span
-                      key={tool}
-                      className="rounded-lg bg-white px-3 py-1 text-xs font-bold"
-                    >
-                      {tool}
-                    </span>
-                  ))}
+                <div className="mb-4 space-y-2">
+                  <div className="h-2 w-28 rounded bg-[#123f2b]" />
+                  <div className="h-2 w-44 rounded bg-[#d8dce5]" />
                 </div>
                 <div className="space-y-2">
-                  <div className="h-3 w-4/5 rounded bg-[#171c19]" />
+                  <div className="h-3 w-4/5 rounded bg-[#123f2b]" />
                   <div className="h-3 w-full rounded bg-[#d8dce5]" />
                   <div className="h-3 w-3/4 rounded bg-[#d8dce5]" />
                   <div className="h-16 rounded-lg bg-white" />
@@ -465,7 +441,7 @@ export default function Home() {
                     className="flex items-center justify-between rounded-lg bg-[#f9f9ff] px-4 py-3"
                   >
                     <span className="text-sm font-semibold">{item}</span>
-                    <span className="h-3 w-3 rounded-full bg-[#16a34a]" />
+                    <span className="h-3 w-3 rounded-full bg-[#123f2b]" />
                   </div>
                 ))}
               </div>
@@ -480,10 +456,10 @@ export default function Home() {
               </div>
             </article>
 
-            <article className="rounded-lg border border-[#dfe5ef] bg-[#171c19] p-6 text-white lg:col-span-4">
+            <article className="rounded-lg border border-[#dfe5ef] bg-[#123f2b] p-6 text-white lg:col-span-4">
               <div className="grid gap-8 lg:grid-cols-2">
                 <div>
-                  <p className="text-sm font-bold text-[#16a34a]">
+                  <p className="text-sm font-bold text-[#123f2b]">
                     Real-Time Tracking
                   </p>
                   <h3 className="mt-3 text-3xl font-bold">
@@ -506,7 +482,7 @@ export default function Home() {
                   ].map((step) => (
                     <div
                       key={step}
-                      className="rounded-lg border border-white/10 bg-white/7 px-4 py-3 text-sm font-semibold"
+                      className="border-l-2 border-[#123f2b] bg-white/7 px-4 py-3 text-sm font-semibold"
                     >
                       {step}
                     </div>
@@ -529,12 +505,6 @@ export default function Home() {
               Common questions about document revisions, deadline controls, and
               permission-based access for capstone stakeholders.
             </p>
-            <a
-              href="/contact"
-              className="mt-8 inline-flex rounded-lg bg-[#171c19] px-6 py-3 text-sm font-bold text-white"
-            >
-              Contact Admin / Support
-            </a>
           </div>
           <FAQAccordion />
         </div>
@@ -552,19 +522,18 @@ export default function Home() {
                   Get updates about deployment, training, and department rollout.
                 </p>
               </div>
-              <form className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="Enter department email"
-                  className="h-12 min-w-0 flex-1 rounded-lg border border-[#dfe5ef] px-4 text-sm outline-none focus:border-[#171c19]"
-                />
-                <button
-                  type="button"
-                  className="h-12 rounded-lg bg-[#16a34a] px-5 text-sm font-bold text-white transition hover:bg-[#15803d]"
-                >
-                  Notify Me / Contact Admin
-                </button>
-              </form>
+              <div className="grid gap-4 text-sm text-[#4d5751] sm:grid-cols-3">
+                {["Deployment updates", "Training support", "Department rollout"].map(
+                  (item) => (
+                    <div key={item} className="border-l-2 border-[#123f2b] pl-4">
+                      <p className="font-bold text-[#171c19]">{item}</p>
+                      <p className="mt-1 leading-6">
+                        Coordinated through authorized system administrators.
+                      </p>
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </div>

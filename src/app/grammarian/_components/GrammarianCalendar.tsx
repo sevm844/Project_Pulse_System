@@ -8,7 +8,7 @@ export default function GrammarianCalendar() {
       title="Grammarian Calendar"
       storageKey="project-pulse-grammarian-calendar-notes"
       categories={categories}
-      variant="glass"
+      compact
     />
   );
 }

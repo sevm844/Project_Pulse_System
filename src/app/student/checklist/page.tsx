@@ -161,7 +161,7 @@ export default function ChecklistPage() {
                 <button
                   type="button"
                   onClick={() => completeTask(selected)}
-                  className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                  className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                 >
                   Submit Requirement
                 </button>

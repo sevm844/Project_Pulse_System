@@ -21,29 +21,64 @@ export const DEAN_PROFILE_IMAGE_UPDATED_EVENT =
 const DEAN_SIDEBAR_COLLAPSED_KEY = "project-pulse-dean-sidebar-collapsed";
 
 const navItems = [
-  ["Dashboard", "/dashbrd.png", "/dean"],
-  ["Assigned Groups", "/fold.png", "/dean/assigned-groups"],
-  ["Reviews", "/docs.png", "/dean/reviews"],
-  ["Defense", "/work.png", "/dean/defense"],
-  ["Submissions", "/comment.png", "/dean/submissions"],
-  ["Document Versions", "/docs.png", "/dean/document-versions"],
-  ["Projects Monitoring", "/fold.png", "/dean/projects"],
-  ["Final Approvals", "/checklt.png", "/dean/approvals"],
-  ["Reports", "/docs.png", "/dean/reports"],
-  ["Messages", "/chats.png", "/dean/messages"],
-  ["Notifications", "/notif.png", "/dean/notifications"],
-  ["Profile", "/profile.png", "/dean/profile"],
+  {
+    label: "Dashboard",
+    icon: "/dashbrd.png",
+    href: "/dean",
+    matches: ["/dean"],
+  },
+  {
+    label: "Projects",
+    icon: "/fold.png",
+    href: "/dean/projects",
+    matches: [
+      "/dean/projects",
+      "/dean/assigned-groups",
+      "/dean/submissions",
+      "/dean/document-versions",
+      "/dean/defense",
+      "/dean/schedule",
+    ],
+  },
+  {
+    label: "Approvals",
+    icon: "/checklt.png",
+    href: "/dean/approvals",
+    matches: ["/dean/approvals", "/dean/reviews", "/dean/final-approval"],
+  },
+  {
+    label: "Administration",
+    icon: "/profile.png",
+    href: "/dean/administration",
+    matches: ["/dean/administration"],
+  },
+  {
+    label: "Reports",
+    icon: "/docs.png",
+    href: "/dean/reports",
+    matches: ["/dean/reports"],
+  },
+  {
+    label: "Messages",
+    icon: "/chats.png",
+    href: "/dean/messages",
+    matches: ["/dean/messages"],
+  },
+  {
+    label: "Profile",
+    icon: "/profile.png",
+    href: "/dean/profile",
+    matches: ["/dean/profile", "/dean/notifications"],
+  },
 ] as const;
 
 type DeanShellProps = {
   title: string;
-  subtitle?: string;
   children: ReactNode;
 };
 
 export default function DeanShell({
   title,
-  subtitle = "Dean Executive Monitoring",
   children,
 }: DeanShellProps) {
   const pathname = usePathname();
@@ -62,7 +97,7 @@ export default function DeanShell({
   useEffect(() => {
     const role = localStorage.getItem("project-pulse-user-role");
 
-    if (role !== "Dean") {
+    if (role !== "Dean" && role !== "Admin") {
       router.replace("/login");
       return;
     }
@@ -135,55 +170,46 @@ export default function DeanShell({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
-      <div className="flex min-h-screen w-full overflow-hidden bg-white">
+    <main className="h-screen overflow-hidden bg-white text-[#1f2a24]">
+      <div className="flex h-full w-full overflow-hidden bg-white">
           <aside
-            className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
-              sidebarCollapsed ? "w-20" : "w-[270px]"
+            className={`relative hidden h-screen shrink-0 flex-col justify-between overflow-visible border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 lg:flex ${
+              sidebarCollapsed ? "w-20" : "w-[190px]"
             }`}
           >
             <SidebarToggle
               collapsed={sidebarCollapsed}
               onClick={toggleSidebar}
+              variant="panel"
             />
             <div>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-3">
+            <div
+              className={`flex items-center ${
+                sidebarCollapsed ? "justify-center" : "gap-2 px-2"
+              }`}
+            >
                 <Image
                   src="/logotop.png"
                   alt="Project Pulse"
                   width={34}
                   height={34}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
-
                 {!sidebarCollapsed && (
-                  <div className="min-w-0">
-                    <h1 className="truncate text-sm font-semibold tracking-tight">
-                      Project Pulse
-                    </h1>
-                    <p className="truncate text-[11px] text-[#7b877f]">
-                      Dean Portal
-                    </p>
-                  </div>
+                  <span className="text-sm font-semibold text-[#203028]">
+                    Project Pulse
+                  </span>
                 )}
-              </div>
-
             </div>
 
-            <nav className="mt-9 text-sm">
-              {!sidebarCollapsed && (
-                <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
-                  Executive Menu
-                </p>
-              )}
-
+            <nav className="mt-6 text-[12px]">
               <div className="space-y-1">
-                {navItems.map(([label, icon, href]) => {
-                  const isActive =
-                    href === "/dean"
+                {navItems.map(({ label, icon, href, matches }) => {
+                  const isActive = matches.some((match) =>
+                    match === "/dean"
                       ? pathname === "/dean"
-                      : pathname.startsWith(href);
+                      : pathname.startsWith(match),
+                  );
 
                   return (
                     <Link
@@ -192,8 +218,8 @@ export default function DeanShell({
                       title={label}
                       className={`flex items-center rounded-lg transition ${
                         sidebarCollapsed
-                          ? "justify-center px-0 py-3"
-                          : "gap-3 px-3 py-2.5"
+                          ? "justify-center px-0 py-2.5"
+                          : "gap-2 px-3 py-2"
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
@@ -220,27 +246,23 @@ export default function DeanShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
-              sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
+            className={`mt-auto flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
+              sidebarCollapsed ? "justify-center px-0 py-2.5" : "px-3 py-2.5"
             }`}
           >
             {sidebarCollapsed ? "Out" : "Log out"}
           </button>
         </aside>
 
-        <section className="relative flex-1 overflow-hidden bg-white">
+        <section className="relative h-screen flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
 
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
-              <div>
-                <p className="text-[11px] font-medium text-[#7b877f]">
-                  {subtitle}
-                </p>
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {title}
-                </h1>
-              </div>
+          <div className="relative z-10 flex h-full flex-col">
+            <header
+              aria-label={`${title} toolbar`}
+              className="shrink-0 flex items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
+            >
+              <div />
 
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />

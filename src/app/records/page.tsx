@@ -68,22 +68,24 @@ export default function RecordsPage() {
           <SidebarToggle
             collapsed={sidebarCollapsed}
             onClick={toggleSidebar}
+            variant="panel"
           />
-          <div className="flex items-center gap-3">
+          <div
+            className={`flex items-center ${
+              sidebarCollapsed ? "justify-center" : "gap-2 px-2"
+            }`}
+          >
             <Image
               src="/logotop.png"
               alt="Project Pulse"
               width={34}
               height={34}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             {!sidebarCollapsed && (
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight">
+              <span className="text-sm font-semibold text-[#203028]">
                 Project Pulse
-              </h1>
-              <p className="text-xs text-[#7b877f]">Records Staff Portal</p>
-            </div>
+              </span>
             )}
           </div>
 
@@ -158,7 +160,7 @@ export default function RecordsPage() {
                   Records & Archiving
                 </p>
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Records Staff Dashboard
+                  Records Overview
                 </h1>
               </div>
 
@@ -222,7 +224,7 @@ export default function RecordsPage() {
 
                 <Link
                   href="/records/final-approval"
-                  className="mt-5 inline-flex rounded-lg bg-[#202823] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
+                  className="mt-5 inline-flex rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
                 >
                   Open Final Validation
                 </Link>

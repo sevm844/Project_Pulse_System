@@ -90,7 +90,7 @@ export default function AdminNotificationsPage() {
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="rounded-lg bg-[#202823] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Mark All as Read
             </button>
@@ -121,7 +121,7 @@ export default function AdminNotificationsPage() {
                 onClick={() => setFilter(item)}
                 className={`rounded-lg px-4 py-2 text-xs font-semibold ${
                   filter === item
-                    ? "bg-[#202823] text-white"
+                    ? "bg-[#123f2b] text-white"
                     : "border border-[#dfe8df] bg-white text-[#59645d] hover:bg-[#f3f7f1]"
                 }`}
               >
@@ -162,7 +162,7 @@ export default function AdminNotificationsPage() {
                         </span>
 
                         {!notification.read && (
-                          <span className="rounded-full bg-[#202823] px-2.5 py-1 text-[10px] font-semibold text-white">
+                          <span className="rounded-full bg-[#123f2b] px-2.5 py-1 text-[10px] font-semibold text-white">
                             New
                           </span>
                         )}

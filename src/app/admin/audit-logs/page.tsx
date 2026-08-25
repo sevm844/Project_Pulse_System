@@ -380,7 +380,7 @@ export default function AdminAuditLogsPage() {
             <button
               type="button"
               onClick={addSampleLog}
-              className="h-10 w-[110px] shrink-0 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="h-10 w-[110px] shrink-0 rounded-lg bg-[#123f2b] px-4 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Add Test Log
             </button>

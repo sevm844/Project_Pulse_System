@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-[#111111] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#2a2a2a]"
+                  className="w-full rounded-full bg-[#123f2b] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0f3324]"
                 >
                   Continue
                 </button>
@@ -227,7 +227,7 @@ export default function ForgotPasswordPage() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-[#111111] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#2a2a2a]"
+                  className="w-full rounded-full bg-[#123f2b] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#0f3324]"
                 >
                   Create New Password
                 </button>

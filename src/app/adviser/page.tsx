@@ -45,8 +45,8 @@ export default function AdviserDashboardPage() {
   );
 
   return (
-    <AdviserShell title="Dashboard">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
+    <AdviserShell title="Adviser Overview">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-6">
           {/* Overview */}
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -69,7 +69,7 @@ export default function AdviserDashboardPage() {
               ],
             ].map(([label, value, href]) => (
               <Link key={label} href={String(href)}>
-                <Card className="border-white/55 bg-white/24 p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)] backdrop-blur-2xl transition hover:bg-white/38">
+                <Card className="p-5 transition hover:bg-[#fbfdfb]">
                   <p className="text-xs font-medium text-[#7b877f]">{label}</p>
                   <p className="mt-3 text-3xl font-semibold text-[#203028]">
                     {value}
@@ -79,9 +79,9 @@ export default function AdviserDashboardPage() {
             ))}
           </div>
 
-          <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+          <Card className="overflow-hidden">
             <div className="pointer-events-none absolute" />
-            <div className="bg-white/10 p-5">
+            <div className="bg-white p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6d7b72]">
@@ -97,14 +97,14 @@ export default function AdviserDashboardPage() {
 
               <Link
                 href="/adviser/assigned-groups"
-                className="self-start rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#245329] lg:self-auto"
+                className="self-start rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324] lg:self-auto"
               >
                 View Assigned Groups
               </Link>
             </div>
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[260px_1fr]">
-              <div className="rounded-xl border border-white/55 bg-white/34 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_rgba(31,42,36,0.04)] backdrop-blur-xl">
+              <div className="rounded-xl border border-[#dfe8df] bg-white p-5 shadow-[0_1px_2px_rgba(31,42,36,0.04)]">
                 <div className="flex items-center justify-center">
                   <div
                     className="flex h-36 w-36 items-center justify-center rounded-full"
@@ -112,7 +112,7 @@ export default function AdviserDashboardPage() {
                       background: `conic-gradient(#74bd6b ${averageProgress * 3.6}deg, #edf2ec 0deg)`,
                     }}
                   >
-                    <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white/82 backdrop-blur">
+                    <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white">
                       <p className="text-3xl font-bold text-[#203028]">
                         {averageProgress}%
                       </p>
@@ -133,7 +133,7 @@ export default function AdviserDashboardPage() {
                   <Link
                     key={group.id}
                     href="/adviser/assigned-groups"
-                    className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.035)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[#c7ff5f] hover:bg-white/48"
+                    className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition hover:-translate-y-0.5 hover:border-[#c7ff5f] hover:bg-[#fbfdfb]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -162,7 +162,7 @@ export default function AdviserDashboardPage() {
           </Card>
 
           {/* Course and section grouping */}
-          <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+          <Card className="p-5">
             <h2 className="text-lg font-semibold text-[#203028]">
               Assigned Groups by Course and Section
             </h2>
@@ -174,7 +174,7 @@ export default function AdviserDashboardPage() {
               {Object.entries(courseSections).map(([section, groups]) => (
                 <div
                   key={section}
-                  className="rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_rgba(31,42,36,0.035)] backdrop-blur-xl"
+                  className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-[#203028]">
@@ -190,7 +190,7 @@ export default function AdviserDashboardPage() {
                       <Link
                         key={group.id}
                         href="/adviser/assigned-groups"
-                        className="block rounded-lg border border-white/50 bg-white/42 px-3 py-3 backdrop-blur transition hover:bg-white/58"
+                        className="block rounded-lg border border-[#edf2ec] bg-white px-3 py-3 transition hover:bg-[#fbfdfb]"
                       >
                         <p className="text-sm font-medium text-[#203028]">
                           {group.groupName}
@@ -208,7 +208,7 @@ export default function AdviserDashboardPage() {
 
           <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
             {/* Review queue */}
-            <Card className="overflow-hidden border-white/55 bg-white/24 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="overflow-hidden">
               <div className="flex items-center justify-between border-b border-[#edf2ec] p-5">
                 <div>
                   <h2 className="text-lg font-semibold text-[#203028]">
@@ -227,9 +227,9 @@ export default function AdviserDashboardPage() {
                 </Link>
               </div>
 
-              <div className="overflow-x-auto bg-white/10">
+              <div className="overflow-x-auto bg-white">
                 <table className="w-full min-w-[760px] text-left text-sm">
-                  <thead className="border-b border-white/50 bg-white/28 text-xs text-[#7b877f] backdrop-blur">
+                  <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                     <tr>
                       <th className="px-5 py-3 font-medium">
                         Course / Section
@@ -240,7 +240,7 @@ export default function AdviserDashboardPage() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-white/45">
+                  <tbody className="divide-y divide-[#edf2ec]">
                     {reviewQueue.map((review) => (
                       <tr key={review.id}>
                         <td className="px-5 py-4 text-[#59645d]">
@@ -263,7 +263,7 @@ export default function AdviserDashboardPage() {
             </Card>
 
             {/* Recent submissions */}
-            <Card className="border-white/55 bg-white/24 p-5 shadow-[0_22px_60px_rgba(31,42,36,0.08)] backdrop-blur-2xl">
+            <Card className="p-5">
               <h2 className="text-lg font-semibold text-[#203028]">
                 Recent Student Submissions
               </h2>
@@ -273,7 +273,7 @@ export default function AdviserDashboardPage() {
                   <Link
                     key={submission.id}
                     href={submission.href}
-                    className="block rounded-xl border border-white/55 bg-white/34 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_10px_24px_rgba(31,42,36,0.03)] backdrop-blur-xl transition hover:bg-white/50"
+                    className="block rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition hover:bg-[#fbfdfb]"
                   >
                     <p className="text-sm font-medium text-[#203028]">
                       {submission.title}

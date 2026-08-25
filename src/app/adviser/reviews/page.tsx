@@ -611,7 +611,7 @@ export default function ReviewsPage() {
                   <button
                     type="button"
                     onClick={() => updateStatus("Approved")}
-                    className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                    className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                   >
                     Approve
                   </button>
@@ -662,7 +662,7 @@ export default function ReviewsPage() {
                   <div className="mt-4 space-y-3">
                     {selectedAnchor && (
                       <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#16a34a]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#123f2b]">
                           Selected text
                         </p>
                         <p className="mt-2 text-sm leading-6 text-[#203028]">
@@ -712,7 +712,7 @@ export default function ReviewsPage() {
                   <button
                     type="button"
                     onClick={addComment}
-                    className="mt-3 w-full rounded-lg bg-[#202823] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
+                    className="mt-3 w-full rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
                   >
                     Add Comment
                   </button>

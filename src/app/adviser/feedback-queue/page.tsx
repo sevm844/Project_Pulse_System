@@ -16,7 +16,7 @@ export default function FeedbackQueuePage() {
   const [feedbackItems, setFeedbackItems] = useState<StoredFeedbackItem[]>([]);
 
   useEffect(() => {
-    setFeedbackItems(getStoredFeedbackItems());
+    queueMicrotask(() => setFeedbackItems(getStoredFeedbackItems()));
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -36,7 +36,7 @@ export default function FeedbackQueuePage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-[#203028]">
-                Feedback Queue
+                Feedback Filters
               </h2>
               <p className="mt-1 text-sm text-[#7b877f]">
                 Track pending feedback, student revision responses, and verified
@@ -52,7 +52,7 @@ export default function FeedbackQueuePage() {
                   onClick={() => setFilter(item as "All" | StoredFeedbackStatus)}
                   className={`rounded-lg px-4 py-2 text-xs font-semibold ${
                     filter === item
-                      ? "bg-[#202823] text-white"
+                      ? "bg-[#123f2b] text-white"
                       : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
                   }`}
                 >
@@ -99,7 +99,7 @@ export default function FeedbackQueuePage() {
                     type="button"
                     onClick={() => updateStatus(item.id, "Verified")}
                     disabled={item.status !== "Addressed"}
-                    className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Verify Correction
                   </button>

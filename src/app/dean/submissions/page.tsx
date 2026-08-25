@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import DeanShell from "../_components/DeanShell";
@@ -465,7 +465,7 @@ export default function DeanSubmissionManagementPage() {
               <button
                 type="button"
                 onClick={updateDeadline}
-                className="rounded-xl bg-[#202823] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#303a33]"
+                className="rounded-xl bg-[#123f2b] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#0f3324]"
               >
                 Set Deadline
               </button>
@@ -665,7 +665,7 @@ export default function DeanSubmissionManagementPage() {
                             type="button"
                             onClick={() => sendSmsAlert(record.id)}
                             disabled={record.status !== "Late"}
-                            className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#303a33] disabled:cursor-not-allowed disabled:bg-[#dfe8df] disabled:text-[#7b877f]"
+                            className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:bg-[#dfe8df] disabled:text-[#7b877f]"
                           >
                             Send SMS
                           </button>

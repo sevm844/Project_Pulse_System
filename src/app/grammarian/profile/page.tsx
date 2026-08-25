@@ -85,7 +85,7 @@ export default function GrammarianProfilePage() {
   }
 
   return (
-    <GrammarianShell title="Profile">
+    <GrammarianShell title="Profile" hideContentTitle>
       <RoleSettingsContent
         user={profile}
         onFieldChange={handleFieldChange}

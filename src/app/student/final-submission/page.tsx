@@ -212,7 +212,7 @@ export default function StudentFinalSubmissionPage() {
             <button
               type="button"
               onClick={submitFinalRequirements}
-              className="mt-6 w-full rounded-lg bg-[#202823] px-4 py-3 text-sm font-semibold text-white hover:bg-[#303a33]"
+              className="mt-6 w-full rounded-lg bg-[#123f2b] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0f3324]"
             >
               Submit Final Requirements
             </button>

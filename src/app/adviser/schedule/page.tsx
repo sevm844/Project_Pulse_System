@@ -6,7 +6,9 @@ export default function AdviserSchedulePage() {
   return (
     <AdviserShell title="Schedule">
       <Card className="p-5">
-        <h2 className="text-lg font-semibold text-[#203028]">Schedule</h2>
+        <h2 className="text-lg font-semibold text-[#203028]">
+          Adviser Schedule
+        </h2>
         <p className="mt-1 text-sm text-[#7b877f]">
           Consultations, review deadlines, and defense-related schedules.
         </p>

@@ -85,7 +85,7 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <AdminShell title="Profile">
+    <AdminShell title="Profile" hideContentTitle>
       <RoleSettingsContent
         user={profile}
         onFieldChange={handleFieldChange}

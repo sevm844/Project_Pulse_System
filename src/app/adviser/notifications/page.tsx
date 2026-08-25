@@ -24,7 +24,7 @@ export default function AdviserNotificationsPage() {
   const [filter, setFilter] = useState<"All" | "Unread" | "Read">("All");
 
   useEffect(() => {
-    setNotifications(getNotificationsForRole("Adviser"));
+    queueMicrotask(() => setNotifications(getNotificationsForRole("Adviser")));
   }, []);
 
   const visibleNotifications = useMemo(() => {
@@ -43,7 +43,7 @@ export default function AdviserNotificationsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#203028]">
-              Notifications
+              Notification Center
             </h2>
             <p className="mt-1 text-sm text-[#7b877f]">
               Message alerts, student submissions, feedback activity, and
@@ -57,7 +57,7 @@ export default function AdviserNotificationsPage() {
               markAllNotificationsAsRead("Adviser");
               refresh();
             }}
-            className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white"
+            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white"
           >
             Mark All Read
           </button>
@@ -71,7 +71,7 @@ export default function AdviserNotificationsPage() {
               onClick={() => setFilter(item)}
               className={`rounded-lg px-4 py-2 text-xs font-semibold ${
                 filter === item
-                  ? "bg-[#202823] text-white"
+                  ? "bg-[#123f2b] text-white"
                   : "border border-[#dfe8df] hover:bg-[#f3f7f1]"
               }`}
             >

@@ -8,7 +8,7 @@ export default function AdviserCalendar() {
       title="Adviser Calendar"
       storageKey="project-pulse-adviser-calendar-notes"
       categories={categories}
-      variant="glass"
+      compact
     />
   );
 }

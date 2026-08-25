@@ -259,7 +259,7 @@ export default function FeedbackPage() {
 
                       <Link
                         href={documentLinks[item.chapter] || "/student/documents"}
-                        className="inline-flex rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#303a33]"
+                        className="inline-flex rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324]"
                       >
                         Open Linked Document
                       </Link>

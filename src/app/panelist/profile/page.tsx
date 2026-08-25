@@ -85,7 +85,7 @@ export default function PanelistProfilePage() {
   }
 
   return (
-    <PanelistShell title="Profile">
+    <PanelistShell title="Profile" hideContentTitle>
       <RoleSettingsContent
         user={profile}
         onFieldChange={handleFieldChange}

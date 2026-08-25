@@ -337,7 +337,7 @@ export default function DeanProjectsPage() {
                       <div className="flex flex-col gap-2 lg:items-end">
                         <Link
                           href={`/dean/projects/${project.id}`}
-                          className="rounded-lg bg-[#202823] px-4 py-2 text-center text-xs font-semibold text-white hover:bg-[#303a33]"
+                          className="rounded-lg bg-[#123f2b] px-4 py-2 text-center text-xs font-semibold text-white hover:bg-[#0f3324]"
                         >
                           Open Profile
                         </Link>

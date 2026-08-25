@@ -267,7 +267,7 @@ const documentVersions: DocumentVersion[] = [
 ];
 
 function actionButtonClass(variant: "primary" | "neutral" | "danger") {
-  if (variant === "primary") return "bg-[#49a95a] text-white hover:bg-[#3f964f]";
+  if (variant === "primary") return "bg-[#123f2b] text-white hover:bg-[#0f3324]";
   if (variant === "danger") {
     return "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100";
   }

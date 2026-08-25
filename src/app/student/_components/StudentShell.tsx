@@ -14,10 +14,6 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "../../_lib/firebase";
 import { clearStoredUserSession } from "../../_utils/authStorage";
-import {
-  getStoredStudentGroup,
-  subscribeToStudentGroupStorage,
-} from "../_utils/studentGroupStorage";
 
 export const STUDENT_PROFILE_IMAGE_KEY = "project-pulse-student-profile-image";
 export const STUDENT_PROFILE_IMAGE_UPDATED_EVENT =
@@ -45,14 +41,12 @@ type StudentShellProps = {
 
 export default function StudentShell({
   title,
-  subtitle = "Student Management",
   children,
 }: StudentShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   const [checkingAccess, setCheckingAccess] = useState(true);
-  const [groupName, setGroupName] = useState("Project Pulse");
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -72,19 +66,6 @@ export default function StudentShell({
 
     queueMicrotask(() => setCheckingAccess(false));
   }, [router]);
-
-  useEffect(() => {
-      function syncGroupName() {
-        const group = getStoredStudentGroup();
-      queueMicrotask(() =>
-        setGroupName(group?.groupName || "Project Pulse"),
-      );
-      }
-
-    syncGroupName();
-
-    return subscribeToStudentGroupStorage(syncGroupName);
-  }, []);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(STUDENT_PROFILE_IMAGE_KEY);
@@ -154,49 +135,39 @@ export default function StudentShell({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
-      <div className="flex min-h-screen w-full overflow-hidden bg-white">
+    <main className="h-screen overflow-hidden bg-white text-[#1f2a24]">
+      <div className="flex h-full w-full overflow-hidden bg-white">
           <aside
-            className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
-              sidebarCollapsed ? "w-20" : "w-[260px]"
+            className={`relative hidden h-screen shrink-0 flex-col justify-between overflow-visible border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 lg:flex ${
+              sidebarCollapsed ? "w-20" : "w-[190px]"
             }`}
           >
             <SidebarToggle
               collapsed={sidebarCollapsed}
               onClick={toggleSidebar}
+              variant="panel"
             />
             <div>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-3">
+            <div
+              className={`flex items-center ${
+                sidebarCollapsed ? "justify-center" : "gap-2 px-2"
+              }`}
+            >
                 <Image
                   src="/logotop.png"
-                  alt="Logo"
+                  alt="Project Pulse"
                   width={34}
                   height={34}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
-
                 {!sidebarCollapsed && (
-                  <div className="min-w-0">
-                    <h1 className="truncate text-sm font-semibold tracking-tight text-[#203028]">
-                      {groupName}
-                    </h1>
-                    <p className="truncate text-[11px] text-[#7b877f]">
-                      Student Workspace
-                    </p>
-                  </div>
+                  <span className="text-sm font-semibold text-[#203028]">
+                    Project Pulse
+                  </span>
                 )}
-              </div>
-
             </div>
 
-            <nav className="mt-9 text-sm">
-              {!sidebarCollapsed && (
-                <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8ba093]">
-                  Student Main Sidebar
-                </p>
-              )}
-
+            <nav className="mt-6 text-[12px]">
               <div className="space-y-1">
                 {navItems.map(([label, icon, href]) => {
                   const isActive =
@@ -211,8 +182,8 @@ export default function StudentShell({
                       title={label}
                       className={`flex w-full items-center rounded-lg text-left transition ${
                         sidebarCollapsed
-                          ? "justify-center px-0 py-3"
-                          : "gap-3 px-3 py-2.5"
+                          ? "justify-center px-0 py-2.5"
+                          : "gap-2 px-3 py-2"
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
@@ -239,27 +210,23 @@ export default function StudentShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
-              sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
+            className={`mt-auto flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
+              sidebarCollapsed ? "justify-center px-0 py-2.5" : "px-3 py-2.5"
             }`}
           >
             {sidebarCollapsed ? "Out" : "Log out"}
           </button>
         </aside>
 
-        <section className="relative flex-1 overflow-hidden bg-white">
+        <section className="relative h-screen flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
 
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
-              <div>
-                <p className="text-[11px] font-medium text-[#7b877f]">
-                  {subtitle}
-                </p>
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {title}
-                </h1>
-              </div>
+          <div className="relative z-10 flex h-full flex-col">
+            <header
+              aria-label={`${title} toolbar`}
+              className="flex shrink-0 items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
+            >
+              <div />
 
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />

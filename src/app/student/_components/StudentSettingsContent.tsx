@@ -56,7 +56,7 @@ export default function StudentSettingsContent({
         <button
           type="button"
           onClick={onSave}
-          className="h-11 rounded-full bg-[#49a95a] px-6 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.24)] transition hover:bg-[#3f964f] md:self-start"
+          className="h-11 rounded-full bg-[#123f2b] px-6 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324] md:self-start"
         >
           Save all changes
         </button>
@@ -87,7 +87,7 @@ export default function StudentSettingsContent({
               className="h-28 w-28 rounded-full object-cover grayscale"
             />
 
-            <label className="mt-6 inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#49a95a] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] transition hover:bg-[#3f964f]">
+            <label className="mt-6 inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#123f2b] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]">
               Upload a new one
               <input
                 type="file"

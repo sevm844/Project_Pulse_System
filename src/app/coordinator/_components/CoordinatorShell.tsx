@@ -40,12 +40,14 @@ const navItems = [
 type CoordinatorShellProps = {
   title: string;
   subtitle?: string;
+  hideContentTitle?: boolean;
   children: ReactNode;
 };
 
 export default function CoordinatorShell({
   title,
-  subtitle = "Final Requirements Collection",
+  subtitle,
+  hideContentTitle = false,
   children,
 }: CoordinatorShellProps) {
   const pathname = usePathname();
@@ -152,49 +154,39 @@ export default function CoordinatorShell({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
-      <div className="flex min-h-screen w-full overflow-hidden bg-white">
+    <main className="h-screen overflow-hidden bg-white text-[#1f2a24]">
+      <div className="flex h-full w-full overflow-hidden bg-white">
           <aside
-            className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
-              sidebarCollapsed ? "w-20" : "w-[270px]"
+            className={`relative hidden h-screen shrink-0 flex-col justify-between overflow-visible border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 lg:flex ${
+              sidebarCollapsed ? "w-20" : "w-[190px]"
             }`}
           >
             <SidebarToggle
               collapsed={sidebarCollapsed}
               onClick={toggleSidebar}
+              variant="panel"
             />
             <div>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-3">
+            <div
+              className={`flex items-center ${
+                sidebarCollapsed ? "justify-center" : "gap-2 px-2"
+              }`}
+            >
                 <Image
                   src="/logotop.png"
                   alt="Project Pulse"
                   width={34}
                   height={34}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
-
                 {!sidebarCollapsed && (
-                  <div className="min-w-0">
-                    <h1 className="truncate text-sm font-semibold tracking-tight">
-                      Project Pulse
-                    </h1>
-                    <p className="truncate text-[11px] text-[#7b877f]">
-                      Coordinator Portal
-                    </p>
-                  </div>
+                  <span className="text-sm font-semibold text-[#203028]">
+                    Project Pulse
+                  </span>
                 )}
-              </div>
-
             </div>
 
-            <nav className="mt-9 text-sm">
-              {!sidebarCollapsed && (
-                <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
-                  Coordinator Menu
-                </p>
-              )}
-
+            <nav className="mt-6 text-[12px]">
               <div className="space-y-1">
                 {navItems.map(([label, icon, href]) => {
                   const isActive =
@@ -209,8 +201,8 @@ export default function CoordinatorShell({
                       title={label}
                       className={`flex items-center rounded-lg transition ${
                         sidebarCollapsed
-                          ? "justify-center px-0 py-3"
-                          : "gap-3 px-3 py-2.5"
+                          ? "justify-center px-0 py-2.5"
+                          : "gap-2 px-3 py-2"
                       } ${
                         isActive
                           ? "bg-[#d7f7d8] font-semibold text-[#203028]"
@@ -237,27 +229,23 @@ export default function CoordinatorShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
-              sidebarCollapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
+            className={`mt-auto flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
+              sidebarCollapsed ? "justify-center px-0 py-2.5" : "px-3 py-2.5"
             }`}
           >
             {sidebarCollapsed ? "Out" : "Log out"}
           </button>
         </aside>
 
-        <section className="relative flex-1 overflow-hidden bg-white">
+        <section className="relative h-screen flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
 
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
-              <div>
-                <p className="text-[11px] font-medium text-[#7b877f]">
-                  {subtitle}
-                </p>
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {title}
-                </h1>
-              </div>
+          <div className="relative z-10 flex h-full flex-col">
+            <header
+              aria-label={`${title} toolbar`}
+              className="flex shrink-0 items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
+            >
+              <div />
 
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
@@ -307,6 +295,18 @@ export default function CoordinatorShell({
             </header>
 
             <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-8">
+              {!hideContentTitle && (
+                <div className="mb-5">
+                  <h2 className="text-2xl font-semibold tracking-tight text-[#203028]">
+                    {title}
+                  </h2>
+                  {subtitle && (
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59645d]">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              )}
               {children}
             </div>
           </div>

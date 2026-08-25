@@ -85,7 +85,7 @@ export default function AdviserProfilePage() {
   }
 
   return (
-    <AdviserShell title="Profile">
+    <AdviserShell title="Profile" hideContentTitle>
       <RoleSettingsContent
         user={profile}
         onFieldChange={handleFieldChange}

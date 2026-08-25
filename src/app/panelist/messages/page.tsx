@@ -10,7 +10,9 @@ export default function PanelistMessagesPage() {
       senderName="Panelist"
       subtitle="Defense panel communication"
       shell={(children) => (
-        <PanelistShell title="Messages">{children}</PanelistShell>
+        <PanelistShell title="Messages" hideContentTitle>
+          {children}
+        </PanelistShell>
       )}
     />
   );

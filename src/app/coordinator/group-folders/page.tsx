@@ -275,7 +275,7 @@ export default function CoordinatorGroupFoldersPage() {
 
                         <a
                           href="/coordinator/messages"
-                          className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                          className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                         >
                           Message
                         </a>

@@ -10,7 +10,9 @@ export default function AdminMessagesPage() {
       senderName="Admin"
       subtitle="System-wide communication"
       shell={(children) => (
-        <AdminShell title="Messages">{children}</AdminShell>
+        <AdminShell title="Messages" hideContentTitle>
+          {children}
+        </AdminShell>
       )}
     />
   );

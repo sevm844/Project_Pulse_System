@@ -10,7 +10,9 @@ export default function GrammarianMessagesPage() {
       senderName="Grammarian"
       subtitle="Grammar review and certificate communication"
       shell={(children) => (
-        <GrammarianShell title="Messages">{children}</GrammarianShell>
+        <GrammarianShell title="Messages" hideContentTitle>
+          {children}
+        </GrammarianShell>
       )}
     />
   );

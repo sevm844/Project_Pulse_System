@@ -14,6 +14,7 @@ type StakeholderCalendarProps = {
   storageKey: string;
   categories: readonly string[];
   variant?: "default" | "glass";
+  compact?: boolean;
 };
 
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -74,6 +75,7 @@ export default function StakeholderCalendar({
   storageKey,
   categories,
   variant = "default",
+  compact = false,
 }: StakeholderCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
@@ -139,6 +141,15 @@ export default function StakeholderCalendar({
   }
 
   const isGlass = variant === "glass";
+  const headerPadding = compact ? "px-4 py-3" : "px-5 py-4";
+  const navButtonSize = compact ? "h-8 w-8 rounded-lg text-base" : "h-10 w-10 rounded-xl text-lg";
+  const monthTitleSize = compact ? "text-base" : "text-lg";
+  const calendarPadding = compact ? "px-4 py-3" : "px-5 py-4";
+  const weekDaySize = compact ? "text-[10px]" : "text-xs";
+  const dayGridSpacing = compact ? "mt-3 gap-y-1.5 text-xs" : "mt-4 gap-y-2 text-sm";
+  const dayButtonSize = compact ? "h-7 w-7" : "h-9 w-9";
+  const notesPadding = compact ? "px-4 py-4" : "px-5 py-5";
+  const panelTitleSize = compact ? "text-sm" : "text-base";
 
   return (
     <aside
@@ -149,14 +160,14 @@ export default function StakeholderCalendar({
       }`}
     >
       <div
-        className={`flex items-center justify-between border-b px-5 py-4 ${
+        className={`flex items-center justify-between border-b ${headerPadding} ${
           isGlass ? "border-white/45 bg-white/10" : "border-[#edf2ec]"
         }`}
       >
         <button
           type="button"
           onClick={goToPreviousMonth}
-          className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg text-[#203028] shadow-sm transition ${
+          className={`flex ${navButtonSize} items-center justify-center text-[#203028] shadow-sm transition ${
             isGlass
               ? "border border-white/55 bg-white/34 backdrop-blur-xl hover:bg-white/50"
               : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
@@ -165,14 +176,14 @@ export default function StakeholderCalendar({
           {"<"}
         </button>
 
-        <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
+        <h2 className={`${monthTitleSize} font-semibold tracking-tight text-[#203028]`}>
           {getMonthLabel(currentMonth)}
         </h2>
 
         <button
           type="button"
           onClick={goToNextMonth}
-          className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg text-[#203028] shadow-sm transition ${
+          className={`flex ${navButtonSize} items-center justify-center text-[#203028] shadow-sm transition ${
             isGlass
               ? "border border-white/55 bg-white/34 backdrop-blur-xl hover:bg-white/50"
               : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
@@ -182,14 +193,14 @@ export default function StakeholderCalendar({
         </button>
       </div>
 
-      <div className="px-5 py-4">
-        <div className="grid grid-cols-7 text-center text-xs font-medium text-[#7b877f]">
+      <div className={calendarPadding}>
+        <div className={`grid grid-cols-7 text-center ${weekDaySize} font-medium text-[#7b877f]`}>
           {weekDays.map((day) => (
             <span key={day}>{day}</span>
           ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-y-2 text-center text-sm">
+        <div className={`grid grid-cols-7 text-center ${dayGridSpacing}`}>
           {calendarDays.map((item) => {
             const isSelected = item.key === selectedDate;
             const hasNote = datesWithNotes.has(item.key);
@@ -199,9 +210,9 @@ export default function StakeholderCalendar({
                 key={item.key}
                 type="button"
                 onClick={() => setSelectedDate(item.key)}
-                className={`relative mx-auto flex h-9 w-9 items-center justify-center rounded-full transition ${
+                className={`relative mx-auto flex ${dayButtonSize} items-center justify-center rounded-full transition ${
                   isSelected
-                    ? "bg-[#202823] font-semibold text-white"
+                    ? "bg-[#123f2b] font-semibold text-white"
                     : item.isCurrentMonth
                       ? "text-[#203028] hover:bg-[#f3f7f1]"
                       : "text-[#b9c0bb]"
@@ -210,7 +221,7 @@ export default function StakeholderCalendar({
                 {item.day}
 
                 {hasNote && !isSelected && (
-                  <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-[#4f8f58]" />
+                  <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-[#123f2b]" />
                 )}
               </button>
             );
@@ -219,7 +230,7 @@ export default function StakeholderCalendar({
       </div>
 
       <div
-        className={`border-t px-5 py-5 ${
+        className={`border-t ${notesPadding} ${
           isGlass
             ? "border-white/45 bg-white/12 backdrop-blur-xl"
             : "border-[#edf2ec] bg-[#fbfdfb]"
@@ -227,7 +238,7 @@ export default function StakeholderCalendar({
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-[#203028]">{title}</h3>
+            <h3 className={`${panelTitleSize} font-semibold text-[#203028]`}>{title}</h3>
             <p className="mt-1 text-xs text-[#7b877f]">
               {formatDateLabel(selectedDate)}
             </p>
@@ -282,7 +293,7 @@ export default function StakeholderCalendar({
             <button
               type="button"
               onClick={addNote}
-              className="rounded-xl bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="rounded-xl bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Add
             </button>
@@ -307,7 +318,7 @@ export default function StakeholderCalendar({
                 }`}
               >
                 <div className="flex h-5 w-5 items-center justify-center rounded-md border border-[#bfc9c0]">
-                  <div className="h-2.5 w-2.5 rounded-sm bg-[#d7f7d8]" />
+                  <div className="h-2.5 w-2.5 rounded-sm bg-[#123f2b]" />
                 </div>
 
                 <div className="min-w-0 flex-1">

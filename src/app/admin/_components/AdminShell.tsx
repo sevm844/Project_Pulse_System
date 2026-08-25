@@ -40,19 +40,83 @@ const navItems = [
   ["Profile", "/profile.png", "/admin/profile"],
 ] as const;
 
+const deanAdminNavItems = [
+  {
+    label: "Dean Dashboard",
+    icon: "/dashbrd.png",
+    href: "/dean",
+    matches: ["/dean"],
+  },
+  {
+    label: "Administration",
+    icon: "/profile.png",
+    href: "/dean/administration",
+    matches: ["/dean/administration"],
+  },
+  {
+    label: "Accounts",
+    icon: "/profile.png",
+    href: "/dean/administration/users",
+    matches: [
+      "/dean/administration/users",
+      "/dean/administration/register-requests",
+      "/dean/administration/roles",
+    ],
+  },
+  {
+    label: "Academic Setup",
+    icon: "/resources.png",
+    href: "/dean/administration/courses",
+    matches: [
+      "/dean/administration/courses",
+      "/dean/administration/groups",
+      "/dean/administration/terms",
+    ],
+  },
+  {
+    label: "Assignments",
+    icon: "/work.png",
+    href: "/dean/administration/advisers",
+    matches: [
+      "/dean/administration/advisers",
+      "/dean/administration/panelists",
+    ],
+  },
+  {
+    label: "System Control",
+    icon: "/docs.png",
+    href: "/dean/administration/audit-logs",
+    matches: [
+      "/dean/administration/audit-logs",
+      "/dean/administration/message-settings",
+    ],
+  },
+] as const;
+
 type AdminShellProps = {
   title: string;
   subtitle?: string;
+  hideContentTitle?: boolean;
   children: ReactNode;
 };
 
 export default function AdminShell({
   title,
   subtitle = "User and Group Management",
+  hideContentTitle = false,
   children,
 }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const isDeanAdministration = pathname.startsWith("/dean/administration");
+  const activeNavItems = isDeanAdministration
+    ? deanAdminNavItems
+    : navItems.map(([label, icon, href]) => ({
+        label,
+        icon,
+        href,
+        matches: [href],
+      }));
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [adminEmail, setAdminEmail] = useState("admin@ub.edu.ph");
@@ -65,13 +129,13 @@ export default function AdminShell({
   useEffect(() => {
     const role = localStorage.getItem("project-pulse-user-role");
 
-    if (role !== "Admin") {
+    if (role !== "Admin" && !(isDeanAdministration && role === "Dean")) {
       router.replace("/login");
       return;
     }
 
     queueMicrotask(() => setCheckingAccess(false));
-  }, [router]);
+  }, [isDeanAdministration, router]);
 
   useEffect(() => {
     const savedImage = localStorage.getItem(ADMIN_PROFILE_IMAGE_KEY);
@@ -153,36 +217,38 @@ export default function AdminShell({
           <SidebarToggle
             collapsed={sidebarCollapsed}
             onClick={toggleSidebar}
+            variant="panel"
           />
           <div>
-            <div className="flex items-center gap-3">
+            <div
+              className={`flex items-center ${
+                sidebarCollapsed ? "justify-center" : "gap-2 px-2"
+              }`}
+            >
               <Image
                 src="/logotop.png"
                 alt="Project Pulse"
                 width={34}
                 height={34}
+                className="rounded-lg"
               />
               {!sidebarCollapsed && (
-              <div>
-                <h1 className="text-sm font-semibold">Project Pulse</h1>
-                <p className="text-[11px] text-[#7b877f]">Admin Portal</p>
-              </div>
+                <span className="text-sm font-semibold text-[#203028]">
+                  Project Pulse
+                </span>
               )}
             </div>
 
             <nav className="mt-9 text-sm">
-              {!sidebarCollapsed && (
-              <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9ba69d]">
-                Admin Menu
-              </p>
-              )}
-
               <div className="space-y-1">
-              {navItems.map(([label, icon, href]) => {
-                const isActive =
-                  href === "/admin"
-                    ? pathname === "/admin"
-                    : pathname.startsWith(href);
+              {activeNavItems.map(({ label, icon, href, matches }) => {
+                const isActive = matches.some((match) =>
+                  match === "/admin" ||
+                  match === "/dean" ||
+                  match === "/dean/administration"
+                    ? pathname === match
+                    : pathname.startsWith(match),
+                );
 
                 return (
                   <Link
@@ -231,20 +297,17 @@ export default function AdminShell({
 
           <div className="relative z-10 flex min-h-screen flex-col">
             <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
-              <div>
-                <p className="text-[11px] font-medium text-[#7b877f]">
-                  {subtitle}
-                </p>
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {title}
-                </h1>
-              </div>
+              <div />
 
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
 
                   <Link
-                    href="/admin/notifications"
+                    href={
+                      isDeanAdministration
+                        ? "/dean/notifications"
+                        : "/admin/notifications"
+                    }
                     aria-label="Notifications"
                     title="Notifications"
                     className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
@@ -254,7 +317,9 @@ export default function AdminShell({
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">
-                    <p className="text-xs font-semibold">Admin</p>
+                    <p className="text-xs font-semibold">
+                      {isDeanAdministration ? "Dean Office" : "Admin"}
+                    </p>
                     <p className="text-[10px] text-[#7b877f]">{adminEmail}</p>
                   </div>
 
@@ -286,6 +351,16 @@ export default function AdminShell({
             </header>
 
             <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-8">
+              {!hideContentTitle && (
+                <div className="mb-5">
+                  <p className="text-[11px] font-medium text-[#7b877f]">
+                    {subtitle}
+                  </p>
+                  <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#203028]">
+                    {title}
+                  </h1>
+                </div>
+              )}
               {children}
             </div>
           </div>

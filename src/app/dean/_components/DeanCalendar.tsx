@@ -8,7 +8,7 @@ export default function DeanCalendar() {
       title="Dean Calendar"
       storageKey="project-pulse-dean-calendar-notes"
       categories={categories}
-      variant="glass"
+      compact
     />
   );
 }

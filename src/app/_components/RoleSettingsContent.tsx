@@ -24,7 +24,7 @@ type RoleSettingsContentProps = {
 };
 
 const inputClass =
-  "mt-2 h-11 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm text-[#203028] outline-none transition placeholder:text-[#a0aaa3] focus:border-[#49a95a] focus:ring-2 focus:ring-[#d7f7d8]";
+  "mt-2 h-11 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm text-[#203028] outline-none transition placeholder:text-[#a0aaa3] focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]";
 
 export default function RoleSettingsContent({
   user,
@@ -54,7 +54,7 @@ export default function RoleSettingsContent({
         <button
           type="button"
           onClick={onSave}
-          className="h-11 rounded-full bg-[#49a95a] px-6 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.24)] transition hover:bg-[#3f964f] md:self-start"
+          className="h-11 rounded-full bg-[#123f2b] px-6 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.24)] transition hover:bg-[#0f3324] md:self-start"
         >
           Save all changes
         </button>
@@ -85,7 +85,7 @@ export default function RoleSettingsContent({
               className="h-[116px] w-[116px] rounded-full object-cover"
             />
 
-            <label className="mt-6 inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#49a95a] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] transition hover:bg-[#3f964f]">
+            <label className="mt-6 inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#123f2b] px-5 text-sm font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] transition hover:bg-[#0f3324]">
               Upload a new one
               <input
                 type="file"

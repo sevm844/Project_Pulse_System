@@ -112,7 +112,7 @@ export default function AdminMessageSettingsPage() {
               onChange={(event) =>
                 updateSchedule("enabled", event.target.checked)
               }
-              className="mt-1 h-4 w-4 accent-[#49a95a]"
+              className="mt-1 h-4 w-4 accent-[#123f2b]"
             />
             <span>
               <span className="block text-sm font-semibold text-[#203028]">
@@ -138,7 +138,7 @@ export default function AdminMessageSettingsPage() {
             <button
               type="button"
               onClick={saveSchedule}
-              className="rounded-full bg-[#49a95a] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] hover:bg-[#3f964f]"
+              className="rounded-full bg-[#123f2b] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] hover:bg-[#0f3324]"
             >
               Save messaging window
             </button>

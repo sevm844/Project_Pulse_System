@@ -8,7 +8,7 @@ export default function CoordinatorCalendar() {
       title="Coordinator Calendar"
       storageKey="project-pulse-coordinator-calendar-notes"
       categories={categories}
-      variant="glass"
+      compact
     />
   );
 }

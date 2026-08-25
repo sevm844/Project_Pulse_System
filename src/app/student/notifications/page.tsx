@@ -56,7 +56,7 @@ export default function NotificationsPage() {
               markAllNotificationsAsRead("Student");
               refresh();
             }}
-            className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white"
+            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
           >
             Mark All Read
           </button>
@@ -70,7 +70,7 @@ export default function NotificationsPage() {
               onClick={() => setFilter(item)}
               className={`rounded-lg px-4 py-2 text-xs font-semibold ${
                 filter === item
-                  ? "bg-[#202823] text-white"
+                  ? "bg-[#123f2b] text-white"
                   : "border border-[#dfe8df] hover:bg-[#f3f7f1]"
               }`}
             >

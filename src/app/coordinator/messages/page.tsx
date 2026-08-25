@@ -10,7 +10,9 @@ export default function CoordinatorMessagesPage() {
       senderName="Coordinator"
       subtitle="Final requirement collection communication"
       shell={(children) => (
-        <CoordinatorShell title="Messages">{children}</CoordinatorShell>
+        <CoordinatorShell title="Messages" hideContentTitle>
+          {children}
+        </CoordinatorShell>
       )}
     />
   );

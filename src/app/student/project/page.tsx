@@ -149,7 +149,7 @@ export default function ProjectPage() {
                 onClick={() => setTab(id)}
                 className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${
                   tab === id
-                    ? "bg-[#202823] text-white"
+                    ? "bg-[#123f2b] text-white"
                     : "border border-[#dfe8df] bg-white text-[#59645d] hover:bg-[#f3f7f1]"
                 }`}
               >
@@ -449,7 +449,7 @@ export default function ProjectPage() {
 
               <button
                 type="submit"
-                className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
               >
                 Save Changes
               </button>

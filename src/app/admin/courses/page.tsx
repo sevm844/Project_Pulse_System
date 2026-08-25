@@ -296,7 +296,7 @@ export default function AdminCoursesPage() {
             <button
               type="button"
               onClick={startAddCourse}
-              className="h-10 w-[130px] shrink-0 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="h-10 w-[130px] shrink-0 rounded-lg bg-[#123f2b] px-4 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Add Course
             </button>
@@ -484,7 +484,7 @@ function CourseEditor({
           <button
             type="button"
             onClick={onSave}
-            className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
           >
             Save
           </button>

@@ -132,7 +132,7 @@ export default function AdviserDefensePage() {
                   <Metric label="Active Groups" value={course.activeGroups} />
                 </div>
 
-                <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition group-hover:bg-[#245329]">
+                <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition group-hover:bg-[#0f3324]">
                   Open Workspace
                   <span aria-hidden="true">-&gt;</span>
                 </div>
@@ -236,7 +236,7 @@ function ScheduleView({ courseName }: { courseName: string }) {
           <button
             type="button"
             onClick={saveSheet}
-            className="rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#245329]"
+            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324]"
           >
             Save Sheet
           </button>

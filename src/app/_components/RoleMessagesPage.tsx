@@ -429,7 +429,7 @@ export default function RoleMessagesPage({
                 type="button"
                 onClick={sendMessage}
                 disabled={!canSendNow}
-                className="rounded-full bg-[#202823] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33] disabled:cursor-not-allowed disabled:bg-[#aab3ad]"
+                className="rounded-full bg-[#123f2b] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:cursor-not-allowed disabled:bg-[#aab3ad]"
               >
                 Send
               </button>

@@ -85,7 +85,7 @@ export default function CoordinatorProfilePage() {
   }
 
   return (
-    <CoordinatorShell title="Profile">
+    <CoordinatorShell title="Profile" hideContentTitle>
       <RoleSettingsContent
         user={profile}
         onFieldChange={handleFieldChange}

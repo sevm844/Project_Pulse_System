@@ -10,7 +10,9 @@ export default function StudentChatPage() {
       senderName="Student Name"
       subtitle="Group and academic communication"
       shell={(children) => (
-        <StudentShell title="Chat">{children}</StudentShell>
+        <StudentShell title="Chat">
+          {children}
+        </StudentShell>
       )}
     />
   );

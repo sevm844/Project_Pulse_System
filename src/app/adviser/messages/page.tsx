@@ -10,7 +10,9 @@ export default function AdviserMessagesPage() {
       senderName="Anna Cruz"
       subtitle="Adviser group communication"
       shell={(children) => (
-        <AdviserShell title="Messages">{children}</AdviserShell>
+        <AdviserShell title="Messages" hideContentTitle>
+          {children}
+        </AdviserShell>
       )}
     />
   );

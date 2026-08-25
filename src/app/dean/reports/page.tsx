@@ -288,7 +288,7 @@ export default function DeanReportsPage() {
             <button
               type="button"
               onClick={() => window.print()}
-              className="h-10 w-[110px] shrink-0 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="h-10 w-[110px] shrink-0 rounded-lg bg-[#123f2b] px-4 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Print
             </button>
@@ -388,7 +388,7 @@ export default function DeanReportsPage() {
                       <td className="px-5 py-4">
                         <Link
                           href={`/dean/projects/${project.id}`}
-                          className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                          className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                         >
                           Open
                         </Link>

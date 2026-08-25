@@ -412,7 +412,7 @@ export default function AdminTermsPage() {
             <button
               type="button"
               onClick={() => setTermEditing(true)}
-              className="rounded-lg bg-[#202823] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Edit Term
             </button>
@@ -479,7 +479,7 @@ export default function AdminTermsPage() {
                 <button
                   type="button"
                   onClick={saveTerm}
-                  className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                  className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                 >
                   Save Term
                 </button>
@@ -511,7 +511,7 @@ export default function AdminTermsPage() {
             <button
               type="button"
               onClick={startAddMilestone}
-              className="h-10 w-[150px] shrink-0 rounded-lg bg-[#202823] px-4 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="h-10 w-[150px] shrink-0 rounded-lg bg-[#123f2b] px-4 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Add Milestone
             </button>
@@ -667,7 +667,7 @@ function MilestoneEditor({
           <button
             type="button"
             onClick={onSave}
-            className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
           >
             Save
           </button>

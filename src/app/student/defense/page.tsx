@@ -133,7 +133,7 @@ export default function DefensePage() {
             <button
               type="button"
               onClick={() => setShowDefenseSheet((current) => !current)}
-              className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+              className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               {showDefenseSheet ? "Close Defense Sheet" : "Open Defense Sheet"}
             </button>
@@ -303,7 +303,7 @@ export default function DefensePage() {
               </h3>
               <Link
                 href="/student/documents/new?workflow=upload&type=Defense%20Requirement"
-                className="rounded-lg bg-[#202823] px-4 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
               >
                 Upload Defense File
               </Link>
@@ -342,7 +342,7 @@ export default function DefensePage() {
                           </Link>
                           <Link
                             href="/student/documents/new?workflow=upload&type=Defense%20Requirement"
-                            className="rounded-lg bg-[#202823] px-3 py-2 text-xs font-semibold text-white hover:bg-[#303a33]"
+                            className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
                           >
                             Upload File
                           </Link>
