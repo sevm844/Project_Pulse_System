@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -37,7 +37,7 @@ const navItems = [
       "/dean/submissions",
       "/dean/document-versions",
       "/dean/defense",
-      "/dean/schedule",
+      "/dean/schedules",
     ],
   },
   {
@@ -180,29 +180,25 @@ export default function DeanShell({
             <SidebarToggle
               collapsed={sidebarCollapsed}
               onClick={toggleSidebar}
-              variant="panel"
             />
             <div>
-            <div
-              className={`flex items-center ${
-                sidebarCollapsed ? "justify-center" : "gap-2 px-2"
-              }`}
-            >
+            <div className="flex items-center justify-center">
                 <Image
                   src="/logotop.png"
                   alt="Project Pulse"
-                  width={34}
-                  height={34}
-                  className="rounded-lg"
+                  width={64}
+                  height={64}
+                  className="rounded-2xl"
                 />
-                {!sidebarCollapsed && (
-                  <span className="text-sm font-semibold text-[#203028]">
-                    Project Pulse
-                  </span>
-                )}
             </div>
 
             <nav className="mt-6 text-[12px]">
+              {!sidebarCollapsed && (
+                <p className="mb-3 px-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9ba69d]">
+                  Executive Menu
+                </p>
+              )}
+
               <div className="space-y-1">
                 {navItems.map(({ label, icon, href, matches }) => {
                   const isActive = matches.some((match) =>
@@ -262,7 +258,11 @@ export default function DeanShell({
               aria-label={`${title} toolbar`}
               className="shrink-0 flex items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
             >
-              <div />
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-[#203028]">
+                  Project Pulse
+                </h1>
+              </div>
 
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />

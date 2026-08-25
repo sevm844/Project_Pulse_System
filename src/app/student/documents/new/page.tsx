@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import StudentShell from "../../_components/StudentShell";
 import HighlightCommentEditor from "../../_components/HighlightCommentEditor";
@@ -63,7 +70,7 @@ function restoreChapterWorkspace(documentId: number, documentType: string) {
   );
 }
 
-export default function NewDocumentPage() {
+function NewDocumentEditor() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -604,5 +611,13 @@ export default function NewDocumentPage() {
         </div>
       </div>
     </StudentShell>
+  );
+}
+
+export default function NewDocumentPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewDocumentEditor />
+    </Suspense>
   );
 }
