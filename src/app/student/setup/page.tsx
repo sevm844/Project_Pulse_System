@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CapstoneGroup } from "../../_lib/firebase";
 import {
   acceptGroupInvitation,
@@ -14,14 +14,12 @@ import {
   getStoredUserUid,
 } from "../../_utils/authStorage";
 import {
+  acknowledgeStudentSetup,
   getStoredStudentGroup,
+  hasAcknowledgedStudentSetup,
   saveStoredStudentGroup,
 } from "../_utils/studentGroupStorage";
 import Card from "../_components/Card";
-
-function getInitialInvitation() {
-  return findGroupInvitationForEmail(getStoredUserEmail());
-}
 
 function getMemberName(email: string) {
   return email
@@ -32,16 +30,45 @@ function getMemberName(email: string) {
 
 export default function StudentSetupPage() {
   const router = useRouter();
-  const [studentEmail] = useState(() => getStoredUserEmail());
-  const [studentUid] = useState(() => getStoredUserUid());
-  const [invitation, setInvitation] = useState<CapstoneGroup | null>(() =>
-    getInitialInvitation(),
-  );
-  const [acceptedGroup] = useState(() => getStoredStudentGroup());
+  const [setupLoaded, setSetupLoaded] = useState(false);
+  const [studentEmail, setStudentEmail] = useState<string | null>(null);
+  const [studentUid, setStudentUid] = useState<string | null>(null);
+  const [invitation, setInvitation] = useState<CapstoneGroup | null>(null);
+  const [acceptedGroup, setAcceptedGroup] = useState<CapstoneGroup | null>(null);
 
-  const invitationAccepted = invitation
+  const invitationAccepted = setupLoaded && invitation
     ? hasAcceptedGroupInvitation(invitation.id)
     : false;
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      const email = getStoredUserEmail();
+
+      setStudentEmail(email);
+      setStudentUid(getStoredUserUid());
+      setInvitation(findGroupInvitationForEmail(email));
+      setAcceptedGroup(getStoredStudentGroup());
+      setSetupLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!setupLoaded) return;
+
+    if (
+      (acceptedGroup || (invitation && invitationAccepted)) &&
+      hasAcknowledgedStudentSetup(studentEmail)
+    ) {
+      router.replace("/student");
+    }
+  }, [
+    acceptedGroup,
+    invitation,
+    invitationAccepted,
+    router,
+    setupLoaded,
+    studentEmail,
+  ]);
 
   function refreshAssignmentStatus() {
     setInvitation(findGroupInvitationForEmail(studentEmail));
@@ -67,17 +94,20 @@ export default function StudentSetupPage() {
 
     acceptGroupInvitation(invitation.id);
     saveStoredStudentGroup(nextGroup);
+    acknowledgeStudentSetup(studentEmail);
     router.push("/student");
   }
 
   function continueToDashboard() {
     if (acceptedGroup) {
+      acknowledgeStudentSetup(studentEmail);
       router.push("/student");
       return;
     }
 
     if (invitation && invitationAccepted) {
       saveStoredStudentGroup(invitation);
+      acknowledgeStudentSetup(studentEmail);
       router.push("/student");
     }
   }
@@ -123,7 +153,21 @@ export default function StudentSetupPage() {
               </p>
             </div>
 
-            {!invitation && !acceptedGroup && (
+            {!setupLoaded && (
+              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
+                  Checking Assignment
+                </p>
+                <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#171c19]">
+                  Loading your group status...
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-[#4d5751]">
+                  Please wait while Project Pulse checks your student account.
+                </p>
+              </Card>
+            )}
+
+            {setupLoaded && !invitation && !acceptedGroup && (
               <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Pending Group Assignment
@@ -156,7 +200,7 @@ export default function StudentSetupPage() {
               </Card>
             )}
 
-            {invitation && !invitationAccepted && (
+            {setupLoaded && invitation && !invitationAccepted && (
               <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Group Invitation
@@ -216,7 +260,8 @@ export default function StudentSetupPage() {
               </Card>
             )}
 
-            {(acceptedGroup || (invitation && invitationAccepted)) && (
+            {setupLoaded &&
+              (acceptedGroup || (invitation && invitationAccepted)) && (
               <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Group Assignment Confirmed

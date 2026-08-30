@@ -10,10 +10,31 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db, type UserProfile, type UserRole } from "../_lib/firebase";
 import { saveStoredUserSession } from "../_utils/authStorage";
 import { addAuditLog } from "../_utils/auditLogStorage";
-import { clearStoredStudentGroup } from "../student/_utils/studentGroupStorage";
+import {
+  clearStoredStudentGroup,
+  getStoredStudentGroup,
+  hasAcknowledgedStudentSetup,
+} from "../student/_utils/studentGroupStorage";
 
-function getRedirectByRole(role: UserRole) {
-  if (role === "Student") return "/student/setup";
+function storedGroupBelongsToStudent(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const storedGroup = getStoredStudentGroup();
+
+  return Boolean(
+    storedGroup?.members.some(
+      (member) => member.email.toLowerCase() === normalizedEmail,
+    ),
+  );
+}
+
+function getRedirectByRole(role: UserRole, email: string) {
+  if (role === "Student") {
+    return hasAcknowledgedStudentSetup(email) &&
+      storedGroupBelongsToStudent(email)
+      ? "/student"
+      : "/student/setup";
+  }
+
   if (role === "Adviser") return "/adviser";
   if (role === "Dean") return "/dean";
   if (role === "Coordinator") return "/coordinator";
@@ -135,11 +156,14 @@ export default function LoginPage() {
         console.warn("Login audit log could not be saved.", auditError);
       }
 
-      if (profile.role === "Student") {
+      if (
+        profile.role === "Student" &&
+        !storedGroupBelongsToStudent(profile.email)
+      ) {
         clearStoredStudentGroup();
       }
 
-      router.push(getRedirectByRole(profile.role));
+      router.push(getRedirectByRole(profile.role, profile.email));
     } catch (error) {
       console.error("Login profile load failed.", error);
       await signOut(auth).catch(() => undefined);
