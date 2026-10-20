@@ -50,7 +50,6 @@ function getRedirectByRole(role: UserRole, email: string) {
   if (role === "Panelist") return "/panelist";
   if (role === "Grammarian") return "/grammarian";
   if (role === "Records Staff") return "/records";
-  if (role === "Admin") return "/dean";
 
   return "/login";
 }

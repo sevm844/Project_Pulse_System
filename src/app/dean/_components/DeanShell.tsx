@@ -99,7 +99,7 @@ export default function DeanShell({
   useEffect(() => {
     const role = localStorage.getItem("project-pulse-user-role");
 
-    if (role !== "Dean" && role !== "Admin") {
+    if (role !== "Dean") {
       router.replace("/login");
       return;
     }

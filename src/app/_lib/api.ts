@@ -76,6 +76,7 @@ export async function apiFetch<T>(
 
 // The database says "Research Coordinator"; the existing pages say "Coordinator".
 export function toAppRole(roleName: string): UserRole {
+  if (roleName === "Admin") return "Dean";
   return (roleName === "Research Coordinator"
     ? "Coordinator"
     : roleName) as UserRole;
