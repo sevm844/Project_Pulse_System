@@ -5,6 +5,11 @@ import { FormEvent, useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
+import type { CapstoneGroup } from "../../_lib/firebase";
+import {
+  getStoredStudentGroup,
+  subscribeToStudentGroupStorage,
+} from "../_utils/studentGroupStorage";
 import {
   activities,
   documents,
@@ -14,6 +19,7 @@ import {
 } from "../_data/mockStudentData";
 import {
   EditableProjectInfo,
+  getEditableProjectInfo,
   PROJECT_INFO_STORAGE_KEY,
 } from "../_utils/projectInfoStorage";
 
@@ -36,24 +42,25 @@ const tabs: Array<[ProjectTab, string]> = [
 export default function ProjectPage() {
   const [tab, setTab] = useState<ProjectTab>("overview");
   const [projectInfo, setProjectInfo] = useState(project);
+  const [studentGroup, setStudentGroup] = useState<CapstoneGroup | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<EditableProjectInfo>({
     groupName: project.groupName,
     groupCode: project.groupCode,
     title: project.title,
     abstract: project.abstract,
-    adviser: project.adviser,
-    stage: project.stage,
-    completion: project.completion,
   });
 
   useEffect(() => {
     const savedProjectInfo = localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
     if (!savedProjectInfo) return;
 
-    const parsedProjectInfo = JSON.parse(
-      savedProjectInfo,
-    ) as Partial<EditableProjectInfo>;
+    let parsedProjectInfo: Partial<EditableProjectInfo>;
+    try {
+      parsedProjectInfo = getEditableProjectInfo(JSON.parse(savedProjectInfo));
+    } catch {
+      return;
+    }
 
     queueMicrotask(() => {
       setProjectInfo((current) => ({
@@ -67,15 +74,27 @@ export default function ProjectPage() {
     });
   }, []);
 
+  useEffect(() => {
+    function syncGroup() {
+      setStudentGroup(getStoredStudentGroup());
+    }
+
+    queueMicrotask(syncGroup);
+    return subscribeToStudentGroupStorage(syncGroup);
+  }, []);
+
+  const progress = Math.min(
+    100,
+    Math.max(0, studentGroup && Number.isFinite(studentGroup.progress) ? studentGroup.progress : 0),
+  );
+  const currentStage = studentGroup?.stage || "Not assigned";
+
   function openProjectEditor() {
     setForm({
       groupName: projectInfo.groupName,
       groupCode: projectInfo.groupCode,
       title: projectInfo.title,
       abstract: projectInfo.abstract,
-      adviser: projectInfo.adviser,
-      stage: projectInfo.stage,
-      completion: projectInfo.completion,
     });
     setIsEditing(true);
   }
@@ -95,8 +114,7 @@ export default function ProjectPage() {
 
     const nextProjectInfo = {
       ...projectInfo,
-      ...form,
-      completion: Math.min(100, Math.max(0, Number(form.completion) || 0)),
+      ...getEditableProjectInfo(form),
     };
 
     setProjectInfo(nextProjectInfo);
@@ -107,9 +125,6 @@ export default function ProjectPage() {
         groupCode: nextProjectInfo.groupCode,
         title: nextProjectInfo.title,
         abstract: nextProjectInfo.abstract,
-        adviser: nextProjectInfo.adviser,
-        stage: nextProjectInfo.stage,
-        completion: nextProjectInfo.completion,
       }),
     );
     setIsEditing(false);
@@ -160,6 +175,62 @@ export default function ProjectPage() {
         </Card>
 
 {/* Overview */}
+        <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[#203028]">
+                Stage Progress
+              </h3>
+              <p className="mt-1 text-sm text-[#7b877f]">
+                {studentGroup
+                  ? `${currentStage} preparation progress`
+                  : "Progress will appear once your group is assigned."}
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-[#4f8f58]">
+              {progress}%
+            </p>
+          </div>
+          <div
+            role="progressbar"
+            aria-label="Project progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            className="mt-5 h-2 overflow-hidden rounded-full bg-[#edf2ec]"
+          >
+            <div
+              className="h-2 rounded-full bg-[#94d29a] transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-6 grid gap-3 md:grid-cols-4">
+            {project.chapters.map((chapter) => (
+              <Link
+                key={chapter.title}
+                href="/student/documents"
+                className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4 transition hover:bg-[#f3f7f1]"
+              >
+                <p className="text-sm font-semibold text-[#203028]">
+                  {chapter.title}
+                </p>
+                <div className="mt-3">
+                  <StatusBadge status={chapter.status} />
+                </div>
+                <p className="mt-3 text-xs text-[#7b877f]">
+                  {chapter.progress}% complete
+                </p>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-[#7b877f]">
+            <span>Progress is managed by staff and the system.</span>
+            <Link href="/student/checklist" className="font-semibold text-[#4f8f58] hover:underline">
+              View stage requirements
+            </Link>
+          </div>
+        </Card>
+
         {tab === "overview" && (
           <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
             <Card className="p-5">
@@ -176,8 +247,8 @@ export default function ProjectPage() {
                   ["Group Name", projectInfo.groupName],
                   ["Group Code", projectInfo.groupCode],
                   ["Adviser", projectInfo.adviser],
-                  ["Stage", projectInfo.stage],
-                  ["Completion", `${projectInfo.completion}%`],
+                  ["Stage", currentStage],
+                  ["Completion", `${progress}%`],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
                     <p className="text-xs text-[#7b877f]">{label}</p>
@@ -348,7 +419,8 @@ export default function ProjectPage() {
                   Edit Project Info
                 </h3>
                 <p className="mt-1 text-sm text-[#7b877f]">
-                  Update the project details shown on this dashboard.
+                  Update your project title, description, and group details. Adviser,
+                  stage, and completion are managed by staff and the system.
                 </p>
               </div>
             </div>
@@ -360,18 +432,6 @@ export default function ProjectPage() {
                   required
                   value={form.title}
                   onChange={(event) => updateForm("title", event.target.value)}
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
-                <span>Adviser</span>
-                <input
-                  required
-                  value={form.adviser}
-                  onChange={(event) =>
-                    updateForm("adviser", event.target.value)
-                  }
                   className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
                 />
               </label>
@@ -395,30 +455,6 @@ export default function ProjectPage() {
                   value={form.groupCode}
                   onChange={(event) =>
                     updateForm("groupCode", event.target.value)
-                  }
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
-                <span>Current Stage</span>
-                <input
-                  required
-                  value={form.stage}
-                  onChange={(event) => updateForm("stage", event.target.value)}
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028] md:col-span-2">
-                <span>Completion</span>
-                <input
-                  min={0}
-                  max={100}
-                  type="number"
-                  value={form.completion}
-                  onChange={(event) =>
-                    updateForm("completion", Number(event.target.value))
                   }
                   className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
                 />

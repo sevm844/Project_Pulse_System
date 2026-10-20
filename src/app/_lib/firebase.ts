@@ -40,6 +40,7 @@ export type UserProfile = {
 };
 
 export type GroupMemberRecord = {
+  acceptedAt?: string;
   uid?: string;
   email: string;
   name: string;
@@ -47,6 +48,8 @@ export type GroupMemberRecord = {
 };
 
 export type CapstoneGroup = {
+  semester?: string;
+  schoolYear?: string;
   id: string;
   groupName: string;
   projectTitle: string;

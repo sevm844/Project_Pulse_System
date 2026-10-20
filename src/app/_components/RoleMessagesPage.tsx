@@ -24,6 +24,7 @@ type RoleMessagesPageProps = {
   senderName: string;
   title?: string;
   subtitle?: string;
+  fitViewport?: boolean;
   shell: (children: ReactNode) => ReactNode;
 };
 
@@ -33,6 +34,7 @@ export default function RoleMessagesPage({
   role,
   senderName,
   subtitle = "Communication center",
+  fitViewport = false,
   shell,
 }: RoleMessagesPageProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -190,10 +192,10 @@ export default function RoleMessagesPage({
   }
 
   return shell(
-    <div className="min-h-[760px] overflow-hidden rounded-[28px] border border-[#e7eee7] bg-white shadow-[0_24px_80px_rgba(31,42,36,0.08)]">
-      <div className="grid min-h-[760px] lg:grid-cols-[360px_1fr]">
-        <aside className="border-r border-[#edf2ec] bg-white">
-          <div className="flex h-[76px] items-center justify-between border-b border-[#edf2ec] px-6">
+    <div className={`${fitViewport ? "h-full min-h-0" : "min-h-[760px]"} overflow-hidden rounded-[28px] border border-[#e7eee7] bg-white shadow-[0_24px_80px_rgba(31,42,36,0.08)]`}>
+      <div className={`grid ${fitViewport ? "h-full min-h-0 grid-rows-[minmax(0,1fr)_minmax(0,2fr)] lg:grid-rows-1" : "min-h-[760px]"} lg:grid-cols-[360px_1fr]`}>
+        <aside className={`${fitViewport ? "flex min-h-0 flex-col overflow-hidden" : ""} border-r border-[#edf2ec] bg-white`}>
+          <div className="flex h-[76px] shrink-0 items-center justify-between border-b border-[#edf2ec] px-6">
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Messages
@@ -202,7 +204,7 @@ export default function RoleMessagesPage({
             </div>
           </div>
 
-          <div className="border-b border-[#edf2ec] px-4 py-3">
+          <div className="shrink-0 border-b border-[#edf2ec] px-4 py-3">
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -211,7 +213,7 @@ export default function RoleMessagesPage({
             />
           </div>
 
-          <div className="h-[calc(760px-136px)] overflow-y-auto px-3 py-3">
+          <div className={`${fitViewport ? "min-h-0 flex-1 overscroll-contain" : "h-[calc(760px-136px)]"} overflow-y-auto px-3 py-3`}>
             {filteredThreads.map((thread) => (
               <ThreadButton
                 key={thread.id}
@@ -230,8 +232,8 @@ export default function RoleMessagesPage({
           </div>
         </aside>
 
-        <section className="flex min-h-[760px] min-w-0 flex-col bg-[#fbfcfb]">
-          <header className="flex h-[76px] items-center justify-between border-b border-[#edf2ec] bg-white px-6">
+        <section className={`flex ${fitViewport ? "min-h-0 overflow-hidden" : "min-h-[760px]"} min-w-0 flex-col bg-[#fbfcfb]`}>
+          <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-[#edf2ec] bg-white px-6">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#d7f7d8] text-sm font-semibold text-[#203028]">
                 {selectedThread.type === "broadcast"
@@ -251,7 +253,7 @@ export default function RoleMessagesPage({
           </header>
 
           <div
-            className="flex-1 overflow-y-auto px-6 py-6"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6"
             onClick={() => setOpenMessageMenuId(null)}
           >
             <div className="space-y-5">
@@ -352,7 +354,7 @@ export default function RoleMessagesPage({
             </div>
           </div>
 
-          <div className="border-t border-[#edf2ec] bg-white px-5 py-4">
+          <div className="shrink-0 border-t border-[#edf2ec] bg-white px-5 py-4">
             {scheduleApplies && (
               <div
                 className={`mb-3 rounded-xl border px-4 py-3 text-xs font-semibold ${

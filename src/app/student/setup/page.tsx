@@ -21,13 +21,6 @@ import {
 } from "../_utils/studentGroupStorage";
 import Card from "../_components/Card";
 
-function getMemberName(email: string) {
-  return email
-    .split("@")[0]
-    .replace(/[._-]/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 export default function StudentSetupPage() {
   const router = useRouter();
   const [setupLoaded, setSetupLoaded] = useState(false);
@@ -37,7 +30,7 @@ export default function StudentSetupPage() {
   const [acceptedGroup, setAcceptedGroup] = useState<CapstoneGroup | null>(null);
 
   const invitationAccepted = setupLoaded && invitation
-    ? hasAcceptedGroupInvitation(invitation.id)
+    ? hasAcceptedGroupInvitation(invitation.id, studentEmail)
     : false;
 
   useEffect(() => {
@@ -47,7 +40,8 @@ export default function StudentSetupPage() {
       setStudentEmail(email);
       setStudentUid(getStoredUserUid());
       setInvitation(findGroupInvitationForEmail(email));
-      setAcceptedGroup(getStoredStudentGroup());
+      const savedGroup = getStoredStudentGroup();
+      setAcceptedGroup(savedGroup && hasAcceptedGroupInvitation(savedGroup.id, email) ? savedGroup : null);
       setSetupLoaded(true);
     });
   }, []);
@@ -77,22 +71,9 @@ export default function StudentSetupPage() {
   function handleAcceptInvitation() {
     if (!invitation || !studentEmail) return;
 
-    const normalizedEmail = studentEmail.toLowerCase();
-    const nextGroup: CapstoneGroup = {
-      ...invitation,
-      members: invitation.members.map((member) =>
-        member.email.toLowerCase() === normalizedEmail
-          ? {
-              ...member,
-              uid: studentUid || member.uid,
-              name: member.name || getMemberName(member.email),
-            }
-          : member,
-      ),
-      updatedAt: new Date().toISOString(),
-    };
+    const nextGroup = acceptGroupInvitation(invitation.id, studentEmail, studentUid);
+    if (!nextGroup) return;
 
-    acceptGroupInvitation(invitation.id);
     saveStoredStudentGroup(nextGroup);
     acknowledgeStudentSetup(studentEmail);
     router.push("/student");
@@ -227,7 +208,7 @@ export default function StudentSetupPage() {
                       Project Title
                     </p>
                     <p className="mt-2 font-bold text-[#171c19]">
-                      {invitation.projectTitle}
+                      {invitation.projectTitle || "Awaiting student title proposals"}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">

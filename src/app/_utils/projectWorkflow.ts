@@ -2,23 +2,35 @@ import type { DocumentStatus, TaskItem } from "../student/_data/mockStudentData"
 
 export type ProjectStage =
   | "Proposal Defense"
+  | "Frontend"
+  | "CAP101"
+  | "CAP102"
   | "Alpha Defense"
   | "Beta Defense"
+  | "Omega Defense"
   | "Final Defense"
   | "Final Approval";
 
 export const PROJECT_STAGES: ProjectStage[] = [
   "Proposal Defense",
+  "Frontend",
+  "CAP101",
+  "CAP102",
   "Alpha Defense",
   "Beta Defense",
+  "Omega Defense",
   "Final Defense",
   "Final Approval",
 ];
 
 export const STAGE_TRANSITIONS: Record<ProjectStage, ProjectStage[]> = {
-  "Proposal Defense": ["Alpha Defense"],
+  "Proposal Defense": ["Frontend"],
+  "Frontend": ["CAP101"],
+  "CAP101": ["CAP102"],
+  "CAP102": ["Alpha Defense"],
   "Alpha Defense": ["Beta Defense"],
-  "Beta Defense": ["Final Defense"],
+  "Beta Defense": ["Omega Defense"],
+  "Omega Defense": ["Final Defense"],
   "Final Defense": ["Final Approval"],
   "Final Approval": [],
 };
@@ -48,13 +60,13 @@ export function isTaskAllowedForStage(task: TaskItem, stage: ProjectStage) {
     return ["Missing Deliverable", "Adviser Approval"].includes(task.section);
   }
 
-  if (stage === "Alpha Defense") {
+  if (["Frontend", "CAP101", "CAP102", "Alpha Defense"].includes(stage)) {
     return ["Stage Requirement", "Missing Deliverable", "Adviser Approval"].includes(
       task.section,
     );
   }
 
-  if (stage === "Beta Defense") {
+  if (stage === "Beta Defense" || stage === "Omega Defense") {
     return ["Stage Requirement", "Adviser Approval"].includes(task.section);
   }
 

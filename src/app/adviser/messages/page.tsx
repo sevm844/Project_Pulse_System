@@ -7,10 +7,11 @@ export default function AdviserMessagesPage() {
   return (
     <RoleMessagesPage
       role="Adviser"
+      fitViewport
       senderName="Anna Cruz"
       subtitle="Adviser group communication"
       shell={(children) => (
-        <AdviserShell title="Messages" hideContentTitle>
+        <AdviserShell title="Messages" hideContentTitle fitViewport>
           {children}
         </AdviserShell>
       )}

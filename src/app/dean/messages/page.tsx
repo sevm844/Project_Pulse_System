@@ -6,11 +6,12 @@ import RoleMessagesPage from "../../_components/RoleMessagesPage";
 export default function DeanMessagesPage() {
   return (
     <RoleMessagesPage
+      fitViewport
       role="Dean"
       senderName="Dean Office"
       subtitle="Executive communication center"
       shell={(children) => (
-        <DeanShell title="Messages">{children}</DeanShell>
+        <DeanShell title="Messages" fitViewport>{children}</DeanShell>
       )}
     />
   );

@@ -37,6 +37,7 @@ type AdviserShellProps = {
   title: string;
   subtitle?: string;
   hideContentTitle?: boolean;
+  fitViewport?: boolean;
   children: ReactNode;
 };
 
@@ -44,6 +45,7 @@ export default function AdviserShell({
   title,
   subtitle,
   hideContentTitle = false,
+  fitViewport = false,
   children,
 }: AdviserShellProps) {
   const pathname = usePathname();
@@ -138,7 +140,7 @@ export default function AdviserShell({
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-white text-[#1f2a24]">
+    <main className={`${fitViewport ? "h-dvh" : "h-screen"} overflow-hidden bg-white text-[#1f2a24]`}>
       <div className="flex h-full w-full overflow-hidden bg-white">
           <aside
             className={`relative hidden h-screen shrink-0 flex-col justify-between overflow-visible border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 lg:flex ${
@@ -164,7 +166,7 @@ export default function AdviserShell({
                   className="rounded-lg"
                 />
                 {!sidebarCollapsed && (
-                  <span className="text-sm font-semibold text-[#203028]">
+                  <span className="text-sm font-semibold tracking-tight text-[#203028]">
                     Project Pulse
                   </span>
                 )}
@@ -221,10 +223,10 @@ export default function AdviserShell({
           </button>
         </aside>
 
-        <section className="relative h-screen flex-1 overflow-hidden bg-white">
+        <section className="relative h-full min-w-0 flex-1 overflow-hidden bg-white">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
 
-          <div className="relative z-10 flex h-full flex-col">
+          <div className="relative flex h-full flex-col">
             <header
               aria-label={`${title} toolbar`}
               className="flex shrink-0 items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
@@ -278,7 +280,7 @@ export default function AdviserShell({
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-8">
+            <div className={`min-h-0 flex-1 px-5 py-6 lg:px-8 ${fitViewport ? "overflow-hidden" : "overflow-y-auto"}`}>
               {!hideContentTitle && (
                 <div className="mb-5">
                   <h2 className="text-2xl font-semibold tracking-tight text-[#203028]">

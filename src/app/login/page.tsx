@@ -4,17 +4,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FirebaseError } from "firebase/app";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db, type UserProfile, type UserRole } from "../_lib/firebase";
-import { saveStoredUserSession } from "../_utils/authStorage";
+import type { UserRole } from "../_lib/firebase";
+import { ApiError, apiFetch, toAppRole } from "../_lib/api";
+import { saveStoredToken, saveStoredUserSession } from "../_utils/authStorage";
 import { addAuditLog } from "../_utils/auditLogStorage";
 import {
   clearStoredStudentGroup,
   getStoredStudentGroup,
   hasAcknowledgedStudentSetup,
 } from "../student/_utils/studentGroupStorage";
+
+type LoginResponse = {
+  token: string;
+  user: {
+    user_id: number;
+    fname: string;
+    lname: string;
+    email: string;
+    role: string;
+  };
+};
 
 function storedGroupBelongsToStudent(email: string) {
   const normalizedEmail = email.trim().toLowerCase();
@@ -46,39 +55,6 @@ function getRedirectByRole(role: UserRole, email: string) {
   return "/login";
 }
 
-function getAuthErrorMessage(error: unknown) {
-  if (!(error instanceof FirebaseError)) {
-    return "Unable to log in. Please try again.";
-  }
-
-  if (
-    error.code === "auth/invalid-credential" ||
-    error.code === "auth/user-not-found" ||
-    error.code === "auth/wrong-password" ||
-    error.code === "auth/invalid-email"
-  ) {
-    return "Invalid email or password.";
-  }
-
-  if (error.code === "auth/too-many-requests") {
-    return "Too many login attempts. Please try again later.";
-  }
-
-  if (error.code === "auth/configuration-not-found") {
-    return "Firebase Authentication is not configured for this app.";
-  }
-
-  return "Unable to log in. Please try again.";
-}
-
-function getProfileErrorMessage(error: unknown) {
-  if (error instanceof FirebaseError && error.code === "permission-denied") {
-    return "Login succeeded, but the app cannot read your account profile. Please check Firestore rules for the users collection.";
-  }
-
-  return "Login succeeded, but your account profile could not be loaded. Please contact the admin.";
-}
-
 export default function LoginPage() {
   const router = useRouter();
 
@@ -103,71 +79,45 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    let credential;
-
     try {
-      credential = await signInWithEmailAndPassword(
-        auth,
-        normalizedEmail,
-        normalizedPassword,
-      );
-    } catch (error) {
-      setError(getAuthErrorMessage(error));
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const profileRef = doc(db, "users", credential.user.uid);
-      const profileSnap = await getDoc(profileRef);
-
-      if (!profileSnap.exists()) {
-        await signOut(auth);
-        setError("Account profile was not found. Please contact the admin.");
-        setLoading(false);
-        return;
-      }
-
-      const profile = profileSnap.data() as UserProfile;
-
-      if (profile.status !== "Active") {
-        await signOut(auth);
-        setError("Your account is not active yet.");
-        setLoading(false);
-        return;
-      }
-
-      saveStoredUserSession({
-        uid: credential.user.uid,
-        email: profile.email,
-        role: profile.role,
+      const result = await apiFetch<LoginResponse>("/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        }),
       });
+
+      const role = toAppRole(result.user.role);
+      const uid = String(result.user.user_id);
+
+      saveStoredToken(result.token);
+      saveStoredUserSession({ uid, email: result.user.email, role });
 
       try {
         addAuditLog({
-          userId: credential.user.uid,
-          userEmail: profile.email,
-          role: profile.role,
+          userId: uid,
+          userEmail: result.user.email,
+          role,
           action: "Login",
           module: "Authentication",
-          details: `${profile.role} logged in successfully.`,
+          details: `${role} logged in successfully.`,
         });
       } catch (auditError) {
         console.warn("Login audit log could not be saved.", auditError);
       }
 
-      if (
-        profile.role === "Student" &&
-        !storedGroupBelongsToStudent(profile.email)
-      ) {
+      if (role === "Student" && !storedGroupBelongsToStudent(result.user.email)) {
         clearStoredStudentGroup();
       }
 
-      router.push(getRedirectByRole(profile.role, profile.email));
-    } catch (error) {
-      console.error("Login profile load failed.", error);
-      await signOut(auth).catch(() => undefined);
-      setError(getProfileErrorMessage(error));
+      router.push(getRedirectByRole(role, result.user.email));
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to log in. Please try again.",
+      );
       setLoading(false);
     }
   }

@@ -98,6 +98,7 @@ type AdminShellProps = {
   subtitle?: string;
   hideContentTitle?: boolean;
   children: ReactNode;
+  fitViewport?: boolean;
 };
 
 export default function AdminShell({
@@ -105,6 +106,7 @@ export default function AdminShell({
   subtitle = "User and Group Management",
   hideContentTitle = false,
   children,
+  fitViewport = false,
 }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -207,8 +209,8 @@ export default function AdminShell({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1f2a24]">
-      <div className="flex min-h-screen">
+    <main className={`${fitViewport ? "h-dvh overflow-hidden" : "min-h-screen"} bg-white text-[#1f2a24]`}>
+      <div className={`flex ${fitViewport ? "h-full overflow-hidden" : "min-h-screen"}`}>
         <aside
           className={`relative hidden shrink-0 flex-col justify-between border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-4 py-5 lg:flex ${
             sidebarCollapsed ? "w-20" : "w-[270px]"
@@ -292,11 +294,11 @@ export default function AdminShell({
           </button>
         </aside>
 
-        <section className="relative flex-1 overflow-hidden">
+        <section className="relative min-w-0 flex-1 overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.62),rgba(207,247,236,0.52)_46%,rgba(255,255,255,0)_82%)]" />
 
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div className={`relative z-10 flex flex-col ${fitViewport ? "h-full min-h-0" : "min-h-screen"}`}>
+            <header className="flex shrink-0 flex-col gap-4 border-b border-[#edf2ec] px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
               <div />
 
               <div className="flex flex-wrap items-center gap-3">
@@ -350,7 +352,7 @@ export default function AdminShell({
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-8">
+            <div className={`min-h-0 flex-1 px-5 py-6 lg:px-8 ${fitViewport ? "overflow-hidden" : "overflow-y-auto"}`}>
               {!hideContentTitle && (
                 <div className="mb-5">
                   <p className="text-[11px] font-medium text-[#7b877f]">
