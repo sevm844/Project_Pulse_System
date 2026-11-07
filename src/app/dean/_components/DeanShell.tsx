@@ -1,14 +1,9 @@
 "use client";
 
 import RoleShell, {
-  profileImageKeys,
   type NavItem,
   type RoleShellProps,
 } from "../../_components/RoleShell";
-
-const keys = profileImageKeys("dean");
-export const DEAN_PROFILE_IMAGE_KEY = keys.image;
-export const DEAN_PROFILE_IMAGE_UPDATED_EVENT = keys.updatedEvent;
 
 const navItems: NavItem[] = [
   { label: "Dashboard", icon: "/dashbrd.png", href: "/dean" },
