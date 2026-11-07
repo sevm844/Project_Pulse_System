@@ -6,7 +6,7 @@ import type { UserRole } from "../_lib/types";
 import { getStoredUserEmail, getStoredUserName } from "../_utils/authStorage";
 import { profileImageKeys } from "./RoleShell";
 
-const DEFAULT_AVATAR = "/default-avatar.jpg";
+const DEFAULT_AVATAR = "/default-avatar.svg";
 
 // Name, email and role come from the signed-in account; only the Dean's office can change them.
 // The profile photo is kept in this browser and shown in the header next to the user's name.
@@ -74,7 +74,7 @@ export default function RoleProfileContent({
               alt="Profile"
               width={116}
               height={116}
-              unoptimized={avatar.startsWith("data:")}
+              unoptimized={avatar.startsWith("data:") || avatar.endsWith(".svg")}
               className="h-[116px] w-[116px] rounded-full object-cover"
             />
 
