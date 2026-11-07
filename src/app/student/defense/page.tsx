@@ -1,12 +1,12 @@
 "use client";
 
 import StudentShell from "../_components/StudentShell";
-import DefenseWorkspace from "../../_components/DefenseWorkspace";
+import StudentDefenses from "../../_components/defenses/StudentDefenses";
 
 export default function StudentDefensePage() {
   return (
     <StudentShell title="Defense">
-      <DefenseWorkspace />
+      <StudentDefenses />
     </StudentShell>
   );
 }

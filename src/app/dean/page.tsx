@@ -1,46 +1,74 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
 import DeanCalendar from "./_components/DeanCalendar";
 import Card from "./_components/Card";
-import StatusBadge from "./_components/StatusBadge";
+import { apiFetch } from "../_lib/api";
 import {
-  adviserWorkloads,
-  deanProjects,
-  defenseOutcomes,
-  finalApprovals,
-} from "./_data/mockDeanData";
+  errorMessage,
+  NO_ADVISER_YET,
+  NO_TITLE_YET,
+  type ApiDeanProject,
+} from "../_lib/groups";
+
+const administrationActions = [
+  [
+    "Manage Users",
+    "Update roles, account status, and access.",
+    "/dean/administration/users",
+  ],
+  [
+    "Manage Groups",
+    "Assign advisers and move groups through the project stages.",
+    "/dean/administration/groups",
+  ],
+  [
+    "Audit Logs",
+    "Review important activity across the system.",
+    "/dean/administration/audit-logs",
+  ],
+] as const;
 
 export default function DeanDashboardPage() {
-  const atRiskGroups = deanProjects.filter(
-    (project) => project.riskLevel === "At Risk",
-  );
+  const [projects, setProjects] = useState<ApiDeanProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const readyApprovals = finalApprovals.filter(
-    (approval) => approval.status === "Ready",
-  );
+  useEffect(() => {
+    let cancelled = false;
 
-  const administrationActions = [
-    [
-      "Review Requests",
-      "Approve or reject new staff accounts.",
-      "/dean/administration/register-requests",
-    ],
-    [
-      "Manage Users",
-      "Update roles, account status, and access.",
-      "/dean/administration/users",
-    ],
-    [
-      "Academic Setup",
-      "Maintain courses, groups, assignments, and terms.",
-      "/dean/administration",
-    ],
-    [
-      "Audit Logs",
-      "Review important activity across the system.",
-      "/dean/administration/audit-logs",
-    ],
-  ] as const;
+    apiFetch<ApiDeanProject[]>("/dean/projects")
+      .then((rows) => {
+        if (!cancelled) setProjects(rows);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(errorMessage(err, "Unable to load projects."));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const withTitle = projects.filter((project) => project.title).length;
+  const withoutAdviser = projects.filter((project) => !project.adviser).length;
+
+  const adviserLoads = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const project of projects) {
+      if (project.adviser) {
+        counts.set(project.adviser, (counts.get(project.adviser) || 0) + 1);
+      }
+    }
+
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [projects]);
 
   return (
     <DeanShell title="Dean Dashboard">
@@ -50,23 +78,29 @@ export default function DeanDashboardPage() {
             Dean Dashboard
           </h1>
 
+          {error && (
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
           {/* Executive summary */}
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ["Total Projects", deanProjects.length, "/dean/projects"],
-              ["At-Risk Groups", atRiskGroups.length, "/dean/projects"],
+              ["Total Projects", projects.length, "/dean/projects"],
+              ["With Approved Title", withTitle, "/dean/projects"],
+              ["Awaiting Title", projects.length - withTitle, "/dean/projects"],
               [
-                "Pending Final Approvals",
-                readyApprovals.length,
-                "/dean/approvals",
+                "Without Adviser",
+                withoutAdviser,
+                "/dean/administration/groups",
               ],
-              ["Admin Tools", 10, "/dean/administration"],
             ].map(([label, value, href]) => (
               <Link key={label} href={String(href)}>
                 <Card className="p-5 transition hover:bg-[#fbfdfb]">
                   <p className="text-xs font-medium text-[#7b877f]">{label}</p>
                   <p className="mt-3 text-3xl font-semibold text-[#203028]">
-                    {value}
+                    {loading ? "-" : value}
                   </p>
                 </Card>
               </Link>
@@ -92,7 +126,7 @@ export default function DeanDashboardPage() {
               </Link>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {administrationActions.map(([title, description, href]) => (
                 <Link key={href} href={href}>
                   <div className="h-full rounded-lg border border-[#dfe8df] bg-white p-4 transition hover:bg-[#fbfdfb]">
@@ -115,7 +149,7 @@ export default function DeanDashboardPage() {
                   Project Monitoring
                 </h2>
                 <p className="mt-1 text-sm text-[#7b877f]">
-                  Overview of all active capstone groups.
+                  Overview of all capstone groups.
                 </p>
               </div>
 
@@ -127,105 +161,73 @@ export default function DeanDashboardPage() {
               </Link>
             </div>
 
-            <div>
-              <table className="w-full table-fixed text-left text-sm">
-                <colgroup>
-                  <col className="w-[24%]" />
-                  <col className="w-[23%]" />
-                  <col className="w-[27%]" />
-                  <col className="w-[16%]" />
-                  <col className="w-[10%]" />
-                </colgroup>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-sm">
                 <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                   <tr>
-                    <th className="px-4 py-3 font-medium">
-                      Course / Section
-                    </th>
+                    <th className="px-4 py-3 font-medium">Course / Section</th>
                     <th className="px-4 py-3 font-medium">Group</th>
+                    <th className="px-4 py-3 font-medium">Project Title</th>
                     <th className="px-4 py-3 font-medium">Stage</th>
-                    <th className="px-4 py-3 font-medium">Progress</th>
-                    <th className="px-4 py-3 font-medium">Risk</th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-[#edf2ec] bg-white">
-                  {deanProjects.map((project) => (
-                    <tr key={project.id} className="transition hover:bg-[#fbfdfb]">
-                      <td className="break-words px-4 py-4 text-[#59645d]">
+                  {projects.slice(0, 8).map((project) => (
+                    <tr key={project.project_id} className="transition hover:bg-[#fbfdfb]">
+                      <td className="px-4 py-4 text-[#59645d]">
                         {project.course} {project.section}
                       </td>
-                      <td className="break-words px-4 py-4 font-medium text-[#203028]">
-                        {project.groupName}
-                      </td>
-                      <td className="break-words px-4 py-4 text-[#59645d]">
-                        {project.stage}
+                      <td className="px-4 py-4 font-medium text-[#203028]">
+                        {project.group_name}
                       </td>
                       <td className="px-4 py-4 text-[#59645d]">
-                        {project.progress}%
+                        {project.title || NO_TITLE_YET}
                       </td>
-                      <td className="px-4 py-4">
-                        <StatusBadge status={project.riskLevel} />
+                      <td className="px-4 py-4 text-[#59645d]">
+                        {project.stage}
                       </td>
                     </tr>
                   ))}
+
+                  {projects.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-sm text-[#7b877f]">
+                        {loading ? "Loading projects..." : "No groups have been created yet."}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </Card>
 
-          <div className="grid gap-5 lg:grid-cols-2">
-            {/* Adviser workloads */}
-            <Card className="p-5">
-              <h2 className="text-lg font-semibold text-[#203028]">
-                Adviser Workloads
-              </h2>
+          {/* Adviser workloads */}
+          <Card className="p-5">
+            <h2 className="text-lg font-semibold text-[#203028]">
+              Adviser Workloads
+            </h2>
 
-              <div className="mt-4 space-y-3">
-                {adviserWorkloads.map(([name, groups, pending]) => (
-                  <div
-                    key={name}
-                    className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
-                  >
-                    <p className="text-sm font-semibold text-[#203028]">
-                      {name}
-                    </p>
-                    <p className="mt-1 text-xs text-[#7b877f]">
-                      {groups} assigned groups • {pending} pending reviews
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {adviserLoads.map(([name, groups]) => (
+                <div
+                  key={name}
+                  className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
+                >
+                  <p className="text-sm font-semibold text-[#203028]">{name}</p>
+                  <p className="mt-1 text-xs text-[#7b877f]">
+                    {groups} assigned group{groups === 1 ? "" : "s"}
+                  </p>
+                </div>
+              ))}
 
-            {/* Defense outcomes */}
-            <Card className="p-5">
-              <h2 className="text-lg font-semibold text-[#203028]">
-                Recent Defense Outcomes
-              </h2>
-
-              <div className="mt-4 space-y-3">
-                {defenseOutcomes.map(([group, stage, outcome, date]) => (
-                  <div
-                    key={group}
-                    className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)]"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#203028]">
-                          {group}
-                        </p>
-                        <p className="mt-1 text-xs text-[#7b877f]">
-                          {stage} • {date}
-                        </p>
-                      </div>
-
-                      <StatusBadge status={outcome} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
+              {adviserLoads.length === 0 && (
+                <p className="text-sm text-[#7b877f]">
+                  {NO_ADVISER_YET}: no group has an adviser yet.
+                </p>
+              )}
+            </div>
+          </Card>
         </div>
 
         {/* Calendar */}

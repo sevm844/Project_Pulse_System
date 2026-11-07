@@ -7,8 +7,6 @@ export default function PanelistMessagesPage() {
   return (
     <RoleMessagesPage
       fitViewport
-      role="Panelist"
-      senderName="Panelist"
       subtitle="Defense panel communication"
       shell={(children) => (
         <PanelistShell title="Messages" hideContentTitle fitViewport>

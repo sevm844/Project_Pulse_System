@@ -5,17 +5,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
 import SidebarToggle from "../../_components/SidebarToggle";
+import NotificationBell from "../../_components/notifications/NotificationBell";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../../_lib/firebase";
+import { logoutFromApi } from "../../_lib/api";
 import {
-  clearStoredUserSession,
   getStoredUserEmail,
+  getStoredUserName,
+  initialsOf,
 } from "../../_utils/authStorage";
 
 export const COORDINATOR_PROFILE_IMAGE_KEY =
@@ -28,6 +29,7 @@ const COORDINATOR_SIDEBAR_COLLAPSED_KEY =
 
 const navItems = [
   ["Dashboard", "/dashbrd.png", "/coordinator"],
+  ["Student Approvals", "/profile.png", "/coordinator/student-approvals"],
   ["Requirements", "/docs.png", "/coordinator/requirements"],
   ["Group Folders", "/fold.png", "/coordinator/group-folders"],
   ["Collection Tracker", "/checklt.png", "/coordinator/collection-tracker"],
@@ -142,8 +144,7 @@ export default function CoordinatorShell({
   }
 
   async function handleLogout() {
-    await signOut(auth);
-    clearStoredUserSession();
+    await logoutFromApi();
     router.push("/login");
   }
 
@@ -252,18 +253,11 @@ export default function CoordinatorShell({
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
 
-                  <Link
-                    href="/coordinator/notifications"
-                    aria-label="Notifications"
-                    title="Notifications"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
-                  >
-                    <Image src="/notif.png" alt="" width={18} height={18} />
-                  </Link>
+                  <NotificationBell href="/coordinator/notifications" />
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">
-                    <p className="text-xs font-semibold">Coordinator</p>
+                    <p className="text-xs font-semibold">{getStoredUserName() ?? "Coordinator"}</p>
                     <p className="text-[10px] text-[#7b877f]">
                       {coordinatorEmail}
                     </p>
@@ -278,7 +272,7 @@ export default function CoordinatorShell({
                           : undefined
                       }
                     >
-                      {!profileImage && "CO"}
+                      {!profileImage && initialsOf(getStoredUserName() ?? "Coordinator")}
                     </div>
 
                     <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">

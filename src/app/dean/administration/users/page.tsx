@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
-import type { UserStatus } from "../../../_lib/firebase";
+import type { UserStatus } from "../../../_lib/types";
 import {
   ApiError,
   apiFetch,
   type ApiRole,
   type ApiUser,
 } from "../../../_lib/api";
-import { addCurrentUserAuditLog } from "../../../_utils/auditLogStorage";
 
 const statuses: UserStatus[] = ["Pending", "Active", "Rejected", "Disabled"];
 
@@ -76,12 +75,6 @@ export default function DeanUsersPage() {
           item.user_id === updated.user_id ? updated : item,
         ),
       );
-
-      addCurrentUserAuditLog({
-        action: "Update",
-        module: "User Management",
-        details: `Updated ${updated.email}: ${Object.keys(changes).join(", ")}.`,
-      });
     } catch (err) {
       showError(err);
     }
@@ -102,12 +95,6 @@ export default function DeanUsersPage() {
       setUsers((current) => [...current, created]);
       setForm(emptyForm);
       setNotice(`Account created for ${created.email}.`);
-
-      addCurrentUserAuditLog({
-        action: "Update",
-        module: "User Management",
-        details: `Created account for ${created.email} as ${created.role}.`,
-      });
     } catch (err) {
       showError(err);
     }
@@ -132,12 +119,6 @@ export default function DeanUsersPage() {
       });
 
       setNotice(`Password updated for ${user.email}.`);
-
-      addCurrentUserAuditLog({
-        action: "Update",
-        module: "User Management",
-        details: `Reset password for ${user.email}.`,
-      });
     } catch (err) {
       showError(err);
     }

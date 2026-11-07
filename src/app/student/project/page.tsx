@@ -1,160 +1,167 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
-import StatusBadge from "../_components/StatusBadge";
-import type { CapstoneGroup } from "../../_lib/firebase";
+import { apiFetch } from "../../_lib/api";
 import {
-  getStoredStudentGroup,
-  subscribeToStudentGroupStorage,
-} from "../_utils/studentGroupStorage";
-import {
-  activities,
-  documents,
-  members,
-  project,
-  tasks,
-} from "../_data/mockStudentData";
-import {
-  EditableProjectInfo,
-  getEditableProjectInfo,
-  PROJECT_INFO_STORAGE_KEY,
-} from "../_utils/projectInfoStorage";
+  errorMessage,
+  fetchMyGroup,
+  NO_TITLE_YET,
+  type ApiGroup,
+  type ApiTitleSubmission,
+} from "../../_lib/groups";
 
-type ProjectTab =
-  | "overview"
-  | "documents"
-  | "versions"
-  | "tasks"
-  | "activity"
-  | "team";
+type ProjectTab = "overview" | "titles" | "team";
 
 const tabs: Array<[ProjectTab, string]> = [
   ["overview", "Overview"],
-  ["versions", "Versions"],
-  ["tasks", "Tasks"],
-  ["activity", "Activity Log"],
+  ["titles", "Title Proposals"],
   ["team", "Team"],
 ];
 
+const emptyForm = {
+  proposed_title: "",
+  project_description: "",
+  technology_stack: "",
+};
+
+const inputClass =
+  "w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
+
+const statusClass: Record<ApiTitleSubmission["title_status"], string> = {
+  Pending: "bg-amber-50 text-amber-700",
+  Approved: "bg-emerald-50 text-emerald-700",
+  Rejected: "bg-rose-50 text-rose-700",
+};
+
+function formatDate(value: string | null) {
+  if (!value) return "";
+
+  return new Date(value).toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "Asia/Manila",
+  });
+}
+
 export default function ProjectPage() {
   const [tab, setTab] = useState<ProjectTab>("overview");
-  const [projectInfo, setProjectInfo] = useState(project);
-  const [studentGroup, setStudentGroup] = useState<CapstoneGroup | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<EditableProjectInfo>({
-    groupName: project.groupName,
-    groupCode: project.groupCode,
-    title: project.title,
-    abstract: project.abstract,
-  });
+  const [group, setGroup] = useState<ApiGroup | null>(null);
+  const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const savedProjectInfo = localStorage.getItem(PROJECT_INFO_STORAGE_KEY);
-    if (!savedProjectInfo) return;
+    let cancelled = false;
 
-    let parsedProjectInfo: Partial<EditableProjectInfo>;
-    try {
-      parsedProjectInfo = getEditableProjectInfo(JSON.parse(savedProjectInfo));
-    } catch {
-      return;
+    async function load() {
+      try {
+        const myGroup = await fetchMyGroup();
+        if (cancelled) return;
+
+        setGroup(myGroup);
+
+        if (myGroup?.project) {
+          const submissions = await apiFetch<ApiTitleSubmission[]>(
+            `/projects/${myGroup.project.project_id}/titles`,
+          );
+          if (!cancelled) setTitles(submissions);
+        }
+      } catch (err) {
+        if (!cancelled) setError(errorMessage(err, "Unable to load your project."));
+      }
+
+      if (!cancelled) setLoading(false);
     }
 
-    queueMicrotask(() => {
-      setProjectInfo((current) => ({
-        ...current,
-        ...parsedProjectInfo,
-      }));
-      setForm((current) => ({
-        ...current,
-        ...parsedProjectInfo,
-      }));
-    });
-  }, []);
+    void load();
 
-  useEffect(() => {
-    function syncGroup() {
-      setStudentGroup(getStoredStudentGroup());
-    }
-
-    queueMicrotask(syncGroup);
-    return subscribeToStudentGroupStorage(syncGroup);
-  }, []);
-
-  const progress = Math.min(
-    100,
-    Math.max(0, studentGroup && Number.isFinite(studentGroup.progress) ? studentGroup.progress : 0),
-  );
-  const currentStage = studentGroup?.stage || "Not assigned";
-
-  function openProjectEditor() {
-    setForm({
-      groupName: projectInfo.groupName,
-      groupCode: projectInfo.groupCode,
-      title: projectInfo.title,
-      abstract: projectInfo.abstract,
-    });
-    setIsEditing(true);
-  }
-
-  function updateForm<K extends keyof EditableProjectInfo>(
-    field: K,
-    value: EditableProjectInfo[K],
-  ) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
-
-  function saveProjectInfo(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const nextProjectInfo = {
-      ...projectInfo,
-      ...getEditableProjectInfo(form),
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
-    setProjectInfo(nextProjectInfo);
-    localStorage.setItem(
-      PROJECT_INFO_STORAGE_KEY,
-      JSON.stringify({
-        groupName: nextProjectInfo.groupName,
-        groupCode: nextProjectInfo.groupCode,
-        title: nextProjectInfo.title,
-        abstract: nextProjectInfo.abstract,
-      }),
-    );
-    setIsEditing(false);
+  async function submitTitle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!group?.project) return;
+
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const created = await apiFetch<ApiTitleSubmission>(
+        `/projects/${group.project.project_id}/titles`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            proposed_title: form.proposed_title.trim(),
+            project_description: form.project_description.trim() || null,
+            technology_stack: form.technology_stack.trim() || null,
+          }),
+        },
+      );
+
+      setTitles((current) => [created, ...current]);
+      setForm(emptyForm);
+      setNotice("Title proposal sent to your adviser for review.");
+    } catch (err) {
+      setError(errorMessage(err, "Unable to submit the title proposal."));
+    }
+
+    setSaving(false);
   }
+
+  if (loading) {
+    return (
+      <StudentShell title="My Project">
+        <p className="text-sm text-[#7b877f]">Loading your project...</p>
+      </StudentShell>
+    );
+  }
+
+  if (!group) {
+    return (
+      <StudentShell title="My Project">
+        <Card className="p-6">
+          <p className="text-sm text-[#59645d]">
+            {error || "You have not been added to a capstone group yet."}
+          </p>
+          <Link
+            href="/student/setup"
+            className="mt-4 inline-block text-xs font-semibold text-[#4f8f58] hover:underline"
+          >
+            Go to group setup
+          </Link>
+        </Card>
+      </StudentShell>
+    );
+  }
+
+  const approvedTitle = group.project?.project_title || null;
+  const stage = group.project?.current_stage || "Proposal Defense";
 
   return (
     <StudentShell title="My Project">
       <div className="space-y-5">
-{/* Project header */}
         <Card className="p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-[#203028]">
-                {projectInfo.title}
-              </h2>
+          <h2
+            className={`text-xl font-semibold ${
+              approvedTitle ? "text-[#203028]" : "text-[#7b877f]"
+            }`}
+          >
+            {approvedTitle || NO_TITLE_YET}
+          </h2>
 
-              <p className="mt-1 text-sm text-[#7b877f]">
-                Manage project details, submissions, versions, requirements,
-                and team information.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={openProjectEditor}
-              className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
-            >
-              Edit Project Info
-            </button>
-          </div>
+          <p className="mt-1 text-sm text-[#7b877f]">
+            {group.group_name} • {group.course} {group.section}
+          </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
             {tabs.map(([id, label]) => (
@@ -174,231 +181,193 @@ export default function ProjectPage() {
           </div>
         </Card>
 
-{/* Overview */}
-        <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Stage Progress
-              </h3>
-              <p className="mt-1 text-sm text-[#7b877f]">
-                {studentGroup
-                  ? `${currentStage} preparation progress`
-                  : "Progress will appear once your group is assigned."}
-              </p>
-            </div>
-            <p className="text-sm font-semibold text-[#4f8f58]">
-              {progress}%
-            </p>
-          </div>
-          <div
-            role="progressbar"
-            aria-label="Project progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-            className="mt-5 h-2 overflow-hidden rounded-full bg-[#edf2ec]"
-          >
-            <div
-              className="h-2 rounded-full bg-[#94d29a] transition-[width]"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-4">
-            {project.chapters.map((chapter) => (
-              <Link
-                key={chapter.title}
-                href="/student/documents"
-                className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4 transition hover:bg-[#f3f7f1]"
-              >
-                <p className="text-sm font-semibold text-[#203028]">
-                  {chapter.title}
-                </p>
-                <div className="mt-3">
-                  <StatusBadge status={chapter.status} />
-                </div>
-                <p className="mt-3 text-xs text-[#7b877f]">
-                  {chapter.progress}% complete
-                </p>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-[#7b877f]">
-            <span>Progress is managed by staff and the system.</span>
-            <Link href="/student/checklist" className="font-semibold text-[#4f8f58] hover:underline">
-              View stage requirements
-            </Link>
-          </div>
-        </Card>
-
         {tab === "overview" && (
-          <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-            <Card className="p-5">
-              <h3 className="text-lg font-semibold text-[#203028]">
-                Overview
-              </h3>
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Overview</h3>
 
-              <p className="mt-4 text-sm leading-7 text-[#59645d]">
-                {projectInfo.abstract}
-              </p>
+            <p className="mt-4 text-sm leading-7 text-[#59645d]">
+              {group.project?.project_description ||
+                (approvedTitle
+                  ? "No description was added to the approved title."
+                  : "Your project description will appear here once your adviser approves a title.")}
+            </p>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {[
-                  ["Group Name", projectInfo.groupName],
-                  ["Group Code", projectInfo.groupCode],
-                  ["Adviser", projectInfo.adviser],
-                  ["Stage", currentStage],
-                  ["Completion", `${progress}%`],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
-                    <p className="text-xs text-[#7b877f]">{label}</p>
-                    <p className="mt-2 text-sm font-semibold text-[#203028]">
-                      {value}
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {[
+                ["Group Name", group.group_name],
+                ["Group Code", group.group_code],
+                ["Adviser", group.adviser?.name || "Not assigned"],
+                ["Stage", stage],
+                [
+                  "School Year / Semester",
+                  [group.school_year, group.semester].filter(Boolean).join(" / ") || "-",
+                ],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
+                  <p className="text-xs text-[#7b877f]">{label}</p>
+                  <p className="mt-2 text-sm font-semibold text-[#203028]">
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {tab === "titles" && (
+          <div className="space-y-5">
+            {!approvedTitle && (
+              <Card className="p-5">
+                <h3 className="text-lg font-semibold text-[#203028]">
+                  Submit a Title Proposal
+                </h3>
+                <p className="mt-1 text-sm text-[#7b877f]">
+                  Your adviser reviews each proposal. When one is approved, it
+                  becomes your official project title.
+                </p>
+
+                <form onSubmit={submitTitle} className="mt-5 space-y-4">
+                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
+                    <span>Proposed Title</span>
+                    <input
+                      required
+                      maxLength={255}
+                      value={form.proposed_title}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          proposed_title: event.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
+                    <span>Description (optional)</span>
+                    <textarea
+                      rows={4}
+                      maxLength={5000}
+                      value={form.project_description}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          project_description: event.target.value,
+                        }))
+                      }
+                      className={`${inputClass} resize-none leading-6`}
+                    />
+                  </label>
+
+                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
+                    <span>Technology Stack (optional)</span>
+                    <input
+                      maxLength={255}
+                      value={form.technology_stack}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          technology_stack: event.target.value,
+                        }))
+                      }
+                      placeholder="e.g., Next.js, Laravel, PostgreSQL"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  {error && (
+                    <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                      {error}
                     </p>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                  )}
+
+                  {notice && (
+                    <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                      {notice}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={saving || !form.proposed_title.trim()}
+                    className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
+                  >
+                    {saving ? "Sending..." : "Send to Adviser"}
+                  </button>
+                </form>
+              </Card>
+            )}
 
             <Card className="p-5">
               <h3 className="text-lg font-semibold text-[#203028]">
-                Blockers & Next Actions
+                Your Proposals
               </h3>
 
               <div className="mt-4 space-y-3">
-                {tasks.slice(0, 3).map((task) => (
-                  <div key={task.id} className="rounded-xl bg-[#f8faf7] p-4">
-                    <p className="text-sm font-medium text-[#203028]">
-                      {task.title}
-                    </p>
+                {titles.length === 0 && (
+                  <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
+                    You have not submitted any title proposals yet.
+                  </p>
+                )}
 
-                    <p className="mt-1 text-xs text-[#7b877f]">
-                      {task.action}
-                    </p>
+                {titles.map((item) => (
+                  <div key={item.title_id} className="rounded-xl bg-[#f8faf7] p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#203028]">
+                          {item.proposed_title}
+                        </p>
+                        <p className="mt-1 text-xs text-[#7b877f]">
+                          Submitted {formatDate(item.submitted_at)}
+                          {item.technology_stack ? ` • ${item.technology_stack}` : ""}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[item.title_status]}`}
+                      >
+                        {item.title_status}
+                      </span>
+                    </div>
+
+                    {item.project_description && (
+                      <p className="mt-3 text-sm leading-6 text-[#59645d]">
+                        {item.project_description}
+                      </p>
+                    )}
+
+                    {item.review_remarks && (
+                      <p className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#59645d]">
+                        <span className="font-semibold text-[#203028]">
+                          Adviser remarks:
+                        </span>{" "}
+                        {item.review_remarks}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
-
-              <Link
-                href="/student/checklist"
-                className="mt-5 block w-full rounded-lg border border-[#dfe8df] px-4 py-2 text-center text-xs font-semibold hover:bg-[#f3f7f1]"
-              >
-                Stage Requirements
-              </Link>
             </Card>
           </div>
         )}
 
-{/* Documents */}
-        {tab === "documents" && (
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">
-              Documents
-            </h3>
-
-            <div className="mt-4 space-y-3">
-              {documents.map((document) => (
-                <div key={document.id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#203028]">
-                        {document.type}
-                      </p>
-
-                      <p className="mt-1 text-xs text-[#7b877f]">
-                        {document.version} • Updated {document.updated}
-                      </p>
-                    </div>
-
-                    <StatusBadge status={document.status} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-{/* Versions */}
-        {tab === "versions" && (
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">Versions</h3>
-
-            <div className="mt-4 space-y-3">
-              {documents.map((document) => (
-                <div key={document.id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <p className="text-sm font-semibold text-[#203028]">
-                    {document.type} • {document.version}
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    Reviewer: {document.reviewer} • Updated {document.updated}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-{/* Tasks */}
-        {tab === "tasks" && (
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">Tasks</h3>
-
-            <div className="mt-4 space-y-3">
-              {tasks.map((task) => (
-                <div key={task.id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <p className="text-sm font-semibold text-[#203028]">
-                    {task.title}
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    {task.section} • Due {task.deadline}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-{/* Activity log */}
-        {tab === "activity" && (
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">
-              Activity Log
-            </h3>
-
-            <div className="mt-4 space-y-3">
-              {activities.map((activity) => (
-                <div key={activity.id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <p className="text-sm font-semibold text-[#203028]">
-                    {activity.title}
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    {activity.date}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-{/* Team */}
         {tab === "team" && (
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Team</h3>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {members.map((member) => (
-                <div key={member.email} className="rounded-xl bg-[#f8faf7] p-4">
+              {group.members.map((member) => (
+                <div key={member.member_id} className="rounded-xl bg-[#f8faf7] p-4">
                   <p className="text-sm font-semibold text-[#203028]">
                     {member.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-[#7b877f]">{member.email}</p>
-
                   <p className="mt-2 text-xs font-semibold text-[#4f8f58]">
-                    {member.role}
+                    {member.role_in_group}
+                  </p>
+
+                  <p className="mt-1 text-xs text-[#7b877f]">
+                    {member.accepted_at ? "Accepted" : "Invitation pending"}
                   </p>
                 </div>
               ))}
@@ -406,93 +375,6 @@ export default function ProjectPage() {
           </Card>
         )}
       </div>
-
-      {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#203028]/35 px-4 py-6">
-          <form
-            onSubmit={saveProjectInfo}
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-xl"
-          >
-            <div className="border-b border-[#edf2ec] pb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-[#203028]">
-                  Edit Project Info
-                </h3>
-                <p className="mt-1 text-sm text-[#7b877f]">
-                  Update your project title, description, and group details. Adviser,
-                  stage, and completion are managed by staff and the system.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
-                <span>Project Title</span>
-                <input
-                  required
-                  value={form.title}
-                  onChange={(event) => updateForm("title", event.target.value)}
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
-                <span>Group Name</span>
-                <input
-                  required
-                  value={form.groupName}
-                  onChange={(event) =>
-                    updateForm("groupName", event.target.value)
-                  }
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028]">
-                <span>Group Code</span>
-                <input
-                  required
-                  value={form.groupCode}
-                  onChange={(event) =>
-                    updateForm("groupCode", event.target.value)
-                  }
-                  className="w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-
-              <label className="space-y-1.5 text-sm font-medium text-[#203028] md:col-span-2">
-                <span>Abstract / Description</span>
-                <textarea
-                  required
-                  rows={5}
-                  value={form.abstract}
-                  onChange={(event) =>
-                    updateForm("abstract", event.target.value)
-                  }
-                  className="w-full resize-none rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal leading-6 outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2 border-t border-[#edf2ec] pt-4">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </StudentShell>
   );
 }

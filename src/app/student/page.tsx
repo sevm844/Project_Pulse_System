@@ -1,86 +1,116 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import StudentCalendar from "./_components/StudentCalendar";
 import Card from "./_components/Card";
-import StatusBadge from "./_components/StatusBadge";
-import type { CapstoneGroup } from "../_lib/firebase";
+import { apiFetch } from "../_lib/api";
 import {
-  getStoredStudentGroup,
-  hasStoredStudentGroup,
-  subscribeToStudentGroupStorage,
-} from "./_utils/studentGroupStorage";
-import {
-  activities,
-  defenseSchedule,
-  documents,
-  feedbackItems,
-  project,
-  tasks,
-} from "./_data/mockStudentData";
+  errorMessage,
+  fetchMyGroup,
+  NO_TITLE_YET,
+  type ApiGroup,
+  type ApiTitleSubmission,
+} from "../_lib/groups";
+
+const emptyCardClass =
+  "border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]";
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const [studentGroup, setStudentGroup] = useState<CapstoneGroup | null>(null);
-
-  const hasGroup = useSyncExternalStore(
-    subscribeToStudentGroupStorage,
-    hasStoredStudentGroup,
-    () => false,
-  );
+  const [group, setGroup] = useState<ApiGroup | null>(null);
+  const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!hasGroup) {
-      router.replace("/student/setup");
-      return;
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const myGroup = await fetchMyGroup();
+        if (cancelled) return;
+
+        // No group yet, or the invitation is not accepted: back to setup.
+        if (!myGroup || !myGroup.my_membership?.accepted_at) {
+          router.replace("/student/setup");
+          return;
+        }
+
+        setGroup(myGroup);
+
+        if (myGroup.project) {
+          const submissions = await apiFetch<ApiTitleSubmission[]>(
+            `/projects/${myGroup.project.project_id}/titles`,
+          );
+          if (!cancelled) setTitles(submissions);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(errorMessage(err, "Unable to load your dashboard."));
+        }
+      }
+
+      if (!cancelled) setLoading(false);
     }
 
-    queueMicrotask(() => setStudentGroup(getStoredStudentGroup()));
-  }, [hasGroup, router]);
+    void load();
 
-  if (!hasGroup) {
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  if (loading || !group) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white text-[#1f2a24]">
-        <p className="text-sm text-[#7b877f]">Checking student group...</p>
+        <p className={`text-sm ${error ? "text-[#b42318]" : "text-[#7b877f]"}`}>
+          {error || "Checking student group..."}
+        </p>
       </main>
     );
   }
 
-  const pendingFeedback = feedbackItems.filter(
-    (item) => item.status === "Pending",
-  );
+  const approvedTitle = group.project?.project_title || null;
+  const pendingTitles = titles.filter((item) => item.title_status === "Pending");
+  const rejectedTitles = titles.filter((item) => item.title_status === "Rejected");
+  const stage = group.project?.current_stage || "Proposal Defense";
 
-  const upcomingTasks = tasks.slice(0, 3);
-  const recentActivities = activities.slice(0, 4);
+  const titleSummary = approvedTitle
+    ? "Approved"
+    : pendingTitles.length > 0
+      ? `${pendingTitles.length} waiting for review`
+      : titles.length > 0
+        ? "Needs a new proposal"
+        : "None submitted yet";
 
-  const displayGroupName = studentGroup?.groupName || project.groupName;
-  const displayProjectTitle = studentGroup?.projectTitle || project.title;
-  const displayGroupCode = studentGroup?.groupCode || project.groupCode;
-  const displayStage = studentGroup?.stage || project.stage;
-  const displayProgress = Math.min(
-    100,
-    Math.max(
-      0,
-      studentGroup && Number.isFinite(studentGroup.progress)
-        ? studentGroup.progress
-        : 0,
-    ),
-  );
-  const displayAdviser = studentGroup?.adviserName || project.adviser;
-  const displayPanelists =
-    studentGroup?.panelists && studentGroup.panelists.length > 0
-      ? studentGroup.panelists
-      : defenseSchedule.panelists;
+  let nextStep = {
+    heading: "Submit your title proposal",
+    text: "Your adviser has to approve a project title before you can continue. Submit one or more proposed titles for review.",
+    action: "Submit Title Proposal",
+  };
 
-  const displayMembers =
-    studentGroup?.members?.map((member) => ({
-      name: member.name || member.email,
-      role: member.role,
-      email: member.email,
-    })) || [];
+  if (approvedTitle) {
+    nextStep = {
+      heading: "Your title is approved",
+      text: "Your project title is final. More project tools will appear here as your adviser and coordinator publish them.",
+      action: "View My Project",
+    };
+  } else if (pendingTitles.length > 0) {
+    nextStep = {
+      heading: "Waiting for your adviser",
+      text: "Your title proposal was sent. You will see it here once your adviser approves or comments on it.",
+      action: "View Title Proposals",
+    };
+  } else if (rejectedTitles.length > 0) {
+    nextStep = {
+      heading: "Submit a revised title",
+      text: "Your adviser did not approve the last proposal. Read the remarks and send a new title.",
+      action: "View Remarks and Resubmit",
+    };
+  }
 
   return (
     <StudentShell title="Student Overview" subtitle="Student Management">
@@ -88,37 +118,43 @@ export default function StudentDashboardPage() {
         <div className="space-y-6">
           <Card className="overflow-hidden border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
             <div className="border-b border-[#edf2ec] bg-[#fbfdfb] p-6">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
-                  Student Dashboard
-                </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
+                Student Dashboard
+              </p>
 
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-semibold tracking-tight text-[#203028]">
-                    {displayProjectTitle}
-                  </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <h1
+                  className={`text-3xl font-semibold tracking-tight ${
+                    approvedTitle ? "text-[#203028]" : "text-[#7b877f]"
+                  }`}
+                >
+                  {approvedTitle || NO_TITLE_YET}
+                </h1>
 
-                  <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1 text-xs font-semibold text-[#59645d]">
-                    {displayGroupName}
+                <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1 text-xs font-semibold text-[#59645d]">
+                  {group.group_name}
+                </span>
+              </div>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59645d]">
+                {approvedTitle
+                  ? "Track your project status and group details here."
+                  : "Submit your title proposals to your adviser. Once one is approved, it becomes your official project title."}
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
+                  Group Code: {group.group_code}
+                </span>
+                <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
+                  {group.course} {group.section}
+                </span>
+                {group.school_year && (
+                  <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
+                    {group.school_year}
+                    {group.semester ? ` / ${group.semester}` : ""}
                   </span>
-                </div>
-
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59645d]">
-                  Track your project status, document submissions, adviser
-                  feedback, deadlines, defense schedule, and group progress.
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
-                    Group Code: {displayGroupCode}
-                  </span>
-
-                  {studentGroup && (
-                    <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
-                      {studentGroup.course} {studentGroup.section}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             </div>
 
@@ -126,128 +162,54 @@ export default function StudentDashboardPage() {
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {displayAdviser}
+                  {group.adviser?.name || "Not assigned"}
                 </p>
               </div>
 
+              <div className="p-5">
+                <p className="text-xs font-medium text-[#7b877f]">Current Stage</p>
+                <p className="mt-2 text-sm font-semibold text-[#203028]">{stage}</p>
+              </div>
+
               <Link
-                href="/student/defense"
+                href="/student/project"
                 className="p-5 transition hover:bg-[#fbfdfb]"
               >
-                <p className="text-xs font-medium text-[#7b877f]">
-                  Current Stage
-                </p>
+                <p className="text-xs font-medium text-[#7b877f]">Title Proposals</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {displayStage}
+                  {titleSummary}
                 </p>
               </Link>
 
-              <Link
-                href="/student/feedback?filter=pending"
-                className="p-5 transition hover:bg-[#fbfdfb]"
-              >
-                <p className="text-xs font-medium text-[#7b877f]">
-                  Pending Feedback
-                </p>
+              <div className="p-5">
+                <p className="text-xs font-medium text-[#7b877f]">Upcoming Defense</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {pendingFeedback.length} unresolved
+                  Not scheduled yet
                 </p>
-              </Link>
-
-              <Link
-                href="/student/defense"
-                className="p-5 transition hover:bg-[#fbfdfb]"
-              >
-                <p className="text-xs font-medium text-[#7b877f]">
-                  Upcoming Defense
-                </p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {defenseSchedule.date}
-                </p>
-              </Link>
-            </div>
-
-            <div className="border-t border-[#edf2ec] bg-white p-5">
-              <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4f8f58]">
-                    Defense Panel
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold text-[#203028]">
-                    Assigned panelists
-                  </h2>
-                </div>
-
-                <div className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4">
-                  {displayPanelists.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {displayPanelists.map((panelist) => (
-                        <span
-                          key={panelist}
-                          className="rounded-full border border-[#dfe8df] bg-white px-3 py-1.5 text-xs font-semibold text-[#203028]"
-                        >
-                          {panelist}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm font-semibold text-[#7b877f]">
-                      Panelists not assigned yet.
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
-            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                    Stage Progress
-                  </h2>
-                  <p className="mt-1 text-sm text-[#7b877f]">
-                    {displayStage} preparation progress
-                  </p>
-                </div>
-
-                <span className="text-sm font-semibold text-[#4f8f58]">
-                  {displayProgress}%
-                </span>
-              </div>
-
-              <div className="mt-5 h-2 rounded-full bg-[#edf2ec]">
-                <div
-                  className="h-2 rounded-full bg-[#94d29a]"
-                  style={{ width: `${displayProgress}%` }}
-                />
-              </div>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-4">
-                {project.chapters.map((chapter) => (
-                  <Link
-                    key={chapter.title}
-                    href="/student/documents"
-                    className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] p-4 transition hover:bg-[#f3f7f1]"
-                  >
-                    <p className="text-sm font-semibold text-[#203028]">
-                      {chapter.title}
-                    </p>
-
-                    <div className="mt-3">
-                      <StatusBadge status={chapter.status} />
-                    </div>
-
-                    <p className="mt-3 text-xs text-[#7b877f]">
-                      {chapter.progress}% complete
-                    </p>
-                  </Link>
-                ))}
-              </div>
+            <Card className={emptyCardClass}>
+              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
+                Next Step
+              </h2>
+              <p className="mt-4 text-sm font-semibold text-[#203028]">
+                {nextStep.heading}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#59645d]">
+                {nextStep.text}
+              </p>
+              <Link
+                href="/student/project"
+                className="mt-5 inline-block rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
+              >
+                {nextStep.action}
+              </Link>
             </Card>
 
-            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
+            <Card className={emptyCardClass}>
               <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
                 Group Members
               </h2>
@@ -257,162 +219,33 @@ export default function StudentDashboardPage() {
               </p>
 
               <div className="mt-4 space-y-3">
-                {displayMembers.length === 0 ? (
-                  <p className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 text-sm text-[#7b877f]">
-                    No members found.
-                  </p>
-                ) : (
-                  displayMembers.map((member, index) => (
-                    <div
-                      key={`${member.email}-${member.role}-${index}`}
-                      className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3"
-                    >
-                      <p className="text-sm font-semibold text-[#203028]">
-                        {member.name}
-                      </p>
-
-                      <p className="text-xs text-[#7b877f]">
-                        {member.role} • {member.email}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
-          </div>
-
-          <div className="grid gap-5 xl:grid-cols-3">
-            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Upcoming Deadlines
-              </h2>
-
-              <div className="mt-4 space-y-3">
-                {upcomingTasks.map((task) => (
-                  <Link
-                    key={task.id}
-                    href="/student/checklist"
-                    className="block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 transition hover:bg-[#f3f7f1]"
+                {group.members.map((member) => (
+                  <div
+                    key={member.member_id}
+                    className="rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3"
                   >
-                    <p className="text-sm font-medium text-[#203028]">
-                      {task.title}
+                    <p className="text-sm font-semibold text-[#203028]">
+                      {member.name}
                     </p>
 
-                    <p className="mt-1 text-xs text-[#7b877f]">
-                      Due {task.deadline}
+                    <p className="text-xs text-[#7b877f]">
+                      {member.role_in_group} •{" "}
+                      {member.accepted_at ? "Accepted" : "Invitation pending"}
                     </p>
-                  </Link>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Defense Schedule
-              </h2>
-
-              <Link
-                href="/student/defense"
-                className="mt-4 block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-4 transition hover:bg-[#f3f7f1]"
-              >
-                <p className="text-sm font-semibold text-[#203028]">
-                  {defenseSchedule.stage}
-                </p>
-
-                <p className="mt-1 text-xs text-[#7b877f]">
-                  {defenseSchedule.date} • {defenseSchedule.time}
-                </p>
-
-                <p className="mt-1 text-xs text-[#7b877f]">
-                  {defenseSchedule.venue}
-                </p>
-              </Link>
-            </Card>
-
-            <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Recent Activity
-              </h2>
-
-              <div className="mt-4 space-y-3">
-                {recentActivities.map((activity) => (
-                  <Link
-                    key={activity.id}
-                    href={activity.href}
-                    className="block rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 transition hover:bg-[#f3f7f1]"
-                  >
-                    <p className="text-sm font-medium text-[#203028]">
-                      {activity.title}
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#7b877f]">
-                      {activity.date}
-                    </p>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </Card>
           </div>
 
-          <Card className="border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                  Document Summary
-                </h2>
-
-                <p className="mt-1 text-sm text-[#7b877f]">
-                  Latest document versions and review states
-                </p>
-              </div>
-
-              <Link
-                href="/student/documents"
-                className="rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-4 py-2 text-xs font-semibold text-[#203028] transition hover:bg-[#f3f7f1]"
-              >
-                View All Documents
-              </Link>
-            </div>
-
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
-                  <tr>
-                    <th className="px-3 py-3 font-medium">Document</th>
-                    <th className="px-3 py-3 font-medium">Version</th>
-                    <th className="px-3 py-3 font-medium">Updated</th>
-                    <th className="px-3 py-3 font-medium">Status</th>
-                    <th className="px-3 py-3 font-medium">Reviewer</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[#edf2ec]">
-                  {documents.slice(0, 4).map((document) => (
-                    <tr key={document.id}>
-                      <td className="px-3 py-4 font-medium text-[#203028]">
-                        {document.type}
-                      </td>
-
-                      <td className="px-3 py-4 text-[#59645d]">
-                        {document.version}
-                      </td>
-
-                      <td className="px-3 py-4 text-[#59645d]">
-                        {document.updated}
-                      </td>
-
-                      <td className="px-3 py-4">
-                        <StatusBadge status={document.status} />
-                      </td>
-
-                      <td className="px-3 py-4 text-[#59645d]">
-                        {document.reviewer}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <Card className={emptyCardClass}>
+            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
+              Deadlines, Defense Schedule and Activity
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[#7b877f]">
+              Nothing here yet. Deadlines, your defense schedule, adviser
+              feedback and recent activity will appear once they are published.
+            </p>
           </Card>
         </div>
 

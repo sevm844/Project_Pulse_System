@@ -4,15 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type { UserRole } from "../_lib/firebase";
+import type { UserRole } from "../_lib/types";
 import { ApiError, apiFetch, toAppRole } from "../_lib/api";
 import { saveStoredToken, saveStoredUserSession } from "../_utils/authStorage";
-import { addAuditLog } from "../_utils/auditLogStorage";
-import {
-  clearStoredStudentGroup,
-  getStoredStudentGroup,
-  hasAcknowledgedStudentSetup,
-} from "../student/_utils/studentGroupStorage";
 
 type LoginResponse = {
   token: string;
@@ -25,31 +19,16 @@ type LoginResponse = {
   };
 };
 
-function storedGroupBelongsToStudent(email: string) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const storedGroup = getStoredStudentGroup();
-
-  return Boolean(
-    storedGroup?.members.some(
-      (member) => member.email.toLowerCase() === normalizedEmail,
-    ),
-  );
-}
-
-function getRedirectByRole(role: UserRole, email: string) {
-  if (role === "Student") {
-    return hasAcknowledgedStudentSetup(email) &&
-      storedGroupBelongsToStudent(email)
-      ? "/student"
-      : "/student/setup";
-  }
+function getRedirectByRole(role: UserRole) {
+  // The student dashboard checks the group on the server and sends the
+  // student to /student/setup when there is no accepted group yet.
+  if (role === "Student") return "/student";
 
   if (role === "Adviser") return "/adviser";
   if (role === "Dean") return "/dean";
   if (role === "Coordinator") return "/coordinator";
   if (role === "Panelist") return "/panelist";
   if (role === "Grammarian") return "/grammarian";
-  if (role === "Records Staff") return "/records";
 
   return "/login";
 }
@@ -91,26 +70,14 @@ export default function LoginPage() {
       const uid = String(result.user.user_id);
 
       saveStoredToken(result.token);
-      saveStoredUserSession({ uid, email: result.user.email, role });
+      saveStoredUserSession({
+        uid,
+        email: result.user.email,
+        role,
+        name: `${result.user.fname} ${result.user.lname}`.trim(),
+      });
 
-      try {
-        addAuditLog({
-          userId: uid,
-          userEmail: result.user.email,
-          role,
-          action: "Login",
-          module: "Authentication",
-          details: `${role} logged in successfully.`,
-        });
-      } catch (auditError) {
-        console.warn("Login audit log could not be saved.", auditError);
-      }
-
-      if (role === "Student" && !storedGroupBelongsToStudent(result.user.email)) {
-        clearStoredStudentGroup();
-      }
-
-      router.push(getRedirectByRole(role, result.user.email));
+      router.push(getRedirectByRole(role));
     } catch (err) {
       setError(
         err instanceof ApiError

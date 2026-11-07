@@ -5,17 +5,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
 import SidebarToggle from "../../_components/SidebarToggle";
+import NotificationBell from "../../_components/notifications/NotificationBell";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../../_lib/firebase";
+import { logoutFromApi } from "../../_lib/api";
 import {
-  clearStoredUserSession,
   getStoredUserEmail,
+  getStoredUserName,
+  initialsOf,
 } from "../../_utils/authStorage";
 
 export const GRAMMARIAN_PROFILE_IMAGE_KEY =
@@ -28,8 +29,6 @@ const GRAMMARIAN_SIDEBAR_COLLAPSED_KEY =
 const navItems = [
   ["Dashboard", "/dashbrd.png", "/grammarian"],
   ["Review Queue", "/docs.png", "/grammarian/review-queue"],
-  ["Feedback History", "/comment.png", "/grammarian/feedback-history"],
-  ["Certificates", "/checklt.png", "/grammarian/certificates"],
   ["Messages", "/chats.png", "/grammarian/messages"],
   ["Notifications", "/notif.png", "/grammarian/notifications"],
   ["Profile", "/profile.png", "/grammarian/profile"],
@@ -117,8 +116,7 @@ export default function GrammarianShell({
   }
 
   async function handleLogout() {
-    await signOut(auth);
-    clearStoredUserSession();
+    await logoutFromApi();
     router.push("/login");
   }
 
@@ -227,18 +225,11 @@ export default function GrammarianShell({
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
 
-                  <Link
-                    href="/grammarian/notifications"
-                    aria-label="Notifications"
-                    title="Notifications"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
-                  >
-                    <Image src="/notif.png" alt="" width={18} height={18} />
-                  </Link>
+                  <NotificationBell href="/grammarian/notifications" />
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">
-                    <p className="text-xs font-semibold">Grammarian</p>
+                    <p className="text-xs font-semibold">{getStoredUserName() ?? "Grammarian"}</p>
                     <p className="text-[10px] text-[#7b877f]">{email}</p>
                   </div>
 
@@ -251,7 +242,7 @@ export default function GrammarianShell({
                           : undefined
                       }
                     >
-                      {!profileImage && "GR"}
+                      {!profileImage && initialsOf(getStoredUserName() ?? "Grammarian")}
                     </div>
 
                     <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">

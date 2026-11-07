@@ -1,45 +1,85 @@
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
-import StatusBadge from "../../_components/StatusBadge";
+import { apiFetch } from "../../../_lib/api";
 import {
-  chapterProgress,
-  deanProjects,
-  revisionHistory,
-} from "../../_data/mockDeanData";
+  errorMessage,
+  NO_ADVISER_YET,
+  NO_TITLE_YET,
+  type ApiGroup,
+  type ApiTitleSubmission,
+} from "../../../_lib/groups";
 
-function getReadinessItems(project: (typeof deanProjects)[number]) {
-  return [
-    ["Revision Count", project.revisionCount],
-    ["Feedback Completion", `${project.feedbackCompletion}%`],
-    ["Defense Outcome", project.defenseOutcome],
-    ["Final Requirements", project.finalRequirementStatus],
-  ];
+const statusClass: Record<ApiTitleSubmission["title_status"], string> = {
+  Pending: "bg-amber-50 text-amber-700",
+  Approved: "bg-emerald-50 text-emerald-700",
+  Rejected: "bg-rose-50 text-rose-700",
+};
+
+function formatDate(value: string | null) {
+  if (!value) return "";
+
+  return new Date(value).toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "Asia/Manila",
+  });
 }
 
-function getProgressColor(progress: number) {
-  if (progress >= 90) return "bg-[#4f8f58]";
-  if (progress >= 60) return "bg-[#94d29a]";
-  return "bg-amber-400";
-}
+export default function DeanProjectProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const [group, setGroup] = useState<ApiGroup | null>(null);
+  const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-export default async function DeanProjectProfilePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const project = deanProjects.find((item) => item.id === Number(id));
+  useEffect(() => {
+    let cancelled = false;
 
-  if (!project) {
+    async function load() {
+      try {
+        const loaded = await apiFetch<ApiGroup>(`/groups/${id}`);
+        if (cancelled) return;
+        setGroup(loaded);
+
+        if (loaded.project) {
+          const submissions = await apiFetch<ApiTitleSubmission[]>(
+            `/projects/${loaded.project.project_id}/titles`,
+          );
+          if (!cancelled) setTitles(submissions);
+        }
+      } catch (err) {
+        if (!cancelled) setError(errorMessage(err, "Unable to load this project."));
+      }
+
+      if (!cancelled) setLoading(false);
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (!group) {
     return (
       <DeanShell title="Project Profile">
         <Card className="p-6">
-          <p className="text-sm text-[#7b877f]">Project not found.</p>
+          <p className="text-sm text-[#7b877f]">
+            {loading ? "Loading project..." : error || "Project not found."}
+          </p>
         </Card>
       </DeanShell>
     );
   }
+
+  const title = group.project?.project_title || null;
 
   return (
     <DeanShell title="Project Profile">
@@ -47,32 +87,32 @@ export default async function DeanProjectProfilePage({
         <Card className="p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-3xl font-semibold tracking-tight text-[#203028]">
-                  {project.projectTitle}
-                </h2>
-                <StatusBadge status={project.riskLevel} />
-              </div>
+              <h2
+                className={`text-3xl font-semibold tracking-tight ${
+                  title ? "text-[#203028]" : "text-[#7b877f]"
+                }`}
+              >
+                {title || NO_TITLE_YET}
+              </h2>
 
               <p className="mt-3 text-sm text-[#59645d]">
-                {project.course} {project.section} • {project.groupName} •
-                Adviser: {project.adviser}
+                {group.course} {group.section} • {group.group_name} • Adviser:{" "}
+                {group.adviser?.name || NO_ADVISER_YET}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Link
-                href="/dean/messages"
+                href="/dean/administration/groups"
                 className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
               >
-                Message Group
+                Manage Group
               </Link>
-
               <Link
-                href="/dean/approvals"
+                href="/dean/messages"
                 className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
               >
-                Review Final Output
+                Message Group
               </Link>
             </div>
           </div>
@@ -80,120 +120,81 @@ export default async function DeanProjectProfilePage({
 
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            ["Stage", project.stage],
-            ["Progress", `${project.progress}%`],
-            ["Feedback", `${project.feedbackCompletion}%`],
-            ["Final", project.finalRequirementStatus],
+            ["Stage", group.project?.current_stage || "-"],
+            ["Group Code", group.group_code],
+            ["School Year", group.school_year || "-"],
+            ["Semester", group.semester || "-"],
           ].map(([label, value]) => (
             <Card key={label} className="p-5">
               <p className="text-xs text-[#7b877f]">{label}</p>
-              <p className="mt-2 text-lg font-semibold text-[#203028]">
-                {value}
-              </p>
+              <p className="mt-2 text-lg font-semibold text-[#203028]">{value}</p>
             </Card>
           ))}
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        {group.project?.project_description && (
           <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">
-              Manuscript Progress
-            </h3>
-
-            <div className="mt-5 space-y-5">
-              {chapterProgress.map(([chapter, status, progress]) => (
-                <div key={chapter}>
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-[#203028]">
-                      {chapter}
-                    </p>
-                    <StatusBadge status={String(status)} />
-                  </div>
-
-                  <div className="h-2 rounded-full bg-[#edf2ec]">
-                    <div
-                      className={`h-2 rounded-full ${getProgressColor(
-                        Number(progress),
-                      )}`}
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h3 className="text-lg font-semibold text-[#203028]">Description</h3>
+            <p className="mt-3 text-sm leading-7 text-[#59645d]">
+              {group.project.project_description}
+            </p>
           </Card>
-
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">
-              Readiness Snapshot
-            </h3>
-
-            <div className="mt-5 grid gap-3">
-              {getReadinessItems(project).map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-[#f8faf7] p-4">
-                  <p className="text-xs text-[#7b877f]">{label}</p>
-                  <p className="mt-2 text-sm font-semibold text-[#203028]">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+        )}
 
         <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">
-              Revision History
+              Title Proposals
             </h3>
 
             <div className="mt-4 space-y-3">
-              {revisionHistory.map((revision) => (
-                <div key={revision.id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <p className="text-sm font-semibold text-[#203028]">
-                    {revision.version} • {revision.chapter}
-                  </p>
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    Edited by {revision.editedBy} on {revision.editedAt}
-                  </p>
-                  <p className="mt-2 text-sm text-[#59645d]">
-                    {revision.note}
-                  </p>
+              {titles.length === 0 && (
+                <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
+                  The group has not submitted a title proposal yet.
+                </p>
+              )}
+
+              {titles.map((item) => (
+                <div key={item.title_id} className="rounded-xl bg-[#f8faf7] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#203028]">
+                        {item.proposed_title}
+                      </p>
+                      <p className="mt-1 text-xs text-[#7b877f]">
+                        Submitted {formatDate(item.submitted_at)}
+                        {item.reviewed_by ? ` • Reviewed by ${item.reviewed_by.name}` : ""}
+                      </p>
+                    </div>
+
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[item.title_status]}`}>
+                      {item.title_status}
+                    </span>
+                  </div>
+
+                  {item.review_remarks && (
+                    <p className="mt-3 text-xs leading-5 text-[#59645d]">
+                      Remarks: {item.review_remarks}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           </Card>
 
           <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">
-              Executive Focus
-            </h3>
+            <h3 className="text-lg font-semibold text-[#203028]">Members</h3>
 
-            <div className="mt-4 space-y-3 text-sm">
-              <div className="rounded-xl bg-[#f8faf7] p-4">
-                <p className="text-xs text-[#7b877f]">Risk Level</p>
-                <div className="mt-2">
-                  <StatusBadge status={project.riskLevel} />
+            <div className="mt-4 space-y-3">
+              {group.members.map((member) => (
+                <div key={member.member_id} className="rounded-xl bg-[#f8faf7] p-4">
+                  <p className="text-sm font-semibold text-[#203028]">{member.name}</p>
+                  <p className="mt-1 text-xs text-[#7b877f]">
+                    {member.role_in_group} •{" "}
+                    {member.accepted_at ? "Accepted" : "Invitation pending"}
+                  </p>
                 </div>
-              </div>
-
-              <div className="rounded-xl bg-[#f8faf7] p-4">
-                <p className="text-xs text-[#7b877f]">Defense Outcome</p>
-                <p className="mt-2 font-semibold text-[#203028]">
-                  {project.defenseOutcome}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-[#f8faf7] p-4">
-                <p className="text-xs text-[#7b877f]">Recommended Action</p>
-                <p className="mt-2 leading-6 text-[#59645d]">
-                  {project.riskLevel === "At Risk"
-                    ? "Request adviser update and monitor pending revisions."
-                    : project.finalRequirementStatus !== "Complete"
-                      ? "Track final requirement completion before approval."
-                      : "Continue monitoring until final archiving is complete."}
-                </p>
-              </div>
+              ))}
             </div>
           </Card>
         </div>

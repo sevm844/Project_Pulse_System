@@ -5,15 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
 import SidebarToggle from "../../_components/SidebarToggle";
+import NotificationBell from "../../_components/notifications/NotificationBell";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../../_lib/firebase";
-import { clearStoredUserSession } from "../../_utils/authStorage";
+import { logoutFromApi } from "../../_lib/api";
+import {
+  getStoredUserEmail,
+  getStoredUserName,
+  initialsOf,
+} from "../../_utils/authStorage";
 
 export const STUDENT_PROFILE_IMAGE_KEY = "project-pulse-student-profile-image";
 export const STUDENT_PROFILE_IMAGE_UPDATED_EVENT =
@@ -23,13 +27,10 @@ const STUDENT_SIDEBAR_COLLAPSED_KEY = "project-pulse-student-sidebar-collapsed";
 const navItems = [
   ["Dashboard", "/dashbrd.png", "/student"],
   ["My Project", "/fold.png", "/student/project"],
-  ["Documents", "/docs.png", "/student/documents"],
-  ["Feedback", "/comment.png", "/student/feedback"],
-  ["Tasks / Checklist", "/checklt.png", "/student/checklist"],
+  ["Requirements", "/checklt.png", "/student/requirements"],
   ["Defense", "/work.png", "/student/defense"],
   ["Chat", "/chats.png", "/student/chat"],
   ["Notifications", "/notif.png", "/student/notifications"],
-  ["Resources", "/resources.png", "/student/resources"],
   ["Profile", "/profile.png", "/student/profile"],
 ] as const;
 
@@ -123,8 +124,7 @@ export default function StudentShell({
   }
 
   async function handleLogout() {
-    await signOut(auth);
-    clearStoredUserSession();
+    await logoutFromApi();
     router.push("/login");
   }
 
@@ -135,6 +135,9 @@ export default function StudentShell({
       </main>
     );
   }
+
+  const displayName = getStoredUserName() ?? "Student";
+  const displayEmail = getStoredUserEmail() ?? "";
 
   return (
     <main className={`${fitViewport ? "h-dvh" : "h-screen"} overflow-hidden bg-white text-[#1f2a24]`}>
@@ -233,20 +236,13 @@ export default function StudentShell({
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
 
-                  <Link
-                    href="/student/notifications"
-                    aria-label="Notifications"
-                    title="Notifications"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
-                  >
-                    <Image src="/notif.png" alt="" width={18} height={18} />
-                  </Link>
+                  <NotificationBell href="/student/notifications" />
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">
-                    <p className="text-xs font-semibold">Student Name</p>
+                    <p className="text-xs font-semibold">{displayName}</p>
                     <p className="text-[10px] text-[#7b877f]">
-                      1234567@ub.edu.ph
+                      {displayEmail}
                     </p>
                   </div>
 
@@ -259,7 +255,7 @@ export default function StudentShell({
                           : undefined
                       }
                     >
-                      {!profileImage && "SN"}
+                      {!profileImage && initialsOf(displayName)}
                     </div>
 
                     <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">

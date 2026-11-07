@@ -24,7 +24,7 @@ const mockupBoxes = [
   {
     title: "Multi-Role Dashboards",
     eyebrow: "Role-Based Access",
-    body: "Students, Advisers, Panelists, Coordinators, Grammarians, Records Staff, Deans, and Admins each get focused workflows.",
+    body: "Students, Advisers, Panelists, Coordinators, Grammarians, and Deans each get focused workflows.",
   },
   {
     title: "Defense Scheduling",
@@ -561,7 +561,7 @@ export default function Home() {
           />
           <FooterColumn
             title="Technologies"
-            links={["Next.js", "Firebase", "Role-Based Access", "Local Prototype Storage"]}
+            links={["Next.js", "Laravel", "PostgreSQL", "Role-Based Access"]}
           />
         </div>
 

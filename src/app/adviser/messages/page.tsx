@@ -5,10 +5,7 @@ import RoleMessagesPage from "../../_components/RoleMessagesPage";
 
 export default function AdviserMessagesPage() {
   return (
-    <RoleMessagesPage
-      role="Adviser"
-      fitViewport
-      senderName="Anna Cruz"
+    <RoleMessagesPage      fitViewport
       subtitle="Adviser group communication"
       shell={(children) => (
         <AdviserShell title="Messages" hideContentTitle fitViewport>

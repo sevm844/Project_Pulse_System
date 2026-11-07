@@ -1,111 +1,82 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
+import { apiFetch, type ApiUser } from "../../../_lib/api";
 import {
-  db,
-  type CapstoneGroup,
-  type CourseCode,
-  type UserProfile,
-} from "../../../_lib/firebase";
+  COURSE_OPTIONS,
+  errorMessage,
+  NO_TITLE_YET,
+  type ApiGroup,
+} from "../../../_lib/groups";
 import {
+  getAllowedNextStages,
   normalizeProjectStage,
-  PROJECT_STAGES,
-  type ProjectStage,
 } from "../../../_utils/projectWorkflow";
 
-const courses: Array<"All" | CourseCode> = ["All", "BSIT", "BSCS", "BSIS"];
+const selectClass =
+  "rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none disabled:opacity-60";
 
 export default function DeanGroupsPage() {
-  const [groups, setGroups] = useState<CapstoneGroup[]>([]);
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [course, setCourse] = useState<"All" | CourseCode>("All");
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [advisers, setAdvisers] = useState<ApiUser[]>([]);
+  const [course, setCourse] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
-  const advisers = users.filter((user) => user.role === "Adviser");
-  const panelists = users.filter((user) => user.role === "Panelist");
+  const filteredGroups = useMemo(
+    () => (course === "All" ? groups : groups.filter((group) => group.course === course)),
+    [course, groups],
+  );
 
-  const filteredGroups = useMemo(() => {
-    if (course === "All") return groups;
-    return groups.filter((group) => group.course === course);
-  }, [course, groups]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
+    setError("");
 
-    const [groupSnapshot, userSnapshot] = await Promise.all([
-      getDocs(collection(db, "groups")),
-      getDocs(collection(db, "users")),
-    ]);
+    try {
+      const [nextGroups, users] = await Promise.all([
+        apiFetch<ApiGroup[]>("/groups"),
+        apiFetch<ApiUser[]>("/users?status=Active"),
+      ]);
 
-    setGroups(
-      groupSnapshot.docs.map((item) => ({
-        id: item.id,
-        ...(item.data() as Omit<CapstoneGroup, "id">),
-        stage: normalizeProjectStage(String(item.data().stage || "")),
-      })),
-    );
+      setGroups(nextGroups);
+      setAdvisers(users.filter((user) => user.role === "Adviser"));
+    } catch (err) {
+      setError(errorMessage(err, "Unable to load groups."));
+    }
 
-    setUsers(userSnapshot.docs.map((item) => item.data() as UserProfile));
     setLoading(false);
-  }
-
-  async function assignAdviser(group: CapstoneGroup, adviserId: string) {
-    const adviser = advisers.find((item) => item.uid === adviserId);
-
-    await updateDoc(doc(db, "groups", group.id), {
-      adviserId,
-      adviserName: adviser?.fullName || "Unassigned",
-      updatedAt: new Date().toISOString(),
-    });
-
-    setGroups((current) =>
-      current.map((item) =>
-        item.id === group.id
-          ? {
-              ...item,
-              adviserId,
-              adviserName: adviser?.fullName || "Unassigned",
-            }
-          : item,
-      ),
-    );
-  }
-
-  async function updateStage(group: CapstoneGroup, stage: ProjectStage) {
-    await updateDoc(doc(db, "groups", group.id), {
-      stage,
-      updatedAt: new Date().toISOString(),
-    });
-
-    setGroups((current) =>
-      current.map((item) => (item.id === group.id ? { ...item, stage } : item)),
-    );
-  }
-
-  async function togglePanelist(group: CapstoneGroup, panelistName: string) {
-    const currentPanelists = group.panelists || [];
-    const nextPanelists = currentPanelists.includes(panelistName)
-      ? currentPanelists.filter((item) => item !== panelistName)
-      : [...currentPanelists, panelistName];
-
-    await updateDoc(doc(db, "groups", group.id), {
-      panelists: nextPanelists,
-      updatedAt: new Date().toISOString(),
-    });
-
-    setGroups((current) =>
-      current.map((item) =>
-        item.id === group.id ? { ...item, panelists: nextPanelists } : item,
-      ),
-    );
-  }
+  }, []);
 
   useEffect(() => {
-    queueMicrotask(() => loadData());
-  }, []);
+    queueMicrotask(() => void loadData());
+  }, [loadData]);
+
+  // Saves one change, then swaps the returned group into the list.
+  async function saveChange(group: ApiGroup, path: string, body: object, message: string) {
+    setSavingId(group.group_id);
+    setError("");
+    setNotice("");
+
+    try {
+      const updated = await apiFetch<ApiGroup>(`/groups/${group.group_id}/${path}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+
+      setGroups((current) =>
+        current.map((item) => (item.group_id === updated.group_id ? updated : item)),
+      );
+      setNotice(`${group.group_name}: ${message}`);
+    } catch (err) {
+      setError(errorMessage(err, "Unable to save this change."));
+    }
+
+    setSavingId(null);
+  }
 
   return (
     <DeanShell title="Group Management">
@@ -117,27 +88,38 @@ export default function DeanGroupsPage() {
                 Capstone Groups
               </h2>
               <p className="mt-1 text-sm text-[#7b877f]">
-                Assign advisers, panelists, and controlled workflow stages.
+                Assign advisers and move groups through the project stages. A
+                group can only move to the next stage, never skip or go back.
               </p>
             </div>
 
             <select
               value={course}
-              onChange={(event) =>
-                setCourse(event.target.value as "All" | CourseCode)
-              }
+              onChange={(event) => setCourse(event.target.value)}
               className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2.5 text-sm outline-none"
             >
-              {courses.map((item) => (
+              {["All", ...COURSE_OPTIONS].map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
           </div>
+
+          {error && (
+            <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
+          {notice && (
+            <p role="status" className="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {notice}
+            </p>
+          )}
         </Card>
 
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1320px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                 <tr>
                   <th className="px-5 py-3 font-medium">Course / Section</th>
@@ -146,113 +128,100 @@ export default function DeanGroupsPage() {
                   <th className="px-5 py-3 font-medium">Members</th>
                   <th className="px-5 py-3 font-medium">Stage</th>
                   <th className="px-5 py-3 font-medium">Adviser</th>
-                  <th className="px-5 py-3 font-medium">Panelists</th>
                   <th className="px-5 py-3 font-medium">Code</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-[#edf2ec]">
-                {filteredGroups.map((group) => (
-                  <tr key={group.id}>
-                    <td className="px-5 py-4 font-medium text-[#203028]">
-                      {group.course} {group.section}
-                    </td>
+                {filteredGroups.map((group) => {
+                  const stage = normalizeProjectStage(group.project?.current_stage || "");
+                  const busy = savingId === group.group_id;
 
-                    <td className="px-5 py-4 font-semibold text-[#203028]">
-                      {group.groupName}
-                    </td>
+                  return (
+                    <tr key={group.group_id}>
+                      <td className="px-5 py-4 font-medium text-[#203028]">
+                        {group.course} {group.section}
+                      </td>
 
-                    <td className="px-5 py-4 text-[#59645d]">
-                      {group.projectTitle}
-                    </td>
+                      <td className="px-5 py-4 font-semibold text-[#203028]">
+                        {group.group_name}
+                      </td>
 
-                    <td className="px-5 py-4 text-[#59645d]">
-                      {group.members?.length || 0}
-                    </td>
+                      <td className="px-5 py-4 text-[#59645d]">
+                        {group.project?.project_title || NO_TITLE_YET}
+                      </td>
 
-                    <td className="px-5 py-4">
-                      <select
-                        value={group.stage}
-                        onChange={(event) =>
-                          updateStage(group, event.target.value as ProjectStage)
-                        }
-                        className="w-44 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none"
-                      >
-                        {PROJECT_STAGES.map((stage) => (
-                          <option key={stage} value={stage}>
-                            {stage}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-[11px] text-[#7b877f]">
-                        Workflow starts from Proposal Defense.
-                      </p>
-                    </td>
+                      <td className="px-5 py-4 text-[#59645d]">
+                        {group.members.length}
+                      </td>
 
-                    <td className="px-5 py-4">
-                      <select
-                        value={group.adviserId || ""}
-                        onChange={(event) =>
-                          assignAdviser(group, event.target.value)
-                        }
-                        className="w-48 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none"
-                      >
-                        <option value="">Unassigned</option>
-                        {advisers.map((adviser) => (
-                          <option key={adviser.uid} value={adviser.uid}>
-                            {adviser.fullName}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                      <td className="px-5 py-4">
+                        <select
+                          value={stage}
+                          disabled={busy || !group.project}
+                          onChange={(event) =>
+                            saveChange(
+                              group,
+                              "stage",
+                              { stage: event.target.value },
+                              `moved to ${event.target.value}.`,
+                            )
+                          }
+                          className={`w-44 ${selectClass}`}
+                        >
+                          {getAllowedNextStages(stage).map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
 
-                    <td className="px-5 py-4">
-                      <div className="flex max-w-sm flex-wrap gap-2">
-                        {panelists.length === 0 ? (
-                          <span className="text-xs text-[#7b877f]">
-                            No panelists yet
-                          </span>
-                        ) : (
-                          panelists.map((panelist) => {
-                            const selected = group.panelists?.includes(
-                              panelist.fullName,
+                      <td className="px-5 py-4">
+                        <select
+                          value={group.adviser?.user_id ?? ""}
+                          disabled={busy}
+                          onChange={(event) => {
+                            const adviser = advisers.find(
+                              (item) => String(item.user_id) === event.target.value,
                             );
+                            if (!adviser) return;
 
-                            return (
-                              <button
-                                key={panelist.uid}
-                                type="button"
-                                onClick={() =>
-                                  togglePanelist(group, panelist.fullName)
-                                }
-                                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                                  selected
-                                    ? "border-[#94d29a] bg-[#d7f7d8] text-[#203028]"
-                                    : "border-[#dfe8df] bg-white text-[#59645d]"
-                                }`}
-                              >
-                                {panelist.fullName}
-                              </button>
+                            void saveChange(
+                              group,
+                              "adviser",
+                              { adviser_id: adviser.user_id },
+                              `adviser changed to ${adviser.fname} ${adviser.lname}.`,
                             );
-                          })
-                        )}
-                      </div>
-                    </td>
+                          }}
+                          className={`w-48 ${selectClass}`}
+                        >
+                          {!group.adviser && <option value="">Unassigned</option>}
+                          {group.adviser &&
+                            !advisers.some((item) => item.user_id === group.adviser?.user_id) && (
+                              <option value={group.adviser.user_id}>{group.adviser.name}</option>
+                            )}
+                          {advisers.map((adviser) => (
+                            <option key={adviser.user_id} value={adviser.user_id}>
+                              {adviser.fname} {adviser.lname}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
 
-                    <td className="px-5 py-4 text-xs font-semibold text-[#4f8f58]">
-                      {group.groupCode}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-5 py-4 text-xs font-semibold text-[#4f8f58]">
+                        {group.group_code}
+                      </td>
+                    </tr>
+                  );
+                })}
 
-                {!loading && filteredGroups.length === 0 && (
+                {filteredGroups.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-5 py-8 text-center text-sm text-[#7b877f]"
-                    >
-                      No groups found. Create a group from the student setup
-                      page first.
+                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#7b877f]">
+                      {loading
+                        ? "Loading groups..."
+                        : "No groups found. Groups are created by advisers."}
                     </td>
                   </tr>
                 )}

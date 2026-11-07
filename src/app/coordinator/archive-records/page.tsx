@@ -1,332 +1,173 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CoordinatorShell from "../_components/CoordinatorShell";
-import Card from "../_components/Card";
-import {
-  finalRequirements,
-  groupFolders,
-  getRequirementCounts,
-} from "../_data/finalRecordsData";
+import OutputList from "../../_components/records/OutputList";
+import { apiFetch } from "../../_lib/api";
+import { downloadCsv, fetchFinalRecords, matchesSearch, type ApiFinalRecord } from "../../_lib/finalOutputs";
+import { errorMessage } from "../../_lib/groups";
+import { formatDate } from "../../_lib/requirements";
 
-const courseSections: Record<string, string[]> = {
-  BSIT: ["4A", "4B", "4C", "4D"],
-  BSIS: ["4A", "4B"],
-  BSCS: ["4A", "4B", "4C"],
-  BLIS: ["4A", "4B"],
-  ACT: ["2A", "2B"],
-};
+export default function ArchiveRecordsPage() {
+  const [records, setRecords] = useState<ApiFinalRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
-const allCourses = ["All", "BSIT", "BSIS", "BSCS", "BLIS", "ACT"];
-
-function archiveId(id: number) {
-  return `ARC-${String(id).padStart(4, "0")}`;
-}
-
-function statusClasses(status: string) {
-  if (status === "Checked") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-
-  if (status === "Submitted") {
-    return "border-blue-200 bg-blue-50 text-blue-700";
-  }
-
-  if (status === "Returned") {
-    return "border-rose-200 bg-rose-50 text-rose-700";
-  }
-
-  return "border-amber-200 bg-amber-50 text-amber-700";
-}
-
-export default function CoordinatorArchiveRecordsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [courseFilter, setCourseFilter] = useState("All");
-  const [sectionFilter, setSectionFilter] = useState("All");
-  const [openRecordId, setOpenRecordId] = useState<number | null>(null);
-
-  const completedFolders = useMemo(() => {
-    return groupFolders.filter(
-      (folder) => getRequirementCounts(folder).progress === 100,
-    );
-  }, []);
-
-  const sections = useMemo(() => {
-    if (courseFilter === "All") {
-      return [
-        "All",
-        ...Array.from(
-          new Set(Object.values(courseSections).flat().filter(Boolean)),
-        ),
-      ];
+  const load = useCallback(async () => {
+    try {
+      const rows = await fetchFinalRecords(true);
+      setRecords(rows.sort((a, b) => (b.archived_at ?? "").localeCompare(a.archived_at ?? "")));
+      setError("");
+    } catch (err) {
+      setError(errorMessage(err, "Unable to load the archive."));
     }
 
-    return ["All", ...(courseSections[courseFilter] || [])];
-  }, [courseFilter]);
+    setLoading(false);
+  }, []);
 
-  const filteredRecords = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+  useEffect(() => {
+    queueMicrotask(() => void load());
+  }, [load]);
 
-    return completedFolders.filter((folder) => {
-      const searchable = [
-        folder.groupName,
-        folder.projectTitle,
-        folder.course,
-        folder.section,
-        folder.adviser,
-        archiveId(folder.id),
-      ]
-        .join(" ")
-        .toLowerCase();
+  async function restore(record: ApiFinalRecord) {
+    if (!window.confirm(`Restore ${record.group_name} to the active records?`)) return;
 
-      const matchesSearch = !query || searchable.includes(query);
-      const matchesCourse =
-        courseFilter === "All" || folder.course === courseFilter;
-      const matchesSection =
-        sectionFilter === "All" || folder.section === sectionFilter;
-
-      return matchesSearch && matchesCourse && matchesSection;
-    });
-  }, [completedFolders, courseFilter, searchQuery, sectionFilter]);
-
-  const totalRequirements = completedFolders.reduce((sum, folder) => {
-    return sum + getRequirementCounts(folder).checked;
-  }, 0);
-
-  function changeCourse(nextCourse: string) {
-    setCourseFilter(nextCourse);
-    setSectionFilter("All");
+    try {
+      await apiFetch(`/projects/${record.project_id}/archive`, { method: "DELETE" });
+      setNotice(`${record.group_name} was restored to Group Folders.`);
+      setOpenId(null);
+      await load();
+    } catch (err) {
+      setError(errorMessage(err, "Unable to restore the project."));
+    }
   }
 
-  function resetFilters() {
-    setSearchQuery("");
-    setCourseFilter("All");
-    setSectionFilter("All");
+  function exportCsv() {
+    downloadCsv("archive-records.csv", [
+      ["Group", "Course", "Section", "School year", "Title", "Adviser", "Archived on", "Archived by", "Remarks"],
+      ...visible.map((record) => [
+        record.group_name,
+        record.course,
+        record.section,
+        record.school_year,
+        record.project_title,
+        record.adviser,
+        record.archived_at ? formatDate(record.archived_at) : null,
+        record.archived_by,
+        record.archive_remarks,
+      ]),
+    ]);
   }
+
+  const visible = records.filter((record) => matchesSearch(record, query));
 
   return (
     <CoordinatorShell title="Archive Records">
-      <div className="space-y-5">
-        <Card className="overflow-x-auto p-4">
-          <div className="flex min-w-[760px] divide-x divide-[#dfe8df]">
-            {[
-              ["Archived Folders", completedFolders.length, "Complete groups"],
-              ["Visible Records", filteredRecords.length, "After filters"],
-              ["Archived Files", totalRequirements, "Checked requirements"],
-              ["Archive Status", "Ready", "For records turnover"],
-            ].map(([label, value, caption]) => (
-              <div key={label} className="flex-1 px-4 py-2">
-                <p className="text-xs font-semibold text-[#7b877f]">{label}</p>
-                <div className="mt-1 flex items-end gap-2 whitespace-nowrap">
-                  <p className="text-2xl font-semibold text-[#203028]">
-                    {value}
-                  </p>
-                  <p className="pb-1 text-xs text-[#59645d]">{caption}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+      <div className="mx-auto max-w-4xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
+            Finished projects whose final outputs were all received. Their files stay available here.
+          </p>
 
-        <Card className="overflow-x-auto p-4">
-          <div className="flex min-w-[820px] items-end gap-3">
-            <label className="min-w-[280px] flex-1 text-xs font-semibold text-[#59645d]">
-              Search
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search archive ID, group, project, adviser..."
-                className="mt-1 h-10 w-full rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              />
-            </label>
-
-            <label className="w-[170px] shrink-0 text-xs font-semibold text-[#59645d]">
-              Course
-              <select
-                value={courseFilter}
-                onChange={(event) => changeCourse(event.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                {allCourses.map((course) => (
-                  <option key={course}>{course}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="w-[170px] shrink-0 text-xs font-semibold text-[#59645d]">
-              Section
-              <select
-                value={sectionFilter}
-                onChange={(event) => setSectionFilter(event.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                {sections.map((section) => (
-                  <option key={section}>{section}</option>
-                ))}
-              </select>
-            </label>
-
+          <div className="flex gap-2">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search group, title or adviser"
+              aria-label="Search the archive"
+              className="w-56 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+            />
             <button
               type="button"
-              onClick={resetFilters}
-              className="h-10 shrink-0 rounded-lg border border-[#dfe8df] px-4 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+              onClick={exportCsv}
+              disabled={visible.length === 0}
+              className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1] disabled:opacity-40"
             >
-              Reset
+              Export CSV
             </button>
           </div>
-        </Card>
+        </div>
 
-        <Card className="overflow-hidden">
-          <div className="border-b border-[#edf2ec] px-5 py-4">
-            <h2 className="text-lg font-semibold text-[#203028]">
-              Archive Registry
-            </h2>
-            <p className="mt-1 text-sm text-[#7b877f]">
-              Completed final folders ready for records turnover and long-term
-              archive.
-            </p>
-          </div>
+        {error && (
+          <p role="alert" className="mt-4 text-sm text-[#b42318]">
+            {error}
+          </p>
+        )}
 
-          <div className="divide-y divide-[#edf2ec]">
-            {filteredRecords.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-[#7b877f]">
-                No completed archive records match the selected filters.
-              </p>
-            ) : (
-              filteredRecords.map((folder) => {
-                const counts = getRequirementCounts(folder);
-                const isOpen = openRecordId === folder.id;
+        {notice && (
+          <p role="status" className="mt-4 text-sm text-[#2f6f3a]">
+            {notice}
+          </p>
+        )}
 
-                return (
-                  <div key={folder.id}>
-                    <div className="grid gap-4 px-5 py-4 lg:grid-cols-[160px_1.2fr_1fr_auto] lg:items-center">
-                      <div>
-                        <p className="text-xs font-semibold text-[#7b877f]">
-                          Archive ID
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-[#203028]">
-                          {archiveId(folder.id)}
-                        </p>
-                      </div>
+        {loading && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
 
-                      <div>
-                        <p className="text-sm font-semibold text-[#203028]">
-                          {folder.groupName}
-                        </p>
-                        <p className="mt-1 text-sm text-[#59645d]">
-                          {folder.projectTitle}
-                        </p>
-                        <p className="mt-1 text-xs text-[#7b877f]">
-                          {folder.course} {folder.section} • Adviser:{" "}
-                          {folder.adviser}
-                        </p>
-                      </div>
+        {!loading && visible.length === 0 && !error && (
+          <p className="mt-12 text-center text-sm text-[#9aa59e]">
+            {records.length === 0
+              ? "Nothing is archived yet. Archive a project from Group Folders once all its outputs are received."
+              : "No archived project matches your search."}
+          </p>
+        )}
 
-                      <div>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                            Ready for Archive
-                          </span>
-                          <span className="rounded-full border border-[#dfe8df] bg-[#f8faf7] px-2.5 py-1 text-[11px] font-semibold text-[#59645d]">
-                            {counts.checked}/{counts.total} files checked
-                          </span>
-                        </div>
-                        <p className="mt-2 text-xs text-[#7b877f]">
-                          Last submission: {folder.lastSubmission}
-                        </p>
-                      </div>
+        <ul className="mt-6 divide-y divide-[#edf2ec] border-t border-[#edf2ec]">
+          {visible.map((record) => {
+            const open = openId === record.project_id;
 
-                      <div className="flex gap-2 lg:justify-end">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenRecordId(isOpen ? null : folder.id)
-                          }
-                          className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
-                        >
-                          {isOpen ? "Close" : "Open"}
-                        </button>
-
-                        <a
-                          href="/coordinator/messages"
-                          className="rounded-lg bg-[#123f2b] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
-                        >
-                          Message
-                        </a>
-                      </div>
-                    </div>
-
-                    {isOpen && (
-                      <div className="border-t border-[#edf2ec] bg-[#fbfdfb] px-5 py-4">
-                        <div className="mb-4 grid gap-3 md:grid-cols-3">
-                          <div className="rounded-xl border border-[#edf2ec] bg-white p-4">
-                            <p className="text-xs font-semibold text-[#7b877f]">
-                              Archive Package
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-[#203028]">
-                              Final Requirements
-                            </p>
-                          </div>
-
-                          <div className="rounded-xl border border-[#edf2ec] bg-white p-4">
-                            <p className="text-xs font-semibold text-[#7b877f]">
-                              Turnover Status
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-[#203028]">
-                              Ready for Records
-                            </p>
-                          </div>
-
-                          <div className="rounded-xl border border-[#edf2ec] bg-white p-4">
-                            <p className="text-xs font-semibold text-[#7b877f]">
-                              Retention
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-[#203028]">
-                              Department Archive
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                          {finalRequirements.map((requirement) => {
-                            const requirementStatus =
-                              folder.requirements[requirement.name];
-
-                            return (
-                              <div
-                                key={requirement.id}
-                                className="rounded-xl border border-[#edf2ec] bg-white p-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs font-semibold text-[#203028]">
-                                      {requirement.name}
-                                    </p>
-                                    <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#7b877f]">
-                                      {requirement.description}
-                                    </p>
-                                  </div>
-
-                                  <span
-                                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClasses(
-                                      requirementStatus,
-                                    )}`}
-                                  >
-                                    {requirementStatus}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+            return (
+              <li key={record.project_id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotice("");
+                    setOpenId(open ? null : record.project_id);
+                  }}
+                  aria-expanded={open}
+                  className="flex w-full items-center justify-between gap-6 py-4 text-left"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#203028]">
+                      {record.project_title ?? record.group_name}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-[#7b877f]">
+                      {record.group_name} · {record.course} {record.section}
+                      {record.school_year ? ` · ${record.school_year}` : ""}
+                    </p>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </Card>
+
+                  <span className="shrink-0 text-xs text-[#9aa59e]">
+                    Archived {record.archived_at ? formatDate(record.archived_at) : ""}
+                  </span>
+                </button>
+
+                {open && (
+                  <div className="space-y-4 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4">
+                    <p className="text-xs text-[#7b877f]">
+                      {record.adviser ? `Adviser ${record.adviser} · ` : ""}
+                      Archived by {record.archived_by ?? "the Coordinator"}
+                      {record.archive_remarks ? ` · “${record.archive_remarks}”` : ""}
+                    </p>
+
+                    <OutputList outputs={record.outputs} onError={setError} />
+
+                    <div className="border-t border-[#edf2ec] pt-4">
+                      <button
+                        type="button"
+                        onClick={() => void restore(record)}
+                        className="text-xs font-semibold text-[#59645d] hover:text-[#203028] hover:underline"
+                      >
+                        Restore to Group Folders
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </CoordinatorShell>
   );

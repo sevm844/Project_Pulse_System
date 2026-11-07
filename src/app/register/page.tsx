@@ -3,10 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db, type UserProfile } from "../_lib/firebase";
-import { addAuditLog } from "../_utils/auditLogStorage";
+import { ApiError, apiFetch } from "../_lib/api";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -36,6 +33,13 @@ export default function RegisterPage() {
       return;
     }
 
+    const nameParts = normalizedName.split(/\s+/);
+
+    if (nameParts.length < 2) {
+      setError("Please enter your first and last name.");
+      return;
+    }
+
     if (!isValidStudentEmail(normalizedEmail)) {
       setError("Please enter a valid UB student email.");
       return;
@@ -54,39 +58,35 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        normalizedEmail,
-        password,
+      const lname = nameParts[nameParts.length - 1];
+      const fname = nameParts.slice(0, -1).join(" ");
+
+      await apiFetch<{ message: string; user_id: number }>(
+        "/register",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            fname,
+            lname,
+            email: normalizedEmail,
+            password,
+          }),
+        },
       );
 
-      const profile: UserProfile = {
-        uid: credential.user.uid,
-        email: normalizedEmail,
-        fullName: normalizedName,
-        role: "Student",
-        status: "Active",
-        createdAt: new Date().toISOString(),
-      };
-
-      await setDoc(doc(db, "users", credential.user.uid), profile);
-
-      addAuditLog({
-        userId: credential.user.uid,
-        userEmail: normalizedEmail,
-        role: "Student",
-        action: "Register",
-        module: "Registration",
-        details: "Student account registered and saved to Firebase.",
-      });
-
-      setSuccess("Student account created successfully. Redirecting to login...");
+      setSuccess(
+        "Account created. It is now waiting for approval by the Research Coordinator. You can log in once it is approved. Redirecting to login...",
+      );
 
       setTimeout(() => {
         window.location.href = "/login";
-      }, 1200);
-    } catch {
-      setError("Unable to create account. The email may already be registered.");
+      }, 3500);
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to create account. Please try again.",
+      );
       setLoading(false);
     }
   }
@@ -224,7 +224,8 @@ export default function RegisterPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-gray-500">
-            Student accounts are saved to Firebase Authentication and Firestore.
+            New student accounts are reviewed by the Research Coordinator
+            before you can log in.
           </p>
         </div>
       </section>

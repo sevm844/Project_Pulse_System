@@ -4,27 +4,41 @@ import { useEffect, useState } from "react";
 import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import {
-  defaultMessagingSchedule,
-  formatScheduleWindow,
-  getStoredMessagingSchedule,
-  isMessagingAllowedNow,
-  saveStoredMessagingSchedule,
-  type MessagingSchedule,
-} from "../../../_utils/messagingScheduleStorage";
+  clockLabel,
+  fetchMessagingSettings,
+  saveMessagingSettings,
+  type MessagingSettings,
+} from "../../../_lib/messages";
+
+const DEFAULT_SETTINGS: MessagingSettings = {
+  enabled: true,
+  start_time: "05:00",
+  end_time: "20:00",
+  note: "Students can message during the configured availability window.",
+  open_now: true,
+};
 
 export default function DeanMessageSettingsPage() {
-  const [schedule, setSchedule] = useState<MessagingSchedule>(
-    defaultMessagingSchedule,
-  );
+  const [schedule, setSchedule] = useState<MessagingSettings>(DEFAULT_SETTINGS);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    queueMicrotask(() => setSchedule(getStoredMessagingSchedule()));
+    fetchMessagingSettings()
+      .then((settings) => {
+        setSchedule(settings);
+        setLoaded(true);
+      })
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Could not load the messaging window."),
+      );
   }, []);
 
-  function updateSchedule<K extends keyof MessagingSchedule>(
+  function updateSchedule<K extends keyof MessagingSettings>(
     field: K,
-    value: MessagingSchedule[K],
+    value: MessagingSettings[K],
   ) {
     setSchedule((current) => ({
       ...current,
@@ -33,18 +47,26 @@ export default function DeanMessageSettingsPage() {
     setSavedMessage("");
   }
 
-  function saveSchedule() {
-    saveStoredMessagingSchedule(schedule);
-    setSavedMessage("Messaging window updated.");
+  async function persist(next: MessagingSettings, done: string) {
+    setSaving(true);
+    setError("");
+    setSavedMessage("");
+
+    try {
+      setSchedule(await saveMessagingSettings(next));
+      setSavedMessage(done);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save the messaging window.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function resetSchedule() {
-    setSchedule(defaultMessagingSchedule);
-    saveStoredMessagingSchedule(defaultMessagingSchedule);
-    setSavedMessage("Default messaging window restored.");
-  }
+  const saveSchedule = () => persist(schedule, "Messaging window updated.");
+  const resetSchedule = () => persist(DEFAULT_SETTINGS, "Default messaging window restored.");
 
-  const currentlyOpen = isMessagingAllowedNow(schedule);
+  const currentlyOpen = schedule.open_now;
+  const windowLabel = `${clockLabel(schedule.start_time)} - ${clockLabel(schedule.end_time)}`;
 
   return (
     <DeanShell title="Messaging Window">
@@ -57,8 +79,7 @@ export default function DeanMessageSettingsPage() {
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-[#59645d]">
                 Control when students can send messages from the portal.
-                Advisers and staff can still review conversations outside this
-                window.
+                Advisers and staff can message at any time.
               </p>
             </div>
 
@@ -84,9 +105,9 @@ export default function DeanMessageSettingsPage() {
               Start time
               <input
                 type="time"
-                value={schedule.startTime}
+                value={schedule.start_time}
                 onChange={(event) =>
-                  updateSchedule("startTime", event.target.value)
+                  updateSchedule("start_time", event.target.value)
                 }
                 className="mt-2 h-11 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               />
@@ -96,9 +117,9 @@ export default function DeanMessageSettingsPage() {
               End time
               <input
                 type="time"
-                value={schedule.endTime}
+                value={schedule.end_time}
                 onChange={(event) =>
-                  updateSchedule("endTime", event.target.value)
+                  updateSchedule("end_time", event.target.value)
                 }
                 className="mt-2 h-11 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               />
@@ -120,7 +141,7 @@ export default function DeanMessageSettingsPage() {
               </span>
               <span className="mt-1 block text-xs leading-5 text-[#59645d]">
                 When enabled, students can read messages anytime but cannot
-                send or attach files outside the allowed hours.
+                send outside the allowed hours.
               </span>
             </span>
           </label>
@@ -138,7 +159,8 @@ export default function DeanMessageSettingsPage() {
             <button
               type="button"
               onClick={saveSchedule}
-              className="rounded-full bg-[#123f2b] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] hover:bg-[#0f3324]"
+              disabled={!loaded || saving}
+              className="rounded-full bg-[#123f2b] px-5 py-2.5 text-xs font-semibold text-white shadow-[0_10px_22px_rgba(73,169,90,0.22)] hover:bg-[#0f3324] disabled:opacity-50"
             >
               Save messaging window
             </button>
@@ -146,10 +168,13 @@ export default function DeanMessageSettingsPage() {
             <button
               type="button"
               onClick={resetSchedule}
+              disabled={!loaded || saving}
               className="rounded-full border border-[#dfe8df] bg-white px-5 py-2.5 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
             >
               Restore default
             </button>
+
+            {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}
 
             {savedMessage && (
               <p className="text-xs font-semibold text-emerald-700">
@@ -165,7 +190,7 @@ export default function DeanMessageSettingsPage() {
               Active Rule
             </h2>
             <p className="mt-4 text-3xl font-semibold tracking-tight text-[#203028]">
-              {formatScheduleWindow(schedule)}
+              {windowLabel}
             </p>
             <p className="mt-3 text-sm leading-6 text-[#59645d]">
               {schedule.enabled
@@ -184,8 +209,8 @@ export default function DeanMessageSettingsPage() {
                 after 8:00 PM.
               </p>
               <p className="rounded-xl bg-[#f8faf7] px-4 py-3">
-                Keep backend enforcement when this moves from local storage to
-                Firebase or an API.
+                The server enforces this window, so students cannot get around
+                it. Times are Philippine time.
               </p>
             </div>
           </Card>

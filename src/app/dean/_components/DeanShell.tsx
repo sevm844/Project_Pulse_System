@@ -5,15 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardSearchIcon from "../../_components/DashboardSearchIcon";
 import SidebarToggle from "../../_components/SidebarToggle";
+import NotificationBell from "../../_components/notifications/NotificationBell";
 import {
   useEffect,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../../_lib/firebase";
-import { clearStoredUserSession } from "../../_utils/authStorage";
+import { logoutFromApi } from "../../_lib/api";
+import {
+  getStoredUserEmail,
+  getStoredUserName,
+  initialsOf,
+} from "../../_utils/authStorage";
 
 export const DEAN_PROFILE_IMAGE_KEY = "project-pulse-dean-profile-image";
 export const DEAN_PROFILE_IMAGE_UPDATED_EVENT =
@@ -34,17 +38,19 @@ const navItems = [
     matches: [
       "/dean/projects",
       "/dean/assigned-groups",
-      "/dean/submissions",
-      "/dean/document-versions",
-      "/dean/defense",
-      "/dean/schedules",
     ],
   },
   {
-    label: "Approvals",
-    icon: "/checklt.png",
-    href: "/dean/approvals",
-    matches: ["/dean/approvals", "/dean/reviews", "/dean/final-approval"],
+    label: "Defenses",
+    icon: "/work.png",
+    href: "/dean/defense",
+    matches: ["/dean/defense"],
+  },
+  {
+    label: "Requirements",
+    icon: "/docs.png",
+    href: "/dean/requirements",
+    matches: ["/dean/requirements"],
   },
   {
     label: "Administration",
@@ -158,8 +164,7 @@ export default function DeanShell({
   }
 
   async function handleLogout() {
-    await signOut(auth);
-    clearStoredUserSession();
+    await logoutFromApi();
     router.push("/login");
   }
 
@@ -170,6 +175,9 @@ export default function DeanShell({
       </main>
     );
   }
+
+  const displayName = getStoredUserName() ?? "Dean";
+  const displayEmail = getStoredUserEmail() ?? "";
 
   return (
     <main className={`${fitViewport ? "h-dvh" : "h-screen"} overflow-hidden bg-white text-[#1f2a24]`}>
@@ -269,20 +277,13 @@ export default function DeanShell({
               <div className="flex flex-wrap items-center gap-3">
                   <DashboardSearchIcon />
 
-                  <Link
-                    href="/dean/notifications"
-                    aria-label="Notifications"
-                    title="Notifications"
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
-                  >
-                    <Image src="/notif.png" alt="" width={18} height={18} />
-                  </Link>
+                  <NotificationBell href="/dean/notifications" />
 
                 <div className="flex items-center gap-2 pl-1">
                   <div className="text-right">
-                    <p className="text-xs font-semibold">Dean Office</p>
+                    <p className="text-xs font-semibold">{displayName}</p>
                     <p className="text-[10px] text-[#7b877f]">
-                      dean.office@ub.edu.ph
+                      {displayEmail}
                     </p>
                   </div>
 
@@ -295,7 +296,7 @@ export default function DeanShell({
                           : undefined
                       }
                     >
-                      {!profileImage && "DO"}
+                      {!profileImage && initialsOf(displayName)}
                     </div>
 
                     <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">

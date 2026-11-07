@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@fortune-sheet/react/dist/index.css";
 
 :root {
   --background: #ffffff;

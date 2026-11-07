@@ -1,38 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
-import type {
-  CapstoneGroup,
-  UserProfile,
-  CourseCode as FirebaseCourseCode,
-} from "../../_lib/firebase";
+import type { CourseCode, UserProfile } from "../../_lib/types";
+import { apiFetch } from "../../_lib/api";
 import {
-  getAdviserCreatedGroups,
+  COURSE_OPTIONS,
+  errorMessage,
   isGroupConfirmed,
-  subscribeToGroupAssignments,
-  saveAdviserCreatedGroup,
-} from "../../_utils/groupAssignmentStorage";
-import {
-  assignedGroups,
-  courses,
-  sections,
-  type CourseCode,
-} from "../_data/mockAdviserData";
-
-import { auth, db } from "../../_lib/firebase";
-import { getStoredUserUid } from "../../_utils/authStorage";
-import { GROUP_SEMESTERS, buildSelectedGroupMembers, getAvailableStudents, isSchoolYear } from "../../_utils/studentSelection";
+  NO_TITLE_YET,
+  SECTION_OPTIONS,
+  type ApiGroup,
+} from "../../_lib/groups";
+import { getStoredUserEmail } from "../../_utils/authStorage";
+import { GROUP_SEMESTERS, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
 import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
 
-const stages = [...PROJECT_STAGES, "Proposal Review"] as const;
-
-const groupCreationCourses: FirebaseCourseCode[] = ["BSIT", "BSCS", "BSIS"];
+const groupCreationCourses = COURSE_OPTIONS as CourseCode[];
 
 function generateInternalGroupCode() {
   return `ADV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
@@ -42,18 +29,16 @@ export default function AssignedGroupsPage() {
   const [course, setCourse] = useState<"All" | CourseCode>("All");
   const [section, setSection] = useState("All");
   const [stage, setStage] = useState("All");
-  const [createdGroups, setCreatedGroups] = useState<CapstoneGroup[]>(() =>
-    getAdviserCreatedGroups(),
-  );
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [groupsError, setGroupsError] = useState("");
   const [groupName, setGroupName] = useState("");
   const [schoolYear, setSchoolYear] = useState("");
-  const [createCourse, setCreateCourse] = useState<FirebaseCourseCode>("BSIT");
+  const [createCourse, setCreateCourse] = useState<CourseCode>("BSIT");
   const [createSection, setCreateSection] = useState("4A");
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
   const [studentLoadAttempt, setStudentLoadAttempt] = useState(0);
-  const [adviserId, setAdviserId] = useState("");
   const [semester, setSemester] = useState("1st Semester");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [leaderUid, setLeaderUid] = useState("");
@@ -62,9 +47,11 @@ export default function AssignedGroupsPage() {
     "success" | "error" | ""
   >("");
   const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [adviserEmail] = useState(() => getStoredUserEmail() || "Adviser");
 
-  const availableStudents = getAvailableStudents(students, createdGroups, schoolYear, semester);
-  const adviserGroups = createdGroups.filter((group) => group.adviserId === adviserId);
+  // The backend already leaves out students who are in a group for this school year + semester.
+  const availableStudents = students;
   const selectedMembers = buildSelectedGroupMembers(availableStudents, leaderUid, selectedIds);
   const memberCount = availableStudents.filter((student) => student.uid === leaderUid || selectedIds.includes(student.uid)).length;
   const validMembers = Boolean(selectedMembers) && !studentsLoading && !studentsError;
@@ -73,106 +60,102 @@ export default function AssignedGroupsPage() {
 
   function resetMembers() { setSelectedIds([]); setLeaderUid(""); }
 
-  useEffect(() => {
-    queueMicrotask(() => setAdviserId(getStoredUserUid() || ""));
+  const loadGroups = useCallback(async () => {
+    try {
+      setGroups(await apiFetch<ApiGroup[]>("/groups"));
+      setGroupsError("");
+    } catch (err) {
+      setGroupsError(errorMessage(err, "Unable to load your groups."));
+    }
   }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => void loadGroups());
+  }, [loadGroups]);
 
   useEffect(() => {
     if (!showCreateWizard) return;
     let cancelled = false;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    async function loadStudents() {
       if (cancelled) return;
-      setStudents([]); setStudentsError("");
-      if (!user) {
-        setStudentsLoading(false);
-        setStudentsError("Sign in to load registered students.");
-        return;
-      }
-      setAdviserId(user.uid);
-      setStudentsLoading(true);
+      setStudents([]); setStudentsError(""); setStudentsLoading(true);
       try {
-        const snapshot = await getDocs(query(collection(db, "users"), where("role", "==", "Student")));
-        const registeredStudents = snapshot.docs.map((item) => ({ ...item.data(), uid: item.id }) as UserProfile);
+        // Adviser-only endpoint: returns Active students only.
+        const params = new URLSearchParams();
+        if (isSchoolYear(schoolYear)) {
+          params.set("school_year", schoolYear);
+          params.set("semester", semester);
+        }
+        const query = params.toString();
+        const available = await apiFetch<
+          Array<{ user_id: number; fname: string; lname: string; email: string }>
+        >(`/students/available${query ? `?${query}` : ""}`);
+        const registeredStudents = available.map((student): UserProfile => ({
+          uid: String(student.user_id),
+          email: student.email,
+          fullName: `${student.fname} ${student.lname}`.trim(),
+          role: "Student",
+          status: "Active",
+          createdAt: "",
+        }));
         if (!cancelled) setStudents(registeredStudents);
-      } catch {
-        if (!cancelled) setStudentsError("Unable to load registered students. Check your connection and adviser access to student accounts, then retry.");
+      } catch (err) {
+        if (!cancelled) {
+          setStudentsError(errorMessage(err, "Unable to load registered students. Check your connection, then retry."));
+        }
       } finally {
         if (!cancelled) setStudentsLoading(false);
       }
-    });
-    return () => { cancelled = true; unsubscribe(); };
-  }, [showCreateWizard, studentLoadAttempt]);
+    }
+    queueMicrotask(loadStudents);
+    return () => { cancelled = true; };
+  }, [showCreateWizard, studentLoadAttempt, schoolYear, semester]);
 
-  useEffect(() => {
-    const refresh = () => setCreatedGroups(getAdviserCreatedGroups());
-    queueMicrotask(refresh);
-    return subscribeToGroupAssignments(refresh);
-  }, []);
-
-  const createdGroupRows = useMemo(
-    () =>
-      createdGroups.filter((group) => group.adviserId === adviserId && isGroupConfirmed(group)).map((group) => ({
-        id: group.id,
-        course: group.course,
-        section: group.section,
-        groupName: group.groupName,
-        projectTitle: group.projectTitle || "Awaiting student title proposals",
-        stage: group.stage,
-        lastSubmission: "No submission yet",
-        progress: group.progress,
-        status: group.status,
-      })),
-    [createdGroups, adviserId],
-  );
-
-  const allGroups = useMemo(
-    () => [...createdGroupRows, ...assignedGroups],
-    [createdGroupRows],
-  );
+  const confirmedGroups = useMemo(() => groups.filter(isGroupConfirmed), [groups]);
 
   const filteredGroups = useMemo(() => {
-    return allGroups.filter((group) => {
+    return confirmedGroups.filter((group) => {
       const matchesCourse = course === "All" || group.course === course;
       const matchesSection = section === "All" || group.section === section;
-      const matchesStage = stage === "All" || group.stage === stage;
+      const matchesStage = stage === "All" || group.project?.current_stage === stage;
 
       return matchesCourse && matchesSection && matchesStage;
     });
-  }, [allGroups, course, section, stage]);
+  }, [confirmedGroups, course, section, stage]);
 
-  function handleCreateGroup() {
-    const members = buildSelectedGroupMembers(
-      getAvailableStudents(students, getAdviserCreatedGroups(), schoolYear, semester), leaderUid, selectedIds,
-    );
-    if (!adviserId || !detailsReady || !validMembers || !members) {
+  async function handleCreateGroup() {
+    if (!detailsReady || !validMembers || !selectedMembers) {
       setCreateMessage("Complete the group details, select a group leader, and add at least one member.");
       setCreateMessageType("error");
       return;
     }
 
-    const now = new Date().toISOString();
-    const nextGroup: CapstoneGroup = {
-      id: `adviser-group-${crypto.randomUUID()}`,
-      groupName: groupName.trim(),
-      projectTitle: "",
-      schoolYear,
-      semester,
-      groupCode: generateInternalGroupCode(),
-      course: createCourse,
-      section: createSection,
-      members,
-      leaderId: leaderUid,
-      adviserId,
-      adviserName: auth.currentUser?.displayName || auth.currentUser?.email || "Adviser",
-      panelists: [],
-      stage: "Proposal Defense",
-      progress: 0,
-      status: "Pending Student Confirmation",
-      createdAt: now,
-      updatedAt: now,
-    };
+    setCreating(true);
+    setCreateMessage("");
+    setCreateMessageType("");
 
-    saveAdviserCreatedGroup(nextGroup);
+    try {
+      await apiFetch<ApiGroup>("/groups", {
+        method: "POST",
+        body: JSON.stringify({
+          group_name: groupName.trim(),
+          group_code: generateInternalGroupCode(),
+          course: createCourse,
+          section: createSection,
+          school_year: schoolYear,
+          semester,
+          leader_id: Number(leaderUid),
+          member_ids: selectedIds.filter((uid) => uid !== leaderUid).map(Number),
+        }),
+      });
+    } catch (err) {
+      setCreateMessage(errorMessage(err, "Unable to create the group."));
+      setCreateMessageType("error");
+      setCreating(false);
+      return;
+    }
+
+    await loadGroups();
     setCreateMessage(
       "Invitation created. Track each member's response in Group Invitations below. Student Confirmation completes when all members accept.",
     );
@@ -180,6 +163,7 @@ export default function AssignedGroupsPage() {
     setGroupName("");
     setSchoolYear("");
     resetMembers();
+    setCreating(false);
     setShowCreateWizard(false);
   }
 
@@ -196,7 +180,7 @@ export default function AssignedGroupsPage() {
                 Adviser-managed group creation
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-[#7b877f]">
-                Select a group leader and members from registered student accounts.
+                Select a group leader and members from approved student accounts.
               </p>
             </div>
 
@@ -297,7 +281,7 @@ export default function AssignedGroupsPage() {
                       <select
                         value={createCourse}
                         onChange={(e) =>
-                          { setCreateCourse(e.target.value as FirebaseCourseCode); resetMembers(); }
+                          { setCreateCourse(e.target.value as CourseCode); resetMembers(); }
                         }
                         className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:border-[#94d29a] focus:ring-2 focus:ring-[#d7f7d8]"
                       >
@@ -315,7 +299,7 @@ export default function AssignedGroupsPage() {
                         onChange={(e) => { setCreateSection(e.target.value); resetMembers(); }}
                         className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:border-[#94d29a] focus:ring-2 focus:ring-[#d7f7d8]"
                       >
-                        {sections.map((item) => (
+                        {SECTION_OPTIONS.map((item) => (
                           <option key={item}>{item}</option>
                         ))}
                       </select>
@@ -328,7 +312,7 @@ export default function AssignedGroupsPage() {
                   <div className="space-y-2.5">
                     {studentsLoading && <p role="status" className="text-xs text-[#7b877f]">Loading registered students...</p>}
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
-                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. Register accounts first; already invited students are excluded.</p>}
+                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. Students must be approved by the Research Coordinator first; students already in a group for this school year and semester are excluded.</p>}
                     <label className="block text-xs font-semibold text-[#59645d]">Group Leader
                       <select value={availableStudents.some((student) => student.uid === leaderUid) ? leaderUid : ""} disabled={studentsLoading || Boolean(studentsError)} onChange={(event) => { setLeaderUid(event.target.value); setSelectedIds((current) => current.filter((uid) => uid !== event.target.value)); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs disabled:bg-gray-50">
                         <option value="">Select the group leader</option>
@@ -364,7 +348,7 @@ export default function AssignedGroupsPage() {
                           </span>
                         ))}
                     </div>
-                    <p className="text-xs text-[#7b877f]">Choose the leader first, then add members.</p>
+                    <p className="text-xs text-[#7b877f]">Choose the leader first, then add members. Enter the school year to hide students who already have a group.</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
@@ -373,7 +357,7 @@ export default function AssignedGroupsPage() {
                         Adviser
                       </p>
                       <p className="mt-0.5 truncate text-xs font-semibold text-[#203028]">
-                        {auth.currentUser?.displayName || auth.currentUser?.email || "Adviser"}
+                        {adviserEmail}
                       </p>
                     </div>
                     <div>
@@ -412,10 +396,10 @@ export default function AssignedGroupsPage() {
                   <button
                     type="button"
                     onClick={handleCreateGroup}
-                    disabled={!adviserId || !detailsReady || !validMembers}
+                    disabled={creating || !detailsReady || !validMembers}
                     className="rounded-lg bg-[#07845f] px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_34px_rgba(7,132,95,0.2)] transition hover:bg-[#066f50] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Create Invitation
+                    {creating ? "Creating..." : "Create Invitation"}
                   </button>
                 </div>
               </section>
@@ -426,19 +410,20 @@ export default function AssignedGroupsPage() {
         <Card className="p-5">
           <h2 className="text-lg font-semibold text-[#203028]">Group Invitations</h2>
           <p className="mt-1 text-sm text-[#7b877f]">Sending an invitation completes setup. Student Confirmation completes only when all members accept.</p>
+          {groupsError && <p role="alert" className="mt-3 text-sm text-[#b42318]">{groupsError}</p>}
           <div className="mt-4 space-y-4">
-            {adviserGroups.length === 0 && <p className="text-sm text-[#7b877f]">No invitations yet. Create a group to invite its members.</p>}
-            {adviserGroups.map((group) => {
+            {groups.length === 0 && !groupsError && <p className="text-sm text-[#7b877f]">No invitations yet. Create a group to invite its members.</p>}
+            {groups.map((group) => {
               const confirmed = isGroupConfirmed(group);
-              const accepted = group.members.filter((member) => member.acceptedAt).length;
-              return <div key={group.id} className="rounded-xl border border-[#dfe8df] p-4">
+              const accepted = group.members.filter((member) => member.accepted_at).length;
+              return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><h3 className="font-semibold text-[#203028]">{group.groupName}</h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.schoolYear || "School year not recorded"} / {group.semester || "Semester not recorded"}</p></div>
+                  <div><h3 className="font-semibold text-[#203028]">{group.group_name}</h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p></div>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${confirmed ? "bg-[#e7f5e9] text-[#123f2b]" : "bg-amber-50 text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
                 <ul className="mt-3 divide-y divide-[#edf2ec]">
-                  {group.members.map((member) => <li key={member.email} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{member.email} <span className="text-xs text-[#7b877f]">({member.role})</span></span><span className={member.acceptedAt ? "text-[#4f8f58]" : "text-amber-700"}>{member.acceptedAt ? "Accepted" : "Pending acceptance"}</span></li>)}
+                  {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span></li>)}
                 </ul>
               </div>;
             })}
@@ -458,7 +443,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {courses.map((item) => (
+                {COURSE_OPTIONS.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -474,7 +459,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {sections.map((item) => (
+                {SECTION_OPTIONS.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -490,7 +475,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {stages.map((item) => (
+                {PROJECT_STAGES.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -505,13 +490,12 @@ export default function AssignedGroupsPage() {
               Group List
             </h2>
             <p className="mt-1 text-sm text-[#7b877f]">
-              Adviser view is filtered by assigned course, section, stage, and
-              academic period.
+              Confirmed groups you advise, filtered by course, section, and stage.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left text-sm">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <thead className="border-b border-[#edf2ec] bg-[#fbfdfb] text-xs text-[#7b877f]">
                 <tr>
                   <th className="px-5 py-3 font-medium">Course</th>
@@ -519,8 +503,7 @@ export default function AssignedGroupsPage() {
                   <th className="px-5 py-3 font-medium">Group</th>
                   <th className="px-5 py-3 font-medium">Project Title</th>
                   <th className="px-5 py-3 font-medium">Stage</th>
-                  <th className="px-5 py-3 font-medium">Last Submission</th>
-                  <th className="px-5 py-3 font-medium">Progress</th>
+                  <th className="px-5 py-3 font-medium">Members</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Actions</th>
                 </tr>
@@ -528,7 +511,7 @@ export default function AssignedGroupsPage() {
 
               <tbody className="divide-y divide-[#edf2ec]">
                 {filteredGroups.map((group) => (
-                  <tr key={group.id} className="hover:bg-[#fbfdfb]">
+                  <tr key={group.group_id} className="hover:bg-[#fbfdfb]">
                     <td className="px-5 py-4 font-medium text-[#203028]">
                       {group.course}
                     </td>
@@ -536,50 +519,33 @@ export default function AssignedGroupsPage() {
                       {group.section}
                     </td>
                     <td className="px-5 py-4 font-semibold text-[#203028]">
-                      {group.groupName}
+                      {group.group_name}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
-                      {group.projectTitle}
+                      {group.project?.project_title || NO_TITLE_YET}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
-                      {group.stage}
+                      {group.project?.current_stage || "-"}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
-                      {group.lastSubmission}
+                      {group.members.length}
                     </td>
                     <td className="px-5 py-4">
-                      <div className="h-2 w-32 rounded-full bg-[#edf2ec]">
-                        <div
-                          className="h-2 rounded-full bg-[#94d29a]"
-                          style={{ width: `${group.progress}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-[#7b877f]">
-                        {group.progress}%
-                      </p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={group.status} />
+                      <StatusBadge status="Active" />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
                         <Link
-                          href="/adviser/reviews"
-                          className="rounded-lg border border-[#dfe8df] px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]"
+                          href="/adviser/title-proposals"
+                          className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
                         >
-                          Open Latest
+                          Title Proposals
                         </Link>
                         <Link
                           href="/adviser/messages"
                           className="rounded-lg border border-[#dfe8df] px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]"
                         >
                           Chat
-                        </Link>
-                        <Link
-                          href="/adviser/defense"
-                          className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
-                        >
-                          Endorse / Hold
                         </Link>
                       </div>
                     </td>
@@ -589,10 +555,10 @@ export default function AssignedGroupsPage() {
                 {filteredGroups.length === 0 && (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={8}
                       className="px-5 py-8 text-center text-sm text-[#7b877f]"
                     >
-                      No assigned groups found for the selected filters.
+                      No confirmed groups found. A group appears here once all its members accept.
                     </td>
                   </tr>
                 )}

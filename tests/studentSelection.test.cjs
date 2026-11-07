@@ -12,17 +12,6 @@ const api = compiled.exports;
 const leader = { uid: "leader", fullName: "Leader", email: "leader@ub.edu.ph", role: "Student", status: "Active" };
 const member = { ...leader, uid: "member", fullName: "Member", email: "member@ub.edu.ph" };
 
-test("dropdown uses active student accounts and removes duplicate emails", () => {
-  const students = [leader, member, { ...leader, uid: "duplicate", email: " LEADER@UB.EDU.PH " }, { ...leader, uid: "staff", email: "staff@example.com", role: "Adviser" }, { ...leader, uid: "pending", email: "pending@example.com", status: "Pending" }];
-  assert.deepEqual(api.getAvailableStudents(students, [], "2026-2027", "1st Semester"), [leader, member]);
-});
-
-test("existing invitations reserve students only in the matching academic period", () => {
-  const group = { schoolYear: "2026-2027", semester: "1st Semester", members: [{ email: leader.email }] };
-  assert.deepEqual(api.getAvailableStudents([leader, member], [group], "2026-2027", "1st Semester"), [member]);
-  assert.equal(api.getAvailableStudents([leader, member], [group], "2026-2027", "2nd Semester").length, 2);
-});
-
 test("group leader comes first with actual account identity and members cannot duplicate it", () => {
   const members = api.buildSelectedGroupMembers([leader, member], "leader", ["leader", "member", "member"]);
   assert.deepEqual(members, [

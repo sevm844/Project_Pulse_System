@@ -1,5 +1,3 @@
-import type { DocumentStatus, TaskItem } from "../student/_data/mockStudentData";
-
 export type ProjectStage =
   | "Proposal Defense"
   | "Frontend"
@@ -53,48 +51,4 @@ export function isProjectStage(value: string): value is ProjectStage {
 
 export function normalizeProjectStage(value: string): ProjectStage {
   return isProjectStage(value) ? value : "Proposal Defense";
-}
-
-export function isTaskAllowedForStage(task: TaskItem, stage: ProjectStage) {
-  if (stage === "Proposal Defense") {
-    return ["Missing Deliverable", "Adviser Approval"].includes(task.section);
-  }
-
-  if (["Frontend", "CAP101", "CAP102", "Alpha Defense"].includes(stage)) {
-    return ["Stage Requirement", "Missing Deliverable", "Adviser Approval"].includes(
-      task.section,
-    );
-  }
-
-  if (stage === "Beta Defense" || stage === "Omega Defense") {
-    return ["Stage Requirement", "Adviser Approval"].includes(task.section);
-  }
-
-  if (stage === "Final Defense" || stage === "Final Approval") {
-    return ["Final Requirement", "Adviser Approval"].includes(task.section);
-  }
-
-  return false;
-}
-
-export function getDocumentStatusProgress(status: DocumentStatus | string) {
-  if (status === "Approved") return 100;
-  if (status === "Submitted") return 80;
-  if (status === "Under Review") return 70;
-  if (status === "Needs Revision") return 50;
-  if (status === "Draft") return 25;
-  return 0;
-}
-
-export function computeOverallProgress(
-  documents: Array<{ status: DocumentStatus | string }>,
-) {
-  if (documents.length === 0) return null;
-
-  const total = documents.reduce(
-    (sum, document) => sum + getDocumentStatusProgress(document.status),
-    0,
-  );
-
-  return Math.round(total / documents.length);
 }

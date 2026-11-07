@@ -7,8 +7,6 @@ export default function CoordinatorMessagesPage() {
   return (
     <RoleMessagesPage
       fitViewport
-      role="Coordinator"
-      senderName="Coordinator"
       subtitle="Final requirement collection communication"
       shell={(children) => (
         <CoordinatorShell title="Messages" hideContentTitle fitViewport>

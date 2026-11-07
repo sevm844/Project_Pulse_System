@@ -2,95 +2,75 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { CapstoneGroup } from "../../_lib/firebase";
+import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "../../_lib/api";
 import {
-  acceptGroupInvitation,
-  findGroupInvitationForEmail,
-  hasAcceptedGroupInvitation,
-} from "../../_utils/groupAssignmentStorage";
-import {
-  getStoredUserEmail,
-  getStoredUserUid,
-} from "../../_utils/authStorage";
-import {
-  acknowledgeStudentSetup,
-  getStoredStudentGroup,
-  hasAcknowledgedStudentSetup,
-  saveStoredStudentGroup,
-} from "../_utils/studentGroupStorage";
+  errorMessage,
+  fetchMyGroup,
+  NO_TITLE_YET,
+  type ApiGroup,
+} from "../../_lib/groups";
+import { getStoredUserEmail } from "../../_utils/authStorage";
 import Card from "../_components/Card";
+
+const cardClass =
+  "border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl";
+const buttonClass =
+  "mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324] disabled:opacity-60";
 
 export default function StudentSetupPage() {
   const router = useRouter();
-  const [setupLoaded, setSetupLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [group, setGroup] = useState<ApiGroup | null>(null);
   const [studentEmail, setStudentEmail] = useState<string | null>(null);
-  const [studentUid, setStudentUid] = useState<string | null>(null);
-  const [invitation, setInvitation] = useState<CapstoneGroup | null>(null);
-  const [acceptedGroup, setAcceptedGroup] = useState<CapstoneGroup | null>(null);
+  const [accepting, setAccepting] = useState(false);
+  const [error, setError] = useState("");
 
-  const invitationAccepted = setupLoaded && invitation
-    ? hasAcceptedGroupInvitation(invitation.id, studentEmail)
-    : false;
+  const loadGroup = useCallback(async () => {
+    setError("");
+
+    try {
+      const myGroup = await fetchMyGroup();
+
+      // Already accepted: nothing to do here, go to the dashboard.
+      if (myGroup?.my_membership?.accepted_at) {
+        router.replace("/student");
+        return;
+      }
+
+      setGroup(myGroup);
+    } catch (err) {
+      setError(errorMessage(err, "Unable to check your group assignment."));
+    }
+
+    setLoaded(true);
+  }, [router]);
 
   useEffect(() => {
     queueMicrotask(() => {
-      const email = getStoredUserEmail();
-
-      setStudentEmail(email);
-      setStudentUid(getStoredUserUid());
-      setInvitation(findGroupInvitationForEmail(email));
-      const savedGroup = getStoredStudentGroup();
-      setAcceptedGroup(savedGroup && hasAcceptedGroupInvitation(savedGroup.id, email) ? savedGroup : null);
-      setSetupLoaded(true);
+      setStudentEmail(getStoredUserEmail());
+      void loadGroup();
     });
-  }, []);
+  }, [loadGroup]);
 
-  useEffect(() => {
-    if (!setupLoaded) return;
+  async function handleAcceptInvitation() {
+    if (!group) return;
 
-    if (
-      (acceptedGroup || (invitation && invitationAccepted)) &&
-      hasAcknowledgedStudentSetup(studentEmail)
-    ) {
-      router.replace("/student");
+    setAccepting(true);
+    setError("");
+
+    try {
+      await apiFetch(`/groups/${group.group_id}/accept`, { method: "POST" });
+      router.push("/student");
+    } catch (err) {
+      setError(errorMessage(err, "Unable to accept the invitation."));
+      setAccepting(false);
     }
-  }, [
-    acceptedGroup,
-    invitation,
-    invitationAccepted,
-    router,
-    setupLoaded,
-    studentEmail,
-  ]);
-
-  function refreshAssignmentStatus() {
-    setInvitation(findGroupInvitationForEmail(studentEmail));
   }
 
-  function handleAcceptInvitation() {
-    if (!invitation || !studentEmail) return;
-
-    const nextGroup = acceptGroupInvitation(invitation.id, studentEmail, studentUid);
-    if (!nextGroup) return;
-
-    saveStoredStudentGroup(nextGroup);
-    acknowledgeStudentSetup(studentEmail);
-    router.push("/student");
-  }
-
-  function continueToDashboard() {
-    if (acceptedGroup) {
-      acknowledgeStudentSetup(studentEmail);
-      router.push("/student");
-      return;
-    }
-
-    if (invitation && invitationAccepted) {
-      saveStoredStudentGroup(invitation);
-      acknowledgeStudentSetup(studentEmail);
-      router.push("/student");
-    }
+  async function refreshAssignmentStatus() {
+    setLoaded(false);
+    await loadGroup();
   }
 
   return (
@@ -134,8 +114,8 @@ export default function StudentSetupPage() {
               </p>
             </div>
 
-            {!setupLoaded && (
-              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+            {!loaded && (
+              <Card className={cardClass}>
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Checking Assignment
                 </p>
@@ -148,8 +128,8 @@ export default function StudentSetupPage() {
               </Card>
             )}
 
-            {setupLoaded && !invitation && !acceptedGroup && (
-              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+            {loaded && !group && (
+              <Card className={cardClass}>
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Pending Group Assignment
                 </p>
@@ -171,18 +151,24 @@ export default function StudentSetupPage() {
                   </p>
                 </div>
 
+                {error && (
+                  <p role="alert" className="mt-4 text-sm font-semibold text-[#b42318]">
+                    {error}
+                  </p>
+                )}
+
                 <button
                   type="button"
                   onClick={refreshAssignmentStatus}
-                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+                  className={buttonClass}
                 >
                   Refresh Assignment Status
                 </button>
               </Card>
             )}
 
-            {setupLoaded && invitation && !invitationAccepted && (
-              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
+            {loaded && group && (
+              <Card className={cardClass}>
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
                   Group Invitation
                 </p>
@@ -200,7 +186,7 @@ export default function StudentSetupPage() {
                       Group
                     </p>
                     <p className="mt-2 font-bold text-[#171c19]">
-                      {invitation.groupName}
+                      {group.group_name}
                     </p>
                   </div>
                   <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
@@ -208,7 +194,7 @@ export default function StudentSetupPage() {
                       Project Title
                     </p>
                     <p className="mt-2 font-bold text-[#171c19]">
-                      {invitation.projectTitle || "Awaiting student title proposals"}
+                      {group.project?.project_title || NO_TITLE_YET}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -217,7 +203,7 @@ export default function StudentSetupPage() {
                         Adviser
                       </p>
                       <p className="mt-2 font-bold text-[#171c19]">
-                        {invitation.adviserName}
+                        {group.adviser?.name || "Not assigned"}
                       </p>
                     </div>
                     <div className="rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
@@ -225,42 +211,25 @@ export default function StudentSetupPage() {
                         Course & Section
                       </p>
                       <p className="mt-2 font-bold text-[#171c19]">
-                        {invitation.course} {invitation.section}
+                        {group.course} {group.section}
                       </p>
                     </div>
                   </div>
                 </div>
 
+                {error && (
+                  <p role="alert" className="mt-4 text-sm font-semibold text-[#b42318]">
+                    {error}
+                  </p>
+                )}
+
                 <button
                   type="button"
+                  disabled={accepting}
                   onClick={handleAcceptInvitation}
-                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+                  className={buttonClass}
                 >
-                  Accept and Continue to Dashboard
-                </button>
-              </Card>
-            )}
-
-            {setupLoaded &&
-              (acceptedGroup || (invitation && invitationAccepted)) && (
-              <Card className="border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl">
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
-                  Group Assignment Confirmed
-                </p>
-                <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#171c19]">
-                  Your capstone group is already confirmed.
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-[#4d5751]">
-                  You can continue to your dashboard and access your project
-                  workspace, submissions, feedback, and defense preparation.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={continueToDashboard}
-                  className="mt-6 w-full rounded-lg bg-[#123f2b] py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
-                >
-                  Continue to Dashboard
+                  {accepting ? "Accepting..." : "Accept and Continue to Dashboard"}
                 </button>
               </Card>
             )}
