@@ -8,6 +8,7 @@ import {
   apiFetch,
   type ApiStudentApproval,
 } from "../../_lib/api";
+import { formatDate } from "../../_lib/requirements";
 
 type StatusFilter = ApiStudentApproval["account_status"];
 
@@ -16,17 +17,6 @@ const filters: Array<[StatusFilter, string]> = [
   ["Rejected", "Rejected"],
   ["Active", "Approved"],
 ];
-
-function formatDate(value: string | null) {
-  if (!value) return "-";
-
-  return new Date(value).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "Asia/Manila",
-  });
-}
 
 export default function CoordinatorStudentApprovalsPage() {
   const [status, setStatus] = useState<StatusFilter>("Pending");
@@ -171,7 +161,7 @@ export default function CoordinatorStudentApprovalsPage() {
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">{student.email}</td>
                     <td className="px-5 py-4 text-[#59645d]">
-                      {formatDate(student.created_at)}
+                      {formatDate(student.created_at) || "-"}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
                       {student.account_status === "Active"

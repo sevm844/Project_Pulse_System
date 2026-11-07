@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // CLAUDE.md is the single place for project rules, so skip the auto-generated AGENTS.md.
+  agentRules: false,
 };
 
 export default nextConfig;

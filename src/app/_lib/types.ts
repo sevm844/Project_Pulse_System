@@ -5,9 +5,7 @@ export type UserRole =
   | "Panelist"
   | "Dean"
   | "Coordinator"
-  | "Grammarian"
-  | "Records Staff"
-  | "Admin";
+  | "Grammarian";
 
 export type UserStatus = "Pending" | "Active" | "Rejected" | "Disabled";
 export type CourseCode = "BSIT" | "BSCS" | "BSIS";

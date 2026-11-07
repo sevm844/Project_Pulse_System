@@ -52,6 +52,9 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   UI, so the app doesn't end up half-Firebase/half-API for that feature.
 
 ## Folder structure notes
+- Every role portal wraps its pages in `<Role>Shell`, a thin wrapper (nav items only) around the shared
+  `src/app/_components/RoleShell.tsx`. Change the sidebar/header layout there once, not per role.
+- `formatDate` lives in `src/app/_lib/requirements.ts`; do not copy it into pages.
 - `src/app/dean/administration/...` — Dean-only pages (users, groups, etc.)
 - `src/app/student/...`, `src/app/adviser/...`, `src/app/panelist/...`,
   `src/app/grammarian/...`, `src/app/coordinator/...` — other role portals,

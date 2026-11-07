@@ -12,6 +12,7 @@ import {
   type ApiGroup,
   type ApiTitleSubmission,
 } from "../../_lib/groups";
+import { formatDate } from "../../_lib/requirements";
 
 type ProjectTab = "overview" | "titles" | "team";
 
@@ -35,17 +36,6 @@ const statusClass: Record<ApiTitleSubmission["title_status"], string> = {
   Approved: "bg-emerald-50 text-emerald-700",
   Rejected: "bg-rose-50 text-rose-700",
 };
-
-function formatDate(value: string | null) {
-  if (!value) return "";
-
-  return new Date(value).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "Asia/Manila",
-  });
-}
 
 export default function ProjectPage() {
   const [tab, setTab] = useState<ProjectTab>("overview");
