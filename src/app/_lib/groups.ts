@@ -75,9 +75,10 @@ export function isGroupConfirmed(group: ApiGroup) {
 }
 
 // The logged-in student's group, or null when they have not been added to one yet.
+// (Older servers answered 404 for that case, so it is still treated as null.)
 export async function fetchMyGroup(): Promise<ApiGroup | null> {
   try {
-    return await apiFetch<ApiGroup>("/my-group");
+    return await apiFetch<ApiGroup | null>("/my-group");
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null;
     throw err;
