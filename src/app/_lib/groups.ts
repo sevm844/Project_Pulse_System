@@ -31,6 +31,8 @@ export type ApiGroup = {
     project_status: string | null;
     proposal_stage: ProposalStage;
     chosen_title_id: number | null;
+    // The Dean's note when the group was sent back to the adviser; null once the adviser sends it again.
+    dean_return: { note: string; returned_by: string | null; returned_at: string | null } | null;
     // The Dean's sign-off; null until the Dean has endorsed the approved titles.
     endorsement: {
       signed_by: string | null;
@@ -107,6 +109,8 @@ const post = (path: string, body?: unknown) =>
 export const sendGroupToDean = (groupId: number) => post(`/groups/${groupId}/send-to-dean`);
 // Dean: the sign-off moves the group to Client Consultation.
 export const endorseGroup = (groupId: number, notes: string) => post(`/groups/${groupId}/endorse`, { notes });
+// Dean: not satisfied yet. The group goes back to its adviser (Title Proposal) with a required note.
+export const returnGroupToAdviser = (groupId: number, note: string) => post(`/groups/${groupId}/return-to-adviser`, { note });
 // Adviser: Client Consultation -> Ready for Proposal Defense, with the one title the group will defend.
 export const chooseGroupTitle = (groupId: number, titleId: number) => post(`/groups/${groupId}/choose-title`, { title_id: titleId });
 

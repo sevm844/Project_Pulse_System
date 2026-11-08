@@ -17,6 +17,7 @@ import {
   NO_ADVISER_YET,
   NO_TITLE_YET,
   removeGroupMember,
+  returnGroupToAdviser,
   setGroupLeader,
   type ApiGroup,
   type ApiGroupMember,
@@ -68,6 +69,9 @@ export default function DeanProjectProfilePage() {
   }, [id]);
 
   // Runs one action and swaps the returned group in; shows its error if the server refuses.
+  const [returning, setReturning] = useState(false);
+  const [returnNote, setReturnNote] = useState("");
+
   async function run(action: () => Promise<ApiGroup>, message: string) {
     setBusy(true);
     setError("");
@@ -228,6 +232,60 @@ export default function DeanProjectProfilePage() {
             >
               {busy ? "Signing off..." : "Sign off and endorse"}
             </button>
+
+            <div className="mt-6 border-t border-[#edf2ec] pt-5">
+              {returning ? (
+                <div className="space-y-3">
+                  <label className="block text-xs font-semibold text-[#203028]">
+                    What should the adviser look at again?
+                    <textarea
+                      value={returnNote}
+                      onChange={(event) => setReturnNote(event.target.value)}
+                      rows={3}
+                      maxLength={2000}
+                      placeholder="For example: the second title is too broad. Please narrow it down."
+                      className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]"
+                    />
+                  </label>
+                  <p className="text-xs text-[#7b877f]">
+                    The group goes back to the Title Proposal stage. Your adviser and the group see your note. You do not decide on titles; the adviser does.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={busy || returnNote.trim().length < 5}
+                      onClick={() =>
+                        void run(async () => {
+                          const updated = await returnGroupToAdviser(group.group_id, returnNote.trim());
+                          setReturning(false);
+                          setReturnNote("");
+                          return updated;
+                        }, "The group was returned to its adviser with your note.")
+                      }
+                      className="rounded-full border border-amber-300 bg-amber-50 px-5 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      Return to adviser
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReturning(false)}
+                      className="rounded-full border border-[#dfe8df] px-5 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setReturning(true)}
+                  className="text-xs font-semibold text-[#7b877f] underline-offset-2 hover:text-[#203028] hover:underline"
+                >
+                  Not ready? Return to adviser with a note
+                </button>
+              )}
+            </div>
           </Card>
         )}
 

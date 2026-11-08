@@ -190,6 +190,18 @@ export default function AdviserTitleReview({
               </div>
             )}
 
+            {open && group.project?.dean_return && (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-800">
+                  The Dean returned this group{group.project.dean_return.returned_by ? ` (${group.project.dean_return.returned_by})` : ""}
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-[#203028]">{group.project.dean_return.note}</p>
+                <p className="mt-1 text-xs text-[#7b877f]">
+                  Change an approved title if needed, ask for a new one, then send the group to the Dean again.
+                </p>
+              </div>
+            )}
+
             {open && (
               <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
                 <p className="text-sm text-[#203028]">
@@ -290,7 +302,7 @@ export default function AdviserTitleReview({
                     </p>
                   )}
 
-                  {open && item.title_status === "Pending" && (
+                  {open && (item.title_status === "Pending" || item.title_status === "Approved") && (
                     <div className="mt-3">
                       {deciding?.id === item.title_id ? (
                         <div className="space-y-2">
@@ -329,14 +341,15 @@ export default function AdviserTitleReview({
                         </div>
                       ) : (
                         <div className="flex flex-wrap gap-2">
-                          <button
+                          {item.title_status === "Approved" && <span className="self-center text-[11px] text-[#7b877f]">Change your decision:</span>}
+                          {item.title_status === "Pending" && <button
                             type="button"
                             disabled={savingId === item.title_id}
                             onClick={() => void review(item, "Approved")}
                             className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
                           >
                             Approve
-                          </button>
+                          </button>}
                           {(["Needs Revision", "Rejected"] as const).map((status) => (
                             <button
                               key={status}

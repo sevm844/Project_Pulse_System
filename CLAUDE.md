@@ -43,6 +43,11 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   chosen title is set at "choose title" and must be one the Dean endorsed.
 - **Dean's endorsement:** records the endorsed (approved) titles, notes, signer and time (`dean_endorsements`); never the
   chosen title.
+- **Return to Adviser:** at Dean's Endorsement the Dean can send the group back (`POST /groups/{id}/return-to-adviser`) with a required
+  note (5+ characters). The stage goes back to Title Proposal; the note (`projects.dean_return_note`) is shown to the adviser and the
+  group until she sends the group to the Dean again, which clears it. The Dean still decides nothing about titles. While the group is
+  at Title Proposal the adviser may change an earlier approval to "Needs Revision" or "Rejected" (never back to Approved), which frees
+  room under the 3-title limit.
 - **Leaving / removal:** a student can leave; the Adviser or Dean can remove one, but a reason category is required and goes
   to the audit log. Leaving moves the person to `group_member_exits` (history kept). If the leader leaves, the member who
   joined earliest becomes leader. If nobody is left the group becomes 'Pending Closure' until the Adviser/Dean confirms; it is

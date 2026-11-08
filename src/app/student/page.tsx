@@ -100,7 +100,14 @@ export default function StudentDashboardPage() {
     href: "/student/requirements",
   };
 
-  if (stage === "Dean's Endorsement") {
+  if (group.project?.dean_return && stage === "Title Proposal") {
+    nextStep = {
+      heading: "The Dean returned your group to your adviser",
+      text: group.project.dean_return.note,
+      action: "View Requirements",
+      href: "/student/requirements",
+    };
+  } else if (stage === "Dean's Endorsement") {
     nextStep = {
       heading: "Waiting for the Dean",
       text: "Your adviser sent your approved titles to the Dean. The Dean will review them with your group and sign off.",

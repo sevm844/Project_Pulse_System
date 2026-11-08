@@ -350,6 +350,11 @@ ALTER TABLE requirements ADD COLUMN sections JSONB;
 ALTER TABLE requirements ADD COLUMN kind VARCHAR(20) NOT NULL DEFAULT 'Standard' CHECK (kind IN ('Standard', 'Title Proposal'));
 CREATE UNIQUE INDEX requirements_one_title_proposal_per_adviser ON requirements (adviser_id) WHERE kind = 'Title Proposal';
 
+-- Dean returns a group to its adviser (added 2026-11-11). Backend migration: 2026_11_11_000000_dean_return_to_adviser.php
+ALTER TABLE projects ADD COLUMN dean_return_note TEXT;
+ALTER TABLE projects ADD COLUMN dean_returned_at TIMESTAMP;
+ALTER TABLE projects ADD COLUMN dean_returned_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL;
+
 -- File rules and attachment (added 2026-11-10). Backend migration: 2026_11_10_000000_requirement_file_rules_and_attachment.php
 ALTER TABLE requirements ADD COLUMN allowed_types JSONB;  -- NULL = every accepted type
 ALTER TABLE requirements ADD COLUMN max_file_mb SMALLINT NOT NULL DEFAULT 10 CHECK (max_file_mb BETWEEN 1 AND 10);

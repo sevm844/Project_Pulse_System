@@ -69,6 +69,14 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
 
   return (
     <div className="space-y-5">
+      {canPropose && project?.dean_return && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-semibold text-amber-800">The Dean asked your adviser to look at your titles again</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-[#203028]">{project.dean_return.note}</p>
+          <p className="mt-1 text-xs text-[#7b877f]">Your adviser may ask you for a new or revised title.</p>
+        </div>
+      )}
+
       {!canPropose && (
         <p className="text-xs text-[#7b877f]">
           {group.group_status !== "Active"
