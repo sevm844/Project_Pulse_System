@@ -15,7 +15,7 @@ import {
   type ApiRequirement,
   type ApiSubmission,
 } from "../../_lib/requirements";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 
 type Tab = "todo" | "review" | "done";
 
@@ -77,7 +77,7 @@ export default function StudentRequirementsPage() {
 
   const visible = requirements.filter((requirement) => tabOf(requirement) === tab);
 
-  const byStage = PROJECT_STAGES.map((stage) => ({
+  const byStage = REQUIREMENT_STAGES.map((stage) => ({
     stage,
     items: visible.filter((requirement) => requirement.stage === stage),
   })).filter((section) => section.items.length > 0);

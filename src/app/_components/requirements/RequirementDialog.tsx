@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../_lib/api";
 import { COURSE_OPTIONS, errorMessage } from "../../_lib/groups";
 import type { ApiRequirement } from "../../_lib/requirements";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -19,7 +19,7 @@ type Props = {
 export default function RequirementDialog({ role, requirement, onClose, onSaved }: Props) {
   const [title, setTitle] = useState(requirement?.title ?? "");
   const [description, setDescription] = useState(requirement?.description ?? "");
-  const [stage, setStage] = useState(requirement?.stage ?? PROJECT_STAGES[0]);
+  const [stage, setStage] = useState(requirement?.stage ?? REQUIREMENT_STAGES[0]);
   const [type, setType] = useState<"File" | "Link">(requirement?.submission_type ?? "File");
   const [dueDate, setDueDate] = useState(requirement?.due_date ?? "");
   const [course, setCourse] = useState(requirement?.course ?? "");
@@ -104,7 +104,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             <label className="block text-xs font-semibold text-[#59645d]">
               Stage
               <select value={stage} onChange={(event) => setStage(event.target.value)} className={fieldClass}>
-                {PROJECT_STAGES.map((item) => (
+                {REQUIREMENT_STAGES.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>

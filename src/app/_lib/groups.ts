@@ -1,4 +1,7 @@
 import { ApiError, apiFetch } from "./api";
+import type { ProposalStage } from "../_utils/projectWorkflow";
+
+export type GroupStatus = "Active" | "Pending Closure" | "Closed";
 
 export type ApiGroupMember = {
   member_id: number;
@@ -17,6 +20,8 @@ export type ApiGroup = {
   section: string;
   school_year: string | null;
   semester: string | null;
+  // 'Pending Closure' = every member left and the Adviser or Dean still has to confirm closing it.
+  group_status: GroupStatus;
   created_at: string | null;
   adviser: { user_id: number; name: string } | null;
   project: {
@@ -24,7 +29,15 @@ export type ApiGroup = {
     project_title: string | null;
     project_description: string | null;
     project_status: string | null;
-    current_stage: string;
+    proposal_stage: ProposalStage;
+    chosen_title_id: number | null;
+    // The Dean's sign-off; null until the Dean has endorsed the approved titles.
+    endorsement: {
+      signed_by: string | null;
+      signed_at: string | null;
+      notes: string | null;
+      titles: { title_id: number; proposed_title: string }[];
+    } | null;
   } | null;
   members: ApiGroupMember[];
   // Only present on GET /my-group.
@@ -41,7 +54,7 @@ export type ApiTitleSubmission = {
   proposed_title: string;
   project_description: string | null;
   technology_stack: string | null;
-  title_status: "Pending" | "Approved" | "Rejected";
+  title_status: "Pending" | "Approved" | "Needs Revision" | "Rejected";
   submitted_at: string | null;
   review_remarks: string | null;
   reviewed_by: { user_id: number; name: string } | null;
@@ -57,11 +70,12 @@ export type ApiDeanProject = {
   section: string;
   adviser: string | null;
   title: string | null;
-  stage: string;
+  stage: ProposalStage;
+  group_status: GroupStatus;
   status: string | null;
 };
 
-export const NO_TITLE_YET = "No approved title yet";
+export const NO_TITLE_YET = "No title chosen yet";
 export const NO_ADVISER_YET = "Not assigned";
 export const COURSE_OPTIONS = ["BSIT", "BSCS", "BSIS"];
 export const SECTION_OPTIONS = ["4A", "4B", "4C"];
@@ -84,6 +98,31 @@ export async function fetchMyGroup(): Promise<ApiGroup | null> {
     throw err;
   }
 }
+
+// ---- Module 2 actions. Each returns the updated group.
+const post = (path: string, body?: unknown) =>
+  apiFetch<ApiGroup>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+// Adviser: Title Proposal -> Dean's Endorsement.
+export const sendGroupToDean = (groupId: number) => post(`/groups/${groupId}/send-to-dean`);
+// Dean: the sign-off moves the group to Client Consultation.
+export const endorseGroup = (groupId: number, notes: string) => post(`/groups/${groupId}/endorse`, { notes });
+// Adviser: Client Consultation -> Ready for Proposal Defense, with the one title the group will defend.
+export const chooseGroupTitle = (groupId: number, titleId: number) => post(`/groups/${groupId}/choose-title`, { title_id: titleId });
+
+export const REMOVAL_REASONS = ["Shifting courses", "Transferring schools", "Financial hardship", "Other"] as const;
+export type RemovalReason = (typeof REMOVAL_REASONS)[number];
+
+export const leaveGroup = (groupId: number, reason: string) =>
+  apiFetch<{ message: string }>(`/groups/${groupId}/leave`, { method: "POST", body: JSON.stringify({ reason: reason || undefined }) });
+
+export const removeGroupMember = (groupId: number, userId: number, reasonCategory: RemovalReason, reason: string, exception = false) =>
+  post(`/groups/${groupId}/members/${userId}/${exception ? "exception-remove" : "remove"}`, { reason_category: reasonCategory, reason: reason || undefined });
+
+export const setGroupLeader = (groupId: number, userId: number) =>
+  apiFetch<ApiGroup>(`/groups/${groupId}/leader`, { method: "PUT", body: JSON.stringify({ user_id: userId }) });
+
+export const closeGroup = (groupId: number) => post(`/groups/${groupId}/close`);
 
 export function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;

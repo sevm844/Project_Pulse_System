@@ -20,8 +20,18 @@ test("group leader comes first with actual account identity and members cannot d
   ]);
 });
 
-test("missing leader, missing members, and students no longer available block invitation creation", () => {
+test("a missing leader or a student who is no longer available blocks invitation creation", () => {
   assert.equal(api.buildSelectedGroupMembers([leader, member], "", ["member"]), null);
-  assert.equal(api.buildSelectedGroupMembers([leader, member], "leader", []), null);
   assert.equal(api.buildSelectedGroupMembers([leader], "leader", ["member"]), null);
+});
+
+test("a group is 1 to 3 students: a single student is allowed, a fourth is not", () => {
+  const extra = (n) => ({ ...leader, uid: "m" + n, fullName: "M" + n, email: "m" + n + "@ub.edu.ph" });
+  const pool = [leader, extra(1), extra(2), extra(3)];
+
+  assert.equal(api.buildSelectedGroupMembers(pool, "leader", []).length, 1);
+  assert.equal(api.buildSelectedGroupMembers(pool, "leader", ["m1"]).length, 2);
+  assert.equal(api.buildSelectedGroupMembers(pool, "leader", ["m1", "m2"]).length, 3);
+  assert.equal(api.buildSelectedGroupMembers(pool, "leader", ["m1", "m2", "m3"]), null);
+  assert.equal(api.MAX_GROUP_SIZE, 3);
 });

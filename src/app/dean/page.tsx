@@ -55,7 +55,10 @@ export default function DeanDashboardPage() {
     };
   }, []);
 
-  const withTitle = projects.filter((project) => project.title).length;
+  const awaitingEndorsement = projects.filter(
+    (project) => project.stage === "Dean's Endorsement" && project.group_status === "Active",
+  ).length;
+  const readyForDefense = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
   const withoutAdviser = projects.filter((project) => !project.adviser).length;
 
   const adviserLoads = useMemo(() => {
@@ -88,8 +91,8 @@ export default function DeanDashboardPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["Total Projects", projects.length, "/dean/projects"],
-              ["With Approved Title", withTitle, "/dean/projects"],
-              ["Awaiting Title", projects.length - withTitle, "/dean/projects"],
+              ["Awaiting Your Endorsement", awaitingEndorsement, "/dean/projects"],
+              ["Ready for Proposal Defense", readyForDefense, "/dean/projects"],
               [
                 "Without Adviser",
                 withoutAdviser,

@@ -76,7 +76,7 @@ export default function StudentDashboardPage() {
   const approvedTitle = group.project?.project_title || null;
   const pendingTitles = titles.filter((item) => item.title_status === "Pending");
   const rejectedTitles = titles.filter((item) => item.title_status === "Rejected");
-  const stage = group.project?.current_stage || "Proposal Defense";
+  const stage = group.project?.proposal_stage ?? "Title Proposal";
 
   const titleSummary = approvedTitle
     ? "Approved"
@@ -139,7 +139,7 @@ export default function StudentDashboardPage() {
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59645d]">
                 {approvedTitle
                   ? "Track your project status and group details here."
-                  : "Submit your title proposals to your adviser. Once one is approved, it becomes your official project title."}
+                  : "Submit your title proposals to your adviser. Approved titles go to the Dean, and you choose the one to defend after the client consultation."}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2 text-xs">

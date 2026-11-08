@@ -5,15 +5,13 @@ import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import { apiFetch, type ApiUser } from "../../../_lib/api";
 import {
+  closeGroup,
   COURSE_OPTIONS,
   errorMessage,
   NO_TITLE_YET,
   type ApiGroup,
 } from "../../../_lib/groups";
-import {
-  getAllowedNextStages,
-  normalizeProjectStage,
-} from "../../../_utils/projectWorkflow";
+import { GroupStatusNote, StageBadge } from "../../../_components/ProposalStage";
 
 const selectClass =
   "rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none disabled:opacity-60";
@@ -55,6 +53,23 @@ export default function DeanGroupsPage() {
     queueMicrotask(() => void loadData());
   }, [loadData]);
 
+  async function confirmClosure(group: ApiGroup) {
+    setSavingId(group.group_id);
+    setError("");
+    setNotice("");
+
+    try {
+      const updated = await closeGroup(group.group_id);
+
+      setGroups((current) => current.map((item) => (item.group_id === updated.group_id ? updated : item)));
+      setNotice(`${group.group_name}: closed. Its history is kept.`);
+    } catch (err) {
+      setError(errorMessage(err, "Unable to close this group."));
+    }
+
+    setSavingId(null);
+  }
+
   // Saves one change, then swaps the returned group into the list.
   async function saveChange(group: ApiGroup, path: string, body: object, message: string) {
     setSavingId(group.group_id);
@@ -88,8 +103,9 @@ export default function DeanGroupsPage() {
                 Capstone Groups
               </h2>
               <p className="mt-1 text-sm text-[#7b877f]">
-                Assign advisers and move groups through the project stages. A
-                group can only move to the next stage, never skip or go back.
+                Assign advisers and confirm the closing of groups that lost all their
+                members. Groups move through their stages by the Adviser and Dean
+                actions on each project, not from here.
               </p>
             </div>
 
@@ -134,7 +150,6 @@ export default function DeanGroupsPage() {
 
               <tbody className="divide-y divide-[#edf2ec]">
                 {filteredGroups.map((group) => {
-                  const stage = normalizeProjectStage(group.project?.current_stage || "");
                   const busy = savingId === group.group_id;
 
                   return (
@@ -156,25 +171,18 @@ export default function DeanGroupsPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <select
-                          value={stage}
-                          disabled={busy || !group.project}
-                          onChange={(event) =>
-                            saveChange(
-                              group,
-                              "stage",
-                              { stage: event.target.value },
-                              `moved to ${event.target.value}.`,
-                            )
-                          }
-                          className={`w-44 ${selectClass}`}
-                        >
-                          {getAllowedNextStages(stage).map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                        </select>
+                        {group.project ? <StageBadge stage={group.project.proposal_stage} /> : "-"}
+                        <GroupStatusNote status={group.group_status} />
+                        {group.group_status === "Pending Closure" && (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void confirmClosure(group)}
+                            className="ml-2 rounded-full border border-[#dfe8df] px-3 py-1 text-[11px] font-semibold text-[#203028] hover:bg-[#edf9e9] disabled:opacity-60"
+                          >
+                            Confirm closure
+                          </button>
+                        )}
                       </td>
 
                       <td className="px-5 py-4">

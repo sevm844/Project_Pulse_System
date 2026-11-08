@@ -16,7 +16,7 @@ import {
   type ApiSubmissionRow,
   type StaffRole,
 } from "../../_lib/requirements";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 import RequirementDialog from "./RequirementDialog";
 
 const copy: Record<StaffRole, { blurb: string; empty: string }> = {
@@ -148,7 +148,7 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
           aria-label="Filter by stage"
           className="rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs text-[#59645d] outline-none"
         >
-          {["All", ...PROJECT_STAGES].map((item) => (
+          {["All", ...REQUIREMENT_STAGES].map((item) => (
             <option key={item} value={item}>
               {item === "All" ? "All stages" : item}
             </option>

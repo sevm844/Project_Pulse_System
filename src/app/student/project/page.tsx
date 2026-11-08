@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
+import { StageSteps, titleStatusClass } from "../../_components/ProposalStage";
 import { apiFetch } from "../../_lib/api";
 import {
   errorMessage,
   fetchMyGroup,
+  leaveGroup,
   NO_TITLE_YET,
   type ApiGroup,
   type ApiTitleSubmission,
@@ -31,13 +34,10 @@ const emptyForm = {
 const inputClass =
   "w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
 
-const statusClass: Record<ApiTitleSubmission["title_status"], string> = {
-  Pending: "bg-amber-50 text-amber-700",
-  Approved: "bg-emerald-50 text-emerald-700",
-  Rejected: "bg-rose-50 text-rose-700",
-};
-
 export default function ProjectPage() {
+  const router = useRouter();
+  const [leaving, setLeaving] = useState(false);
+  const [leaveReason, setLeaveReason] = useState("");
   const [tab, setTab] = useState<ProjectTab>("overview");
   const [group, setGroup] = useState<ApiGroup | null>(null);
   const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
@@ -108,6 +108,21 @@ export default function ProjectPage() {
     setSaving(false);
   }
 
+  async function leave() {
+    if (!group) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await leaveGroup(group.group_id, leaveReason.trim());
+      router.replace("/student");
+    } catch (err) {
+      setError(errorMessage(err, "Unable to leave the group."));
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <StudentShell title="My Project">
@@ -135,7 +150,10 @@ export default function ProjectPage() {
   }
 
   const approvedTitle = group.project?.project_title || null;
-  const stage = group.project?.current_stage || "Proposal Defense";
+  const stage = group.project?.proposal_stage ?? "Title Proposal";
+  const endorsed = Boolean(group.project?.endorsement);
+  const canPropose = stage === "Title Proposal" && group.group_status === "Active";
+  const inPlay = titles.filter((item) => item.title_status === "Pending" || item.title_status === "Approved").length;
 
   return (
     <StudentShell title="My Project">
@@ -175,11 +193,15 @@ export default function ProjectPage() {
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Overview</h3>
 
+            <div className="mt-4">
+              <StageSteps stage={stage} />
+            </div>
+
             <p className="mt-4 text-sm leading-7 text-[#59645d]">
               {group.project?.project_description ||
                 (approvedTitle
-                  ? "No description was added to the approved title."
-                  : "Your project description will appear here once your adviser approves a title.")}
+                  ? "No description was added to the chosen title."
+                  : "Your project description will appear here once you choose the title you will defend.")}
             </p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -206,14 +228,33 @@ export default function ProjectPage() {
 
         {tab === "titles" && (
           <div className="space-y-5">
-            {!approvedTitle && (
+            {!canPropose && (
+              <Card className="p-5">
+                <p className="text-sm text-[#59645d]">
+                  {group.group_status !== "Active"
+                    ? "This group is no longer active."
+                    : "Title proposals are closed. Your adviser already sent your approved titles to the Dean."}
+                </p>
+              </Card>
+            )}
+
+            {canPropose && inPlay >= 3 && (
+              <Card className="p-5">
+                <p className="text-sm text-[#59645d]">
+                  You already have 3 titles waiting for a decision or approved. Your adviser will decide which to send to
+                  the Dean.
+                </p>
+              </Card>
+            )}
+
+            {canPropose && inPlay < 3 && (
               <Card className="p-5">
                 <h3 className="text-lg font-semibold text-[#203028]">
                   Submit a Title Proposal
                 </h3>
                 <p className="mt-1 text-sm text-[#7b877f]">
-                  Your adviser reviews each proposal. When one is approved, it
-                  becomes your official project title.
+                  Your adviser decides on each proposal. Approved titles go to the Dean for endorsement, and after the
+                  client consultation you choose the one you will defend. You can have up to 3 in play at a time.
                 </p>
 
                 <form onSubmit={submitTitle} className="mt-5 space-y-4">
@@ -314,7 +355,7 @@ export default function ProjectPage() {
                       </div>
 
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass[item.title_status]}`}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${titleStatusClass[item.title_status]}`}
                       >
                         {item.title_status}
                       </span>
@@ -361,6 +402,56 @@ export default function ProjectPage() {
                   </p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 border-t border-[#edf2ec] pt-5">
+              <h4 className="text-sm font-semibold text-[#203028]">Leave this group</h4>
+
+              {endorsed ? (
+                <p className="mt-2 text-xs leading-5 text-[#7b877f]">
+                  The Dean already endorsed your group&apos;s titles, so membership is locked. If you have a genuine
+                  emergency, ask the Dean&apos;s office.
+                </p>
+              ) : leaving ? (
+                <div className="mt-3 space-y-3">
+                  <p className="text-xs text-[#59645d]">
+                    You will be removed from {group.group_name}. If you were the leader, the next member becomes leader.
+                  </p>
+                  <input
+                    value={leaveReason}
+                    onChange={(event) => setLeaveReason(event.target.value)}
+                    maxLength={300}
+                    placeholder="Reason (optional)"
+                    className={inputClass}
+                  />
+                  {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => void leave()}
+                      className="rounded-lg bg-[#b3261e] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8f1e18] disabled:opacity-50"
+                    >
+                      {saving ? "Leaving..." : "Yes, leave the group"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLeaving(false)}
+                      className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setLeaving(true)}
+                  className="mt-3 rounded-lg border border-red-200 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+                >
+                  Leave group
+                </button>
+              )}
             </div>
           </Card>
         )}

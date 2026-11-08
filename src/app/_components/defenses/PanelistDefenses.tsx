@@ -189,7 +189,7 @@ function PanelistRow({
         <div className="space-y-5 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4 text-sm">
           <p className="text-xs text-[#7b877f]">
             {defense.course} {defense.section}
-            {` · ${defense.project_title ?? "No approved title yet"}`}
+            {` · ${defense.project_title ?? "No title chosen yet"}`}
             {chair ? ` · Chair ${chair.name}` : ""}
           </p>
 

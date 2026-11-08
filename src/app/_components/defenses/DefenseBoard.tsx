@@ -223,7 +223,7 @@ function DefenseRow({
           <p className="text-xs text-[#7b877f]">
             {defense.course} {defense.section}
             {defense.adviser ? ` · Adviser ${defense.adviser}` : ""}
-            {` · ${defense.project_title ?? "No approved title yet"}`}
+            {` · ${defense.project_title ?? "No title chosen yet"}`}
           </p>
 
           <div>

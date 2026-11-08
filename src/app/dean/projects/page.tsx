@@ -12,7 +12,8 @@ import {
   NO_TITLE_YET,
   type ApiDeanProject,
 } from "../../_lib/groups";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-[#dfe8df] bg-white px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -77,10 +78,19 @@ export default function DeanProjectsPage() {
     });
   }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter]);
 
-  const withTitle = projects.filter((project) => project.title).length;
-  const needsAttention = projects.filter(
-    (project) => !project.title || !project.adviser,
-  );
+  const awaiting = projects.filter((project) => project.stage === "Dean's Endorsement" && project.group_status === "Active");
+  const ready = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
+
+  // What the Dean can act on: endorsements first, then groups with nobody left, then groups with no adviser.
+  const needsAttention = [
+    ...awaiting.map((project) => ({ project, reason: "Waiting for your endorsement" })),
+    ...projects
+      .filter((project) => project.group_status === "Pending Closure")
+      .map((project) => ({ project, reason: "Every member left - confirm closure" })),
+    ...projects
+      .filter((project) => !project.adviser && project.group_status === "Active")
+      .map((project) => ({ project, reason: "No adviser assigned" })),
+  ];
 
   function resetFilters() {
     setSearchQuery("");
@@ -97,8 +107,8 @@ export default function DeanProjectsPage() {
             Projects Monitoring
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59645d]">
-            Monitor every capstone group: its adviser, approved title, and
-            current project stage.
+            Monitor every capstone group: its adviser, chosen title, and
+            current proposal stage.
           </p>
         </div>
 
@@ -112,8 +122,8 @@ export default function DeanProjectsPage() {
           <div className="flex min-w-[640px] divide-x divide-[#cfe8c8]">
             {[
               ["Total Projects", projects.length, "Registered groups"],
-              ["Approved Title", withTitle, "Title confirmed"],
-              ["Awaiting Title", projects.length - withTitle, "No approved title yet"],
+              ["Awaiting Endorsement", awaiting.length, "Needs your sign-off"],
+              ["Ready for Defense", ready, "Proposal Defense next"],
               ["Advisers", advisers.length, "With assigned groups"],
             ].map(([label, value, caption]) => (
               <div key={label} className="flex-1 px-4 py-2">
@@ -175,7 +185,7 @@ export default function DeanProjectsPage() {
             <label className="text-xs font-semibold text-[#59645d]">
               Stage
               <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value)} className={inputClass}>
-                {["All", ...PROJECT_STAGES].map((stage) => (
+                {["All", ...PROPOSAL_STAGES].map((stage) => (
                   <option key={stage}>{stage}</option>
                 ))}
               </select>
@@ -233,9 +243,13 @@ export default function DeanProjectsPage() {
                           {project.title || NO_TITLE_YET}
                         </p>
 
+                        <div className="mt-2">
+                          <StageBadge stage={project.stage} />
+                          <GroupStatusNote status={project.group_status} />
+                        </div>
+
                         <p className="mt-2 text-xs text-[#7b877f]">
-                          {project.course} {project.section} • {project.stage} •
-                          Adviser: {project.adviser || NO_ADVISER_YET}
+                          {project.course} {project.section} • Adviser: {project.adviser || NO_ADVISER_YET}
                         </p>
                       </div>
 
@@ -257,18 +271,18 @@ export default function DeanProjectsPage() {
           <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
             <Card className="p-5">
               <h3 className="text-base font-semibold text-[#203028]">
-                Needs Attention
+                Needs Your Attention
               </h3>
 
               <div className="mt-4 space-y-3">
                 {needsAttention.length === 0 ? (
                   <p className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
-                    Every group has an adviser and an approved title.
+                    Nothing needs your action right now.
                   </p>
                 ) : (
-                  needsAttention.slice(0, 6).map((project) => (
+                  needsAttention.slice(0, 6).map(({ project, reason }) => (
                     <Link
-                      key={project.project_id}
+                      key={`${project.project_id}-${reason}`}
                       href={`/dean/projects/${project.group_id}`}
                       className="block rounded-xl border border-[#edf2ec] bg-white p-3 hover:bg-[#fbfdfb]"
                     >
@@ -276,7 +290,7 @@ export default function DeanProjectsPage() {
                         {project.group_name}
                       </p>
                       <p className="mt-1 text-xs text-[#7b877f]">
-                        {!project.adviser ? "No adviser assigned" : "Waiting for an approved title"}
+                        {reason}
                       </p>
                     </Link>
                   ))

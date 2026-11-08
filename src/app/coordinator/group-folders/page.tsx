@@ -105,7 +105,7 @@ export default function GroupFoldersPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[#203028]">{record.group_name}</p>
                     <p className="mt-0.5 truncate text-xs text-[#7b877f]">
-                      {record.course} {record.section} · {record.project_title ?? "No approved title yet"}
+                      {record.course} {record.section} · {record.project_title ?? "No title chosen yet"}
                     </p>
                   </div>
 

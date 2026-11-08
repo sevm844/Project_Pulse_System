@@ -11,7 +11,7 @@ import {
   NO_TITLE_YET,
   type ApiDeanProject,
 } from "../../_lib/groups";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 function exportCsv(rows: ApiDeanProject[]) {
   const headers = ["Course", "Section", "Group", "Project Title", "Adviser", "Stage"];
@@ -92,7 +92,7 @@ export default function DeanReportsPage() {
 
   const withTitle = filteredProjects.filter((project) => project.title).length;
 
-  const stageCounts = PROJECT_STAGES.map(
+  const stageCounts = PROPOSAL_STAGES.map(
     (stage) =>
       [
         stage,
@@ -166,8 +166,8 @@ export default function DeanReportsPage() {
         <div className="grid gap-4 md:grid-cols-3">
           {[
             ["Groups", filteredProjects.length],
-            ["With Approved Title", withTitle],
-            ["Awaiting Title", filteredProjects.length - withTitle],
+            ["Title Chosen", withTitle],
+            ["Title Not Chosen Yet", filteredProjects.length - withTitle],
           ].map(([label, value]) => (
             <Card key={label} className="p-5">
               <p className="text-xs text-[#7b877f]">{label}</p>

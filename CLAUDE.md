@@ -31,6 +31,27 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   (Next 16.4.x). Unused packages (fortune-sheet, tiptap) were removed. `.env.local` only needs
   `NEXT_PUBLIC_API_URL` if the API is not at http://127.0.0.1:8000/api.
 
+## Module 2 rules (Groups, Projects, Title proposals) — set by the school's actual process
+- **Group size:** 1 to 3 students (the leader plus up to 2 members). Enforced in `GroupController::MAX_MEMBERS` and
+  `_utils/studentSelection.ts`.
+- **Stages (own column `projects.proposal_stage`, only these 4):** Title Proposal -> Dean's Endorsement -> Client
+  Consultation -> Ready for Proposal Defense. There is no free stage dropdown; each move is one explicit action
+  (`ProposalStageController`): Adviser "send to Dean" -> Dean "endorse" (the sign-off itself advances the stage) ->
+  Adviser "choose title". Approving a title never moves the stage.
+- **Titles:** only the group's Adviser approves / requests revision / rejects. The Dean has NO title-approval action
+  (do not add one). Up to 3 titles Pending or Approved at a time. Approving does not set the project title; the single
+  chosen title is set at "choose title" and must be one the Dean endorsed.
+- **Dean's endorsement:** records the endorsed (approved) titles, notes, signer and time (`dean_endorsements`); never the
+  chosen title.
+- **Leaving / removal:** a student can leave; the Adviser or Dean can remove one, but a reason category is required and goes
+  to the audit log. Leaving moves the person to `group_member_exits` (history kept). If the leader leaves, the member who
+  joined earliest becomes leader. If nobody is left the group becomes 'Pending Closure' until the Adviser/Dean confirms; it is
+  never deleted. After the Dean's endorsement membership is locked; only the Dean's separate exception removal (reason +
+  details, Critical audit entry) can change it.
+- **Module boundaries:** after "Ready for Proposal Defense", Module 5 (Defenses), Module 3 (Requirements) and Module 7
+  (Records) track their own progress in their own fields. A Proposal Defense can only be scheduled for a Ready group.
+  Requirement `stage` labels live in `Requirement::STAGES` / `REQUIREMENT_STAGES`, separate from the proposal stages.
+
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`
 - It automatically attaches the Bearer token from storage

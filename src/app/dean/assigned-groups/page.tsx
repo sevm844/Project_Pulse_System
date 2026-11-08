@@ -12,7 +12,7 @@ import {
   NO_TITLE_YET,
   type ApiDeanProject,
 } from "../../_lib/groups";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const selectClass =
   "mt-2 w-full rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-3 py-2.5 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -124,7 +124,7 @@ export default function DeanAssignedGroupsPage() {
             <label className="text-xs font-semibold text-[#59645d]">
               Stage
               <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value)} className={selectClass}>
-                {["All", ...PROJECT_STAGES].map((stage) => (
+                {["All", ...PROPOSAL_STAGES].map((stage) => (
                   <option key={stage}>{stage}</option>
                 ))}
               </select>

@@ -5,19 +5,26 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
+import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
+import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
 import type { CourseCode, UserProfile } from "../../_lib/types";
 import { apiFetch } from "../../_lib/api";
 import {
+  closeGroup,
   COURSE_OPTIONS,
   errorMessage,
   isGroupConfirmed,
   NO_TITLE_YET,
+  removeGroupMember,
   SECTION_OPTIONS,
+  setGroupLeader,
   type ApiGroup,
+  type ApiGroupMember,
+  type RemovalReason,
 } from "../../_lib/groups";
 import { getStoredUserEmail } from "../../_utils/authStorage";
-import { GROUP_SEMESTERS, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
-import { PROJECT_STAGES } from "../../_utils/projectWorkflow";
+import { GROUP_SEMESTERS, MAX_GROUP_SIZE, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
+import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const groupCreationCourses = COURSE_OPTIONS as CourseCode[];
 
@@ -49,6 +56,10 @@ export default function AssignedGroupsPage() {
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [creating, setCreating] = useState(false);
   const [adviserEmail] = useState(() => getStoredUserEmail() || "Adviser");
+  const [removing, setRemoving] = useState<{ group: ApiGroup; member: ApiGroupMember } | null>(null);
+  const [removeError, setRemoveError] = useState("");
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionNotice, setActionNotice] = useState("");
 
   // The backend already leaves out students who are in a group for this school year + semester.
   const availableStudents = students;
@@ -59,6 +70,41 @@ export default function AssignedGroupsPage() {
   const readySteps = Number(detailsReady) + Number(validMembers);
 
   function resetMembers() { setSelectedIds([]); setLeaderUid(""); }
+
+  // Leader change / closure, then refresh the list. Errors from the server are shown as they are.
+  async function groupAction(action: () => Promise<ApiGroup>, message: string) {
+    setActionBusy(true);
+    setGroupsError("");
+    setActionNotice("");
+
+    try {
+      await action();
+      await loadGroups();
+      setActionNotice(message);
+    } catch (err) {
+      setGroupsError(errorMessage(err, "That did not work. Please try again."));
+    }
+
+    setActionBusy(false);
+  }
+
+  async function removeMember(category: RemovalReason, details: string) {
+    if (!removing) return;
+
+    setActionBusy(true);
+    setRemoveError("");
+
+    try {
+      await removeGroupMember(removing.group.group_id, removing.member.user_id, category, details);
+      await loadGroups();
+      setActionNotice(`${removing.member.name} was removed. The reason was saved to the audit log.`);
+      setRemoving(null);
+    } catch (err) {
+      setRemoveError(errorMessage(err, "Unable to remove this member."));
+    }
+
+    setActionBusy(false);
+  }
 
   const loadGroups = useCallback(async () => {
     try {
@@ -117,7 +163,7 @@ export default function AssignedGroupsPage() {
     return confirmedGroups.filter((group) => {
       const matchesCourse = course === "All" || group.course === course;
       const matchesSection = section === "All" || group.section === section;
-      const matchesStage = stage === "All" || group.project?.current_stage === stage;
+      const matchesStage = stage === "All" || group.project?.proposal_stage === stage;
 
       return matchesCourse && matchesSection && matchesStage;
     });
@@ -125,7 +171,7 @@ export default function AssignedGroupsPage() {
 
   async function handleCreateGroup() {
     if (!detailsReady || !validMembers || !selectedMembers) {
-      setCreateMessage("Complete the group details, select a group leader, and add at least one member.");
+      setCreateMessage("Complete the group details and select a group leader. You can add up to 2 more members.");
       setCreateMessageType("error");
       return;
     }
@@ -174,13 +220,13 @@ export default function AssignedGroupsPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
-                AppDev proposal phase
+                Title proposal phase
               </p>
               <h2 className="mt-2 text-lg font-semibold text-[#203028]">
                 Adviser-managed group creation
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-[#7b877f]">
-                Select a group leader and members from approved student accounts.
+                A group has 1 to 3 students: the leader plus up to 2 members, chosen from approved student accounts.
               </p>
             </div>
 
@@ -320,8 +366,8 @@ export default function AssignedGroupsPage() {
                       </select>
                     </label>
                     <label className="block text-xs font-semibold text-[#59645d]">Student Members
-                      <select value="" disabled={!availableStudents.some((student) => student.uid === leaderUid) || studentsLoading || Boolean(studentsError)} onChange={(event) => { const uid = event.target.value; if (uid) setSelectedIds((current) => current.includes(uid) ? current : [...current, uid]); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs disabled:bg-gray-50">
-                        <option value="">Select a student to add as a member</option>
+                      <select value="" disabled={!availableStudents.some((student) => student.uid === leaderUid) || selectedIds.length >= MAX_GROUP_SIZE - 1 || studentsLoading || Boolean(studentsError)} onChange={(event) => { const uid = event.target.value; if (uid) setSelectedIds((current) => current.includes(uid) ? current : [...current, uid]); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs disabled:bg-gray-50">
+                        <option value="">{selectedIds.length >= MAX_GROUP_SIZE - 1 ? "The group is full (3 students)" : "Select a student to add as a member (optional)"}</option>
                         {availableStudents.filter((student) => student.uid !== leaderUid && !selectedIds.includes(student.uid)).map((student) => <option key={student.uid} value={student.uid}>{student.fullName} / {student.email}</option>)}
                       </select>
                     </label>
@@ -348,7 +394,7 @@ export default function AssignedGroupsPage() {
                           </span>
                         ))}
                     </div>
-                    <p className="text-xs text-[#7b877f]">Choose the leader first, then add members. Enter the school year to hide students who already have a group.</p>
+                    <p className="text-xs text-[#7b877f]">Choose the leader first, then add up to 2 members (a group of 1, 2 or 3 is fine). Enter the school year to hide students who already have a group.</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
@@ -365,7 +411,7 @@ export default function AssignedGroupsPage() {
                         Stage
                       </p>
                       <p className="mt-0.5 truncate text-xs font-semibold text-[#203028]">
-                        Proposal Defense
+                        Title Proposal
                       </p>
                     </div>
                     <div>
@@ -411,6 +457,7 @@ export default function AssignedGroupsPage() {
           <h2 className="text-lg font-semibold text-[#203028]">Group Invitations</h2>
           <p className="mt-1 text-sm text-[#7b877f]">Sending an invitation completes setup. Student Confirmation completes only when all members accept.</p>
           {groupsError && <p role="alert" className="mt-3 text-sm text-[#b42318]">{groupsError}</p>}
+          {actionNotice && <p role="status" className="mt-3 text-sm text-[#4f8f58]">{actionNotice}</p>}
           <div className="mt-4 space-y-4">
             {groups.length === 0 && !groupsError && <p className="text-sm text-[#7b877f]">No invitations yet. Create a group to invite its members.</p>}
             {groups.map((group) => {
@@ -418,13 +465,16 @@ export default function AssignedGroupsPage() {
               const accepted = group.members.filter((member) => member.accepted_at).length;
               return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><h3 className="font-semibold text-[#203028]">{group.group_name}</h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p></div>
+                  <div><h3 className="font-semibold text-[#203028]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}</div>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${confirmed ? "bg-[#e7f5e9] text-[#123f2b]" : "bg-amber-50 text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
                 <ul className="mt-3 divide-y divide-[#edf2ec]">
-                  {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span></li>)}
+                  {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className="flex flex-wrap items-center gap-2"><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span>{group.group_status === "Active" && member.role_in_group !== "Leader" && <button type="button" disabled={actionBusy} onClick={() => void groupAction(() => setGroupLeader(group.group_id, member.user_id), `${member.name} is now the leader of ${group.group_name}.`)} className="rounded-full border border-[#dfe8df] px-3 py-1 text-[11px] font-semibold hover:bg-[#edf9e9] disabled:opacity-60">Make leader</button>}{group.group_status === "Active" && !group.project?.endorsement && <button type="button" disabled={actionBusy} onClick={() => { setRemoveError(""); setRemoving({ group, member }); }} className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">Remove</button>}</span></li>)}
+                  {group.members.length === 0 && <li className="py-2 text-sm text-[#7b877f]">No members left.</li>}
                 </ul>
+                {group.project?.endorsement && group.group_status === "Active" && <p className="mt-2 text-[11px] text-[#7b877f]">Membership is locked after the Dean&apos;s endorsement. Only the Dean&apos;s office can make an exception.</p>}
+                {group.group_status === "Pending Closure" && <div className="mt-3 flex flex-wrap items-center gap-3"><p className="text-xs text-amber-700">Every member left. Confirm to close this group; its history is kept.</p><button type="button" disabled={actionBusy} onClick={() => void groupAction(() => closeGroup(group.group_id), `${group.group_name} was closed. Its history is kept.`)} className="rounded-full bg-[#123f2b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">Confirm closure</button></div>}
               </div>;
             })}
           </div>
@@ -475,7 +525,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {PROJECT_STAGES.map((item) => (
+                {PROPOSAL_STAGES.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -524,8 +574,8 @@ export default function AssignedGroupsPage() {
                     <td className="px-5 py-4 text-[#59645d]">
                       {group.project?.project_title || NO_TITLE_YET}
                     </td>
-                    <td className="px-5 py-4 text-[#59645d]">
-                      {group.project?.current_stage || "-"}
+                    <td className="px-5 py-4">
+                      {group.project ? <StageBadge stage={group.project.proposal_stage} /> : "-"}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
                       {group.members.length}
@@ -567,6 +617,17 @@ export default function AssignedGroupsPage() {
           </div>
         </Card>
       </div>
+
+      {removing && (
+        <RemoveMemberDialog
+          memberName={removing.member.name}
+          groupName={removing.group.group_name}
+          busy={actionBusy}
+          error={removeError}
+          onCancel={() => setRemoving(null)}
+          onSubmit={(category, details) => void removeMember(category, details)}
+        />
+      )}
     </AdviserShell>
   );
 }

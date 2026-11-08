@@ -343,3 +343,47 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX audit_logs_created_idx ON audit_logs (created_at DESC, audit_id DESC);
+
+-- Module 2 rules (added 2026-11-08). Backend migration: 2026_11_08_000000_module2_proposal_workflow.php
+-- Module 2 owns only its 4 stages; Defenses, Requirements and Records track their own progress.
+ALTER TABLE projects RENAME COLUMN current_stage TO proposal_stage;
+ALTER TABLE projects ALTER COLUMN proposal_stage SET DEFAULT 'Title Proposal';
+ALTER TABLE projects ADD CONSTRAINT projects_proposal_stage_check
+    CHECK (proposal_stage IN ('Title Proposal', 'Dean''s Endorsement', 'Client Consultation', 'Ready for Proposal Defense'));
+-- The single title the group will defend, picked by the adviser after the Dean's endorsement and the client consultation.
+ALTER TABLE projects ADD COLUMN chosen_title_id INTEGER REFERENCES title_submissions(title_id) ON DELETE SET NULL;
+
+-- A group that loses its last member is kept: 'Pending Closure' until the adviser or Dean confirms closing it.
+ALTER TABLE student_groups ADD COLUMN group_status VARCHAR(20) NOT NULL DEFAULT 'Active'
+    CHECK (group_status IN ('Active', 'Pending Closure', 'Closed'));
+ALTER TABLE student_groups ADD COLUMN closed_at TIMESTAMP;
+ALTER TABLE student_groups ADD COLUMN closed_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL;
+
+-- Members who left or were removed (their group_members row is deleted; the history and reason are kept here).
+CREATE TABLE group_member_exits (
+    exit_id SERIAL PRIMARY KEY,
+    group_id INTEGER NOT NULL REFERENCES student_groups(group_id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    role_in_group VARCHAR(20) NOT NULL,
+    joined_at TIMESTAMP,
+    left_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    exit_type VARCHAR(12) NOT NULL CHECK (exit_type IN ('Left', 'Removed', 'Exception')),
+    reason_category VARCHAR(40),
+    reason VARCHAR(500),
+    removed_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL
+);
+CREATE INDEX group_member_exits_group_idx ON group_member_exits (group_id);
+
+-- The Dean's sign-off on a group's approved titles. It does not record the chosen title.
+CREATE TABLE dean_endorsements (
+    endorsement_id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL UNIQUE REFERENCES projects(project_id) ON DELETE CASCADE,
+    signed_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+    notes TEXT,
+    signed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE dean_endorsement_titles (
+    endorsement_id INTEGER NOT NULL REFERENCES dean_endorsements(endorsement_id) ON DELETE CASCADE,
+    title_id INTEGER NOT NULL REFERENCES title_submissions(title_id) ON DELETE CASCADE,
+    PRIMARY KEY (endorsement_id, title_id)
+);

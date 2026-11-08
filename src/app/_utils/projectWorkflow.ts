@@ -1,15 +1,19 @@
-export type ProjectStage =
-  | "Proposal Defense"
-  | "Frontend"
-  | "CAP101"
-  | "CAP102"
-  | "Alpha Defense"
-  | "Beta Defense"
-  | "Omega Defense"
-  | "Final Defense"
-  | "Final Approval";
+// Module 2 (Groups / Title Proposals) stages, in order. A group moves through them only by explicit actions:
+//   Title Proposal -> Dean's Endorsement      the Adviser sends the group to the Dean
+//   Dean's Endorsement -> Client Consultation the Dean's sign-off
+//   Client Consultation -> Ready for Proposal Defense   the Adviser picks the single title
+// Later phases belong to other modules (Defenses, Requirements, Records) and are tracked there.
+export const PROPOSAL_STAGES = [
+  "Title Proposal",
+  "Dean's Endorsement",
+  "Client Consultation",
+  "Ready for Proposal Defense",
+] as const;
 
-export const PROJECT_STAGES: ProjectStage[] = [
+export type ProposalStage = (typeof PROPOSAL_STAGES)[number];
+
+// The phase a requirement is for (Module 3). Independent of the proposal stages above.
+export const REQUIREMENT_STAGES = [
   "Proposal Defense",
   "Frontend",
   "CAP101",
@@ -19,36 +23,4 @@ export const PROJECT_STAGES: ProjectStage[] = [
   "Omega Defense",
   "Final Defense",
   "Final Approval",
-];
-
-export const STAGE_TRANSITIONS: Record<ProjectStage, ProjectStage[]> = {
-  "Proposal Defense": ["Frontend"],
-  "Frontend": ["CAP101"],
-  "CAP101": ["CAP102"],
-  "CAP102": ["Alpha Defense"],
-  "Alpha Defense": ["Beta Defense"],
-  "Beta Defense": ["Omega Defense"],
-  "Omega Defense": ["Final Defense"],
-  "Final Defense": ["Final Approval"],
-  "Final Approval": [],
-};
-
-export function canTransitionProjectStage(
-  currentStage: ProjectStage,
-  nextStage: ProjectStage,
-) {
-  if (currentStage === nextStage) return true;
-  return STAGE_TRANSITIONS[currentStage].includes(nextStage);
-}
-
-export function getAllowedNextStages(currentStage: ProjectStage) {
-  return [currentStage, ...STAGE_TRANSITIONS[currentStage]];
-}
-
-export function isProjectStage(value: string): value is ProjectStage {
-  return PROJECT_STAGES.includes(value as ProjectStage);
-}
-
-export function normalizeProjectStage(value: string): ProjectStage {
-  return isProjectStage(value) ? value : "Proposal Defense";
-}
+] as const;
