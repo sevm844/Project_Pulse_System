@@ -8,7 +8,8 @@ import RoleShell, {
 const navItems: NavItem[] = [
   { label: "Dashboard", icon: "/dashbrd.png", href: "/adviser" },
   { label: "Assigned Groups", icon: "/fold.png", href: "/adviser/assigned-groups" },
-  { label: "Requirements", icon: "/docs.png", href: "/adviser/requirements" },
+  { label: "Requirements", icon: "/checklt.png", href: "/adviser/requirements" },
+  { label: "Documents", icon: "/docs.png", href: "/adviser/documents" },
   { label: "Defense", icon: "/work.png", href: "/adviser/defense" },
   { label: "Messages", icon: "/chats.png", href: "/adviser/messages" },
   { label: "Notifications", icon: "/notif.png", href: "/adviser/notifications" },

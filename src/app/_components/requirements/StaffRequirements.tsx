@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch, downloadSubmission } from "../../_lib/api";
+import { apiFetch, downloadRequirementAttachment, downloadSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import AdviserTitleReview from "../groups/AdviserTitleReview";
 import VersionHistory from "./VersionHistory";
 import {
   attentionCount,
   attentionLabel,
+  describeFileRules,
   describeStatus,
   formatDate,
   isOverdue,
@@ -235,6 +236,18 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
                     <p className="max-w-xl text-xs leading-5 text-[#59645d]">
                       {requirement.description || "No instructions were added."}
                       {requirement.created_by ? ` — ${requirement.created_by}` : ""}
+                      {requirement.kind === "Standard" && requirement.submission_type === "File" && (
+                        <span className="mt-1 block text-[#9aa59e]">{describeFileRules(requirement)}</span>
+                      )}
+                      {requirement.attachment_name && (
+                        <button
+                          type="button"
+                          onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name).catch((err) => setError(errorMessage(err, "Unable to open the file.")))}
+                          className="mt-1 block font-semibold text-[#4f8f58] hover:underline"
+                        >
+                          Template: {requirement.attachment_name}
+                        </button>
+                      )}
                     </p>
 
                     {canEdit && (

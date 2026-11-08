@@ -62,6 +62,14 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Sections:** an assignment can be limited to chosen sections (`requirements.sections`, labels like "BSIT 4A", NULL = all of the
   adviser's groups). The dropdown lists the sections the adviser actually advises. `Requirement::appliesTo` enforces it.
 - There is no `/adviser/title-proposals` page any more (the old address redirects to Requirements).
+- **File rules per assignment** (`allowed_types`, `max_file_mb` 1-10, `allow_resubmission`): enforced by `Requirement::fileRules()` on
+  upload. With resubmission off, a new version is only accepted after the adviser asked for changes.
+- **Template/guide:** an adviser can attach one file to an assignment (`attachment_*`); students of the targeted sections, the adviser and
+  the Dean can download it (`/requirements/{id}/attachment`).
+- **Documents page** (`/student|adviser|dean/documents`, `DocumentLibrary`): the current file or link of every submission the role may see
+  (`GET /documents`, `DocumentController`), with version history and an in-browser preview for PDF and images. The preview forces
+  the content type client-side (`previewSubmission`); never render an uploaded file as HTML. A submitted file stays listed even if the
+  assignment's sections change later.
 
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`

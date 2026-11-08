@@ -42,6 +42,12 @@ export type ApiRequirement = {
   kind: "Standard" | "Title Proposal";
   // "BSIT 4A" style labels the assignment is limited to (null = all of the adviser's groups).
   sections: string[] | null;
+  // What students may upload for it.
+  allowed_types: string[];
+  max_file_mb: number;
+  allow_resubmission: boolean;
+  // A file from the adviser (template, guide) students can download.
+  attachment_name: string | null;
   needs_grammar_check: boolean;
   is_final_output: boolean;
   created_by: string | null;
@@ -123,6 +129,18 @@ export function describeTitleProposal(summary: TitleSummary | undefined): {
   if (summary.approved > 0) return { label: "Approved by adviser", tone: "waiting", tab: "review" };
 
   return { label: "Needs revision", tone: "problem", tab: "todo" };
+}
+
+export const FILE_TYPES = ["pdf", "doc", "docx", "ppt", "pptx", "zip", "png", "jpg", "jpeg"];
+
+// "PDF, DOCX · up to 5 MB" (every type is shown as "Any file type").
+export function describeFileRules(requirement: Pick<ApiRequirement, "allowed_types" | "max_file_mb">) {
+  const types =
+    requirement.allowed_types.length >= FILE_TYPES.length
+      ? "Any file type"
+      : requirement.allowed_types.map((type) => type.toUpperCase()).join(", ");
+
+  return `${types} · up to ${requirement.max_file_mb} MB`;
 }
 
 // "BSIT 4A, BSIT 4B" or "All sections".

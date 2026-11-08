@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import StudentShell from "../_components/StudentShell";
 import StudentTitleProposals from "../../_components/groups/StudentTitleProposals";
 import VersionHistory from "../../_components/requirements/VersionHistory";
-import { apiFetch, downloadSubmission } from "../../_lib/api";
+import { apiFetch, downloadRequirementAttachment, downloadSubmission } from "../../_lib/api";
 import { errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
 import {
+  describeFileRules,
   describeStatus,
   describeTitleProposal,
   feedbackFor,
@@ -178,6 +179,8 @@ function RequirementRow({
   const feedback = feedbackFor(submission);
   const overdue = (isTitle ? status.tone === "idle" || status.tone === "problem" : !submission) && isOverdue(requirement.due_date);
   const locked = submission?.status === "Approved";
+  // Some assignments take one file at a time: no replacing while it waits for review.
+  const held = !requirement.allow_resubmission && submission?.status === "Submitted";
 
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
@@ -254,6 +257,17 @@ function RequirementRow({
             </div>
           )}
 
+          {requirement.attachment_name && (
+            <button
+              type="button"
+              onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name).catch((err) => setMessage(errorMessage(err, "Unable to open the file.")))}
+              className="flex items-center gap-2 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+            >
+              <span className="text-[#7b877f]">From your adviser</span>
+              {requirement.attachment_name}
+            </button>
+          )}
+
           {isTitle && group && <StudentTitleProposals group={group} onChanged={onSaved} />}
 
           {feedback?.text && (
@@ -304,7 +318,11 @@ function RequirementRow({
             </div>
           )}
 
-          {isTitle ? null : locked ? (
+          {isTitle ? null : held ? (
+            <p className="text-xs text-[#7b877f]">
+              Your file is waiting for review. You can send a new version if your adviser asks for changes.
+            </p>
+          ) : locked ? (
             <p className="text-xs text-[#7b877f]">This requirement is approved. No further changes are needed.</p>
           ) : (
             <form onSubmit={submit} className="space-y-3">
@@ -315,7 +333,7 @@ function RequirementRow({
               {requirement.submission_type === "File" ? (
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.png,.jpg,.jpeg"
+                  accept={requirement.allowed_types.map((type) => `.${type}`).join(",")}
                   onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                   className="block w-full text-xs text-[#59645d] file:mr-3 file:rounded-lg file:border file:border-[#dfe8df] file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#203028] hover:file:bg-[#f3f7f1]"
                 />
@@ -357,7 +375,7 @@ function RequirementRow({
                 </button>
 
                 {requirement.submission_type === "File" && (
-                  <span className="text-[11px] text-[#9aa59e]">PDF, Word, PowerPoint, ZIP or image, up to 10 MB</span>
+                  <span className="text-[11px] text-[#9aa59e]">{describeFileRules(requirement)}</span>
                 )}
               </div>
             </form>

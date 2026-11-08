@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { apiFetch } from "../../_lib/api";
+import { apiFetch, downloadRequirementAttachment } from "../../_lib/api";
 import { COURSE_OPTIONS, errorMessage, type ApiGroup } from "../../_lib/groups";
-import type { ApiRequirement } from "../../_lib/requirements";
+import { FILE_TYPES, type ApiRequirement } from "../../_lib/requirements";
 import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 
 // A dropdown with checkboxes: pick the sections an assignment is for. Nothing picked = all of them.
@@ -89,6 +89,11 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const [grammar, setGrammar] = useState(requirement?.needs_grammar_check ?? false);
   const [finalOutput, setFinalOutput] = useState(requirement?.is_final_output ?? false);
   const [sections, setSections] = useState<string[]>(requirement?.sections ?? []);
+  const [allowedTypes, setAllowedTypes] = useState<string[]>(requirement?.allowed_types ?? FILE_TYPES);
+  const [maxMb, setMaxMb] = useState(requirement?.max_file_mb ?? 10);
+  const [resubmit, setResubmit] = useState(requirement?.allow_resubmission ?? true);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [removeAttachment, setRemoveAttachment] = useState(false);
   const [sectionOptions, setSectionOptions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -122,7 +127,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
     setError("");
 
     try {
-      await apiFetch(
+      const saved = await apiFetch<ApiRequirement>(
         requirement ? `/requirements/${requirement.requirement_id}` : "/requirements",
         {
           method: requirement ? "PUT" : "POST",
@@ -136,9 +141,21 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             needs_grammar_check: grammar,
             is_final_output: finalOutput,
             sections: role === "Adviser" && sections.length > 0 ? sections : null,
+            allowed_types: allowedTypes.length === FILE_TYPES.length ? null : allowedTypes,
+            max_file_mb: maxMb,
+            allow_resubmission: resubmit,
           }),
         },
       );
+
+      // The template is a separate upload, sent once the assignment exists.
+      if (attachment) {
+        const body = new FormData();
+        body.append("file", attachment);
+        await apiFetch(`/requirements/${saved.requirement_id}/attachment`, { method: "POST", body });
+      } else if (removeAttachment && requirement?.attachment_name) {
+        await apiFetch(`/requirements/${saved.requirement_id}/attachment`, { method: "DELETE" });
+      }
 
       onSaved();
     } catch (err) {
@@ -242,6 +259,102 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
 
           )}
 
+          {!isTitle && type === "File" && (
+            <div className="space-y-4 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4">
+              <div>
+                <p className="text-xs font-semibold text-[#59645d]">Accepted files</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {FILE_TYPES.map((item) => {
+                    const on = allowedTypes.includes(item);
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() =>
+                          setAllowedTypes((current) =>
+                            on ? current.filter((value) => value !== item) : [...current, item],
+                          )
+                        }
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase transition ${
+                          on
+                            ? "border-[#123f2b] bg-[#123f2b] text-white"
+                            : "border-[#dfe8df] bg-white text-[#7b877f] hover:bg-[#f3f7f1]"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+                {allowedTypes.length === 0 && (
+                  <p className="mt-1.5 text-xs text-[#b42318]">Pick at least one file type.</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-3">
+                <label htmlFor="max-file-mb" className="text-xs font-semibold text-[#59645d]">
+                  Biggest file
+                </label>
+                <select
+                  id="max-file-mb"
+                  value={maxMb}
+                  onChange={(event) => setMaxMb(Number(event.target.value))}
+                  className="w-28 rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                >
+                  {[1, 2, 5, 10].map((size) => (
+                    <option key={size} value={size}>
+                      {size} MB
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <label className="flex items-start gap-2.5 text-sm text-[#203028]">
+                <input type="checkbox" checked={resubmit} onChange={(event) => setResubmit(event.target.checked)} className="mt-1" />
+                <span>
+                  Students can replace a file while it waits for review
+                  <span className="block text-xs text-[#7b877f]">If off, a new version is accepted only after you ask for changes.</span>
+                </span>
+              </label>
+            </div>
+          )}
+
+          {!isTitle && (
+            <div>
+              <p className="text-xs font-semibold text-[#59645d]">Template or guide for students (optional)</p>
+
+              {requirement?.attachment_name && !removeAttachment && !attachment && (
+                <p className="mt-1.5 flex items-center gap-3 text-xs text-[#59645d]">
+                  <button
+                    type="button"
+                    onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name)}
+                    className="font-semibold text-[#4f8f58] hover:underline"
+                  >
+                    {requirement.attachment_name}
+                  </button>
+                  <button type="button" onClick={() => setRemoveAttachment(true)} className="text-[#b42318] hover:underline">
+                    Remove
+                  </button>
+                </p>
+              )}
+
+              <input
+                type="file"
+                accept={FILE_TYPES.map((item) => `.${item}`).join(",")}
+                onChange={(event) => {
+                  setAttachment(event.target.files?.[0] ?? null);
+                  setRemoveAttachment(false);
+                }}
+                className="mt-1.5 block w-full text-xs text-[#59645d] file:mr-3 file:rounded-lg file:border file:border-[#dfe8df] file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#203028] hover:file:bg-[#f3f7f1]"
+              />
+              {requirement?.attachment_name && attachment && (
+                <p className="mt-1 text-xs text-[#7b877f]">This replaces {requirement.attachment_name}.</p>
+              )}
+            </div>
+          )}
+
           {role === "Dean" && (
             <label className="block text-xs font-semibold text-[#59645d]">
               For
@@ -294,7 +407,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
           </button>
           <button
             type="submit"
-            disabled={saving || !title.trim()}
+            disabled={saving || !title.trim() || (!isTitle && type === "File" && allowedTypes.length === 0)}
             className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
           >
             {saving ? "Saving..." : requirement ? "Save changes" : "Create"}

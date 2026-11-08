@@ -350,6 +350,13 @@ ALTER TABLE requirements ADD COLUMN sections JSONB;
 ALTER TABLE requirements ADD COLUMN kind VARCHAR(20) NOT NULL DEFAULT 'Standard' CHECK (kind IN ('Standard', 'Title Proposal'));
 CREATE UNIQUE INDEX requirements_one_title_proposal_per_adviser ON requirements (adviser_id) WHERE kind = 'Title Proposal';
 
+-- File rules and attachment (added 2026-11-10). Backend migration: 2026_11_10_000000_requirement_file_rules_and_attachment.php
+ALTER TABLE requirements ADD COLUMN allowed_types JSONB;  -- NULL = every accepted type
+ALTER TABLE requirements ADD COLUMN max_file_mb SMALLINT NOT NULL DEFAULT 10 CHECK (max_file_mb BETWEEN 1 AND 10);
+ALTER TABLE requirements ADD COLUMN allow_resubmission BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE requirements ADD COLUMN attachment_path VARCHAR(255);
+ALTER TABLE requirements ADD COLUMN attachment_name VARCHAR(255);
+
 -- Module 2 rules (added 2026-11-08). Backend migration: 2026_11_08_000000_module2_proposal_workflow.php
 -- Module 2 owns only its 4 stages; Defenses, Requirements and Records track their own progress.
 ALTER TABLE projects RENAME COLUMN current_stage TO proposal_stage;

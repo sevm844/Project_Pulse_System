@@ -102,18 +102,9 @@ export async function apiFetch<T>(
   return data as T;
 }
 
-// Files are private: they are fetched with the login token, then saved from memory.
-export async function downloadSubmission(
-  submissionId: number,
-  fileName: string | null,
-  version?: number,
-) {
+// Files are private: they are fetched with the login token, then saved or shown from memory.
+async function fetchPrivateFile(path: string): Promise<Blob> {
   const token = getStoredToken();
-  const path =
-    version === undefined
-      ? `/submissions/${submissionId}/download`
-      : `/submissions/${submissionId}/versions/${version}/download`;
-
   let response: Response;
 
   try {
@@ -134,14 +125,44 @@ export async function downloadSubmission(
     );
   }
 
-  const url = URL.createObjectURL(await response.blob());
+  return response.blob();
+}
+
+function saveBlob(blob: Blob, fileName: string | null) {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = fileName || "submission";
+  link.download = fileName || "file";
   link.click();
 
   URL.revokeObjectURL(url);
+}
+
+export async function downloadSubmission(
+  submissionId: number,
+  fileName: string | null,
+  version?: number,
+) {
+  const path =
+    version === undefined
+      ? `/submissions/${submissionId}/download`
+      : `/submissions/${submissionId}/versions/${version}/download`;
+
+  saveBlob(await fetchPrivateFile(path), fileName);
+}
+
+// The file an adviser attached to an assignment (a template or guide).
+export async function downloadRequirementAttachment(requirementId: number, fileName: string | null) {
+  saveBlob(await fetchPrivateFile(`/requirements/${requirementId}/attachment`), fileName);
+}
+
+// A temporary address for showing a submitted PDF or image in the browser. Call URL.revokeObjectURL when done.
+export async function previewSubmission(submissionId: number, mimeType: string): Promise<string> {
+  const blob = await fetchPrivateFile(`/submissions/${submissionId}/download`);
+
+  // The type is set here (PDF or image only), so a file can never be shown as a web page.
+  return URL.createObjectURL(new Blob([blob], { type: mimeType }));
 }
 
 // The database says "Research Coordinator"; the existing pages say "Coordinator".
