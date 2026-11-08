@@ -8,6 +8,7 @@ import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import GroupTimeline from "../../_components/health/GroupTimeline";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
@@ -63,6 +64,7 @@ export default function AssignedGroupsPage() {
   const [removeError, setRemoveError] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionNotice, setActionNotice] = useState("");
+  const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
   const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
 
   // The backend already leaves out students who are in a group for this school year + semester.
@@ -475,6 +477,20 @@ export default function AssignedGroupsPage() {
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${confirmed ? "bg-[#e7f5e9] text-[#123f2b]" : "bg-amber-50 text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
+                <button
+                  type="button"
+                  onClick={() => setTimelineOpen(timelineOpen === group.group_id ? null : group.group_id)}
+                  aria-expanded={timelineOpen === group.group_id}
+                  className="mt-3 text-xs font-semibold text-[#4f8f58] hover:underline"
+                >
+                  {timelineOpen === group.group_id ? "Hide timeline" : "Show timeline"}
+                </button>
+                {timelineOpen === group.group_id && (
+                  <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
+                    <GroupTimeline groupId={group.group_id} />
+                  </div>
+                )}
+
                 <ul className="mt-3 divide-y divide-[#edf2ec]">
                   {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className="flex flex-wrap items-center gap-2"><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span>{group.group_status === "Active" && member.role_in_group !== "Leader" && <button type="button" disabled={actionBusy} onClick={() => void groupAction(() => setGroupLeader(group.group_id, member.user_id), `${member.name} is now the leader of ${group.group_name}.`)} className="rounded-full border border-[#dfe8df] px-3 py-1 text-[11px] font-semibold hover:bg-[#edf9e9] disabled:opacity-60">Make leader</button>}{group.group_status === "Active" && !group.project?.endorsement && <button type="button" disabled={actionBusy} onClick={() => { setRemoveError(""); setRemoving({ group, member }); }} className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">Remove</button>}</span></li>)}
                   {group.members.length === 0 && <li className="py-2 text-sm text-[#7b877f]">No members left.</li>}

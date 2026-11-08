@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import type { ApiGroup } from "../../_lib/groups";
 import { errorMessage } from "../../_lib/groups";
+import RiskList from "../health/RiskList";
+import { useRisks } from "../health/useRisks";
 import { ProgressList } from "../progress/ProgressViews";
 import { useProgress } from "../progress/useProgress";
 import {
@@ -41,6 +43,7 @@ export default function StaffHome({ role }: { role: HomeRole }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const progress = useProgress().items;
+  const risks = useRisks().items;
 
   useEffect(() => {
     async function load() {
@@ -120,6 +123,17 @@ export default function StaffHome({ role }: { role: HomeRole }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {role === "Adviser" && risks.length > 0 && (
+        <>
+          <h2 className="mt-10 text-sm font-semibold text-[#203028]">
+            Groups that need attention <span className="font-normal text-[#9aa59e]">· {risks.length}</span>
+          </h2>
+          <div className="mt-3">
+            <RiskList items={risks} href={() => "/adviser/assigned-groups"} />
+          </div>
+        </>
       )}
 
       {role === "Adviser" && progress.length > 0 && (

@@ -85,6 +85,14 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   Upcoming Defense follow it), adviser dashboard and group cards, Dean project list and project profile. Requirements are counted
   beside the phases ("3 of 5 approved"), not as a phase.
 
+## Project management views
+- **Groups at risk** (`GET /risks`, adviser and Dean) and the **group timeline** (`GET /groups/{id}/timeline`, the group, its adviser, the Dean) are
+  worked out in `App\Support\ProjectHealth` from facts the other modules keep; nothing extra is stored. A group is flagged for: overdue
+  assignments, a submission waiting more than 7 days for review or a revision not resent for 7 days, a failed defense not rescheduled, a
+  defense date passed with no result, a group waiting to be closed, or no activity for 21 days. Finished (archived) and closed groups are
+  never listed. Thresholds are constants at the top of the class.
+- Shown by `RiskList` (adviser dashboard, Dean dashboard) and `GroupTimeline` (student My Project tab, adviser group card, Dean project profile).
+
 ## User acceptance testing (UAT)
 - **Demo data:** `php artisan uat:seed` (backend) creates 16 accounts (`uat-*@uat.test`, one shared random password printed once) and four
   sample groups at different phases, by calling the real API. `php artisan uat:reset` removes exactly those and what belongs to them.

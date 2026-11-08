@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
 import DeanCalendar from "./_components/DeanCalendar";
 import Card from "./_components/Card";
+import RiskList from "../_components/health/RiskList";
+import { useRisks } from "../_components/health/useRisks";
 import { apiFetch } from "../_lib/api";
 import {
   errorMessage,
@@ -21,7 +23,7 @@ const administrationActions = [
   ],
   [
     "Manage Groups",
-    "Assign advisers and move groups through the project stages.",
+    "Assign advisers and confirm group closures.",
     "/dean/administration/groups",
   ],
   [
@@ -35,6 +37,7 @@ export default function DeanDashboardPage() {
   const [projects, setProjects] = useState<ApiDeanProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const risks = useRisks().items;
 
   useEffect(() => {
     let cancelled = false;
@@ -109,6 +112,19 @@ export default function DeanDashboardPage() {
               </Link>
             ))}
           </div>
+
+          {risks.length > 0 && (
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold text-[#203028]">
+                Groups at Risk <span className="text-sm font-normal text-[#9aa59e]">· {risks.length}</span>
+              </h2>
+              <p className="mt-1 text-sm text-[#7b877f]">Late, stuck or waiting too long. Most serious first.</p>
+              <div className="mt-4">
+                <RiskList items={risks.slice(0, 8)} href={(risk) => `/dean/projects/${risk.group_id}`} showAdviser />
+              </div>
+              {risks.length > 8 && <p className="mt-3 text-xs text-[#7b877f]">Showing the 8 most serious of {risks.length}.</p>}
+            </Card>
+          )}
 
           <Card className="p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

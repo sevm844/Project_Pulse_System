@@ -29,7 +29,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 8 | (Student 6) Open **Defense**. Find the date, time, room and panel of your proposal defense. | | |
 | 9 | Open **Chat** and send a message to your group or your adviser. | | |
 | 10 | Open **Notifications**. Can you tell what each one is about, and open it? | | |
-| 11 | Open **My Project** and find your team members. | | |
+| 11 | Open **My Project** and find your team members. Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
 | 12 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
@@ -50,7 +50,9 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 8 | Open **Documents**. Find a student's file and preview it. | | |
 | 9 | Open **Assigned Groups**. See each group's members and phase. Try the "Make leader" action on a group. | | |
 | 10 | (Adviser 2) Open **Defense** and look at how you would schedule the next defense for UAT Delta. | | |
-| 11 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 11 | On the dashboard, find **Groups that need attention**. Which of your groups is behind, and why? | | |
+| 12 | In **Assigned Groups**, press **Show timeline** on a group and read its deadlines. | | |
+| 13 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -67,7 +69,7 @@ Email: `uat-dean@uat.test`
 | 5 | Open **Requirements** and **Documents** and look through what groups submitted. | | |
 | 6 | Open **Administration → Users**. Find a demo account. | | |
 | 7 | Open **Administration → Audit Logs**. Find what happened today. | | |
-| 8 | Open **Reports**. Can you find a list of all groups and their stage? | | |
+| 8 | Open **Reports**. Can you find a list of all groups and their stage? On the dashboard, find **Groups at Risk** and open one to see its timeline. | | |
 | 9 | Open **Feedback**. Read what testers sent and mark one as Resolved. | | |
 | 10 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 

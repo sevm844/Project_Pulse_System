@@ -7,6 +7,7 @@ import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
+import GroupTimeline from "../../../_components/health/GroupTimeline";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
 import { useProgress } from "../../../_components/progress/useProgress";
 import { apiFetch } from "../../../_lib/api";
@@ -176,6 +177,14 @@ export default function DeanProjectProfilePage() {
             </div>
           </Card>
         )}
+
+        <Card className="p-5">
+          <h3 className="text-lg font-semibold text-[#203028]">Timeline</h3>
+          <p className="mt-1 text-sm text-[#7b877f]">Every deadline, defense and milestone of this group, in order.</p>
+          <div className="mt-5">
+            <GroupTimeline groupId={group.group_id} />
+          </div>
+        </Card>
 
         {error && (
           <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
