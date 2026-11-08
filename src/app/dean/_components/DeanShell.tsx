@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { label: "Documents", icon: "/docs.png", href: "/dean/documents" },
   { label: "Administration", icon: "/profile.png", href: "/dean/administration" },
   { label: "Reports", icon: "/docs.png", href: "/dean/reports" },
+  { label: "Feedback", icon: "/chats.png", href: "/dean/feedback" },
   { label: "Messages", icon: "/chats.png", href: "/dean/messages" },
   { label: "Profile", icon: "/profile.png", href: "/dean/profile", matches: ["/dean/profile", "/dean/notifications"] },
 ];

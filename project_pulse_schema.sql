@@ -350,6 +350,28 @@ ALTER TABLE requirements ADD COLUMN sections JSONB;
 ALTER TABLE requirements ADD COLUMN kind VARCHAR(20) NOT NULL DEFAULT 'Standard' CHECK (kind IN ('Standard', 'Title Proposal'));
 CREATE UNIQUE INDEX requirements_one_title_proposal_per_adviser ON requirements (adviser_id) WHERE kind = 'Title Proposal';
 
+-- User acceptance testing (added 2026-11-12). Backend migration: 2026_11_12_000000_feedback_and_survey.php
+CREATE TABLE feedback (
+    feedback_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    role_name VARCHAR(30) NOT NULL,
+    page VARCHAR(200),
+    category VARCHAR(12) NOT NULL CHECK (category IN ('Bug', 'Suggestion', 'Question', 'Praise')),
+    message TEXT NOT NULL,
+    status VARCHAR(10) NOT NULL DEFAULT 'New' CHECK (status IN ('New', 'Seen', 'Resolved')),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE survey_responses (
+    response_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+    role_name VARCHAR(30) NOT NULL,
+    answers JSONB NOT NULL,
+    score NUMERIC(4,1) NOT NULL CHECK (score BETWEEN 0 AND 100),
+    comment TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Dean returns a group to its adviser (added 2026-11-11). Backend migration: 2026_11_11_000000_dean_return_to_adviser.php
 ALTER TABLE projects ADD COLUMN dean_return_note TEXT;
 ALTER TABLE projects ADD COLUMN dean_returned_at TIMESTAMP;

@@ -85,6 +85,16 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   Upcoming Defense follow it), adviser dashboard and group cards, Dean project list and project profile. Requirements are counted
   beside the phases ("3 of 5 approved"), not as a phase.
 
+## User acceptance testing (UAT)
+- **Demo data:** `php artisan uat:seed` (backend) creates 16 accounts (`uat-*@uat.test`, one shared random password printed once) and four
+  sample groups at different phases, by calling the real API. `php artisan uat:reset` removes exactly those and what belongs to them.
+  Never delete other data in these commands; `tests/smoke/uat_data_smoke.php` proves the database returns to its exact earlier state.
+  `uat:seed` refuses to run when `APP_ENV=production` without `--force`. Facilitator guide: backend `docs/UAT.md`; tester checklists per
+  role: `docs/UAT_CHECKLISTS.md` here.
+- **Feedback button** (top right of every role's pages, `FeedbackDialog` in `RoleShell`): feedback (Bug / Suggestion / Question / Praise,
+  records the page) and the 10-question System Usability Scale survey (`survey_responses`, one per person, score 0-100).
+  Everyone sends; only the Dean reads them, on `/dean/feedback`.
+
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`
 - It automatically attaches the Bearer token from storage

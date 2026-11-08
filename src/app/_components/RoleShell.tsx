@@ -18,6 +18,7 @@ import {
   initialsOf,
 } from "../_utils/authStorage";
 import DashboardSearchIcon from "./DashboardSearchIcon";
+import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
 import SidebarToggle from "./SidebarToggle";
 
@@ -69,6 +70,7 @@ export default function RoleShell({
   const home = `/${slug}`;
 
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -237,6 +239,14 @@ export default function RoleShell({
               <div />
 
               <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFeedbackOpen(true)}
+                  className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs font-semibold text-[#59645d] transition hover:bg-[#f3f7f1]"
+                >
+                  Feedback
+                </button>
+
                 <DashboardSearchIcon />
 
                 <NotificationBell href={`${home}/notifications`} />
@@ -292,6 +302,8 @@ export default function RoleShell({
           </div>
         </section>
       </div>
+
+      {feedbackOpen && <FeedbackDialog onClose={() => setFeedbackOpen(false)} />}
     </main>
   );
 }
