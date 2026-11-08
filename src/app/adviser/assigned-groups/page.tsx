@@ -8,6 +8,8 @@ import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import { ProgressMini } from "../../_components/progress/ProgressViews";
+import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
 import { apiFetch } from "../../_lib/api";
 import {
@@ -61,6 +63,7 @@ export default function AssignedGroupsPage() {
   const [removeError, setRemoveError] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionNotice, setActionNotice] = useState("");
+  const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
 
   // The backend already leaves out students who are in a group for this school year + semester.
   const availableStudents = students;
@@ -468,7 +471,7 @@ export default function AssignedGroupsPage() {
               const accepted = group.members.filter((member) => member.accepted_at).length;
               return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><h3 className="font-semibold text-[#203028]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}</div>
+                  <div><h3 className="font-semibold text-[#203028]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${confirmed ? "bg-[#e7f5e9] text-[#123f2b]" : "bg-amber-50 text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>

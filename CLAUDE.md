@@ -71,6 +71,15 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   the content type client-side (`previewSubmission`); never render an uploaded file as HTML. A submitted file stays listed even if the
   assignment's sections change later.
 
+## Overall progress tracker
+- One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
+  Final Output (archived). `GET /progress` (`ProgressController`, `App\Support\ProjectProgress`) works it out from the modules that own
+  the facts (Module 2 stage, the latest defense of each type and its result, received final outputs, the archive). Nothing is stored,
+  so it cannot disagree with them. The current phase is the first one not done; a failed defense stays current until a new one passes.
+- Shown with `ProgressTracker` / `ProgressMini` / `ProgressList` (`_components/progress/`): student dashboard (full tracker, Next Step and
+  Upcoming Defense follow it), adviser dashboard and group cards, Dean project list and project profile. Requirements are counted
+  beside the phases ("3 of 5 approved"), not as a phase.
+
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`
 - It automatically attaches the Bearer token from storage

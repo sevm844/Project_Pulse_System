@@ -13,6 +13,8 @@ import {
   type ApiDeanProject,
 } from "../../_lib/groups";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import { ProgressMini } from "../../_components/progress/ProgressViews";
+import { useProgress } from "../../_components/progress/useProgress";
 import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const inputClass =
@@ -22,6 +24,7 @@ export default function DeanProjectsPage() {
   const [projects, setProjects] = useState<ApiDeanProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("All");
   const [stageFilter, setStageFilter] = useState("All");
@@ -251,6 +254,12 @@ export default function DeanProjectsPage() {
                         <p className="mt-2 text-xs text-[#7b877f]">
                           {project.course} {project.section} • Adviser: {project.adviser || NO_ADVISER_YET}
                         </p>
+
+                        {progressByGroup.get(project.group_id) && (
+                          <div className="mt-2">
+                            <ProgressMini progress={progressByGroup.get(project.group_id)!} />
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-2 lg:items-end">

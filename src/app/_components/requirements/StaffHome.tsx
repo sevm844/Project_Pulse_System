@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import type { ApiGroup } from "../../_lib/groups";
 import { errorMessage } from "../../_lib/groups";
+import { ProgressList } from "../progress/ProgressViews";
+import { useProgress } from "../progress/useProgress";
 import {
   attentionCount,
   attentionLabel,
@@ -38,6 +40,7 @@ export default function StaffHome({ role }: { role: HomeRole }) {
   const [groups, setGroups] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const progress = useProgress().items;
 
   useEffect(() => {
     async function load() {
@@ -117,6 +120,15 @@ export default function StaffHome({ role }: { role: HomeRole }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {role === "Adviser" && progress.length > 0 && (
+        <>
+          <h2 className="mt-10 text-sm font-semibold text-[#203028]">Where your groups are</h2>
+          <div className="mt-3">
+            <ProgressList items={progress} href="/adviser/assigned-groups" />
+          </div>
+        </>
       )}
 
       <Link

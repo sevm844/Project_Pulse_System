@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import StudentCalendar from "./_components/StudentCalendar";
 import Card from "./_components/Card";
+import { ProgressTracker } from "../_components/progress/ProgressViews";
+import { useProgress } from "../_components/progress/useProgress";
 import { apiFetch } from "../_lib/api";
 import {
   errorMessage,
@@ -24,6 +26,7 @@ export default function StudentDashboardPage() {
   const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const progress = useProgress().items[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +78,6 @@ export default function StudentDashboardPage() {
 
   const approvedTitle = group.project?.project_title || null;
   const pendingTitles = titles.filter((item) => item.title_status === "Pending");
-  const rejectedTitles = titles.filter((item) => item.title_status === "Rejected");
   const stage = group.project?.proposal_stage ?? "Title Proposal";
 
   const titleSummary = approvedTitle
@@ -86,31 +88,74 @@ export default function StudentDashboardPage() {
         ? "Needs a new proposal"
         : "None submitted yet";
 
+  // What the student should do next, from where the group really is (title stage first, then the defenses).
+  const approvedTitles = titles.filter((item) => item.title_status === "Approved");
+  const revisionTitles = titles.filter((item) => item.title_status === "Needs Revision" || item.title_status === "Rejected");
+  const titleDone = progress?.phases[0]?.state === "done" || Boolean(approvedTitle);
+
   let nextStep = {
     heading: "Submit your title proposal",
-    text: "Your adviser has to approve a project title before you can continue. Submit one or more proposed titles for review.",
+    text: "Your adviser decides on each title you propose. Send up to 3 and she will pick the ones that go to the Dean.",
     action: "Submit Title Proposal",
+    href: "/student/requirements",
   };
 
-  if (approvedTitle) {
+  if (stage === "Dean's Endorsement") {
     nextStep = {
-      heading: "Your title is approved",
-      text: "Your project title is final. More project tools will appear here as your adviser and coordinator publish them.",
+      heading: "Waiting for the Dean",
+      text: "Your adviser sent your approved titles to the Dean. The Dean will review them with your group and sign off.",
       action: "View Requirements",
+      href: "/student/requirements",
+    };
+  } else if (stage === "Client Consultation") {
+    nextStep = {
+      heading: "Client consultation",
+      text: "The Dean endorsed your titles. Talk with your client and your adviser, then your adviser confirms the one title you will defend.",
+      action: "View Requirements",
+      href: "/student/requirements",
+    };
+  } else if (titleDone && progress && progress.current_phase !== "Completed") {
+    const current = progress.phases.find((phase) => phase.label === progress.current_phase);
+    const isFinal = current?.key === "final-output";
+
+    nextStep = {
+      heading: `Next: ${progress.current_phase}`,
+      text: current?.detail ?? "Follow the steps in your progress above.",
+      action: isFinal ? "View Requirements" : "View Defense",
+      href: isFinal ? "/student/requirements" : "/student/defense",
+    };
+  } else if (titleDone && progress) {
+    nextStep = {
+      heading: "Every phase is complete",
+      text: "Your project has gone through all its phases and is archived.",
+      action: "View Documents",
+      href: "/student/documents",
     };
   } else if (pendingTitles.length > 0) {
     nextStep = {
       heading: "Waiting for your adviser",
       text: "Your title proposal was sent. You will see it here once your adviser approves or comments on it.",
-      action: "View Title Proposals",
+      action: "View Requirements",
+      href: "/student/requirements",
     };
-  } else if (rejectedTitles.length > 0) {
+  } else if (revisionTitles.length > 0 && approvedTitles.length === 0) {
     nextStep = {
-      heading: "Submit a revised title",
-      text: "Your adviser did not approve the last proposal. Read the remarks and send a new title.",
+      heading: "Send a new or revised title",
+      text: "Your adviser asked for changes or did not approve the last proposal. Read the remarks and send another title.",
       action: "View Remarks and Resubmit",
+      href: "/student/requirements",
+    };
+  } else if (approvedTitles.length > 0) {
+    nextStep = {
+      heading: "Waiting for your adviser",
+      text: "Your adviser approved a title. When she is ready, she sends your approved titles to the Dean.",
+      action: "View Requirements",
+      href: "/student/requirements",
     };
   }
+
+  // The first defense that already has a date.
+  const scheduledDefense = progress?.phases.find((phase) => phase.detail.startsWith("Scheduled "));
 
   return (
     <StudentShell title="Student Overview" subtitle="Student Management">
@@ -167,8 +212,8 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="p-5">
-                <p className="text-xs font-medium text-[#7b877f]">Current Stage</p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">{stage}</p>
+                <p className="text-xs font-medium text-[#7b877f]">Current Phase</p>
+                <p className="mt-2 text-sm font-semibold text-[#203028]">{progress?.current_phase ?? stage}</p>
               </div>
 
               <Link
@@ -184,11 +229,20 @@ export default function StudentDashboardPage() {
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Upcoming Defense</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  Not scheduled yet
+                  {scheduledDefense ? `${scheduledDefense.label} · ${scheduledDefense.detail.replace("Scheduled ", "")}` : "Not scheduled yet"}
                 </p>
               </div>
             </div>
           </Card>
+
+          {progress && (
+            <Card className={emptyCardClass}>
+              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Project Progress</h2>
+              <div className="mt-4">
+                <ProgressTracker progress={progress} />
+              </div>
+            </Card>
+          )}
 
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
             <Card className={emptyCardClass}>
@@ -202,7 +256,7 @@ export default function StudentDashboardPage() {
                 {nextStep.text}
               </p>
               <Link
-                href="/student/requirements"
+                href={nextStep.href}
                 className="mt-5 inline-block rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
               >
                 {nextStep.action}

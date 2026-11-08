@@ -7,6 +7,8 @@ import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
+import { ProgressTracker } from "../../../_components/progress/ProgressViews";
+import { useProgress } from "../../../_components/progress/useProgress";
 import { apiFetch } from "../../../_lib/api";
 import {
   closeGroup,
@@ -30,6 +32,7 @@ export default function DeanProjectProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const overall = useProgress().items.find((item) => String(item.group_id) === id);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState<ApiGroupMember | null>(null);
@@ -160,6 +163,15 @@ export default function DeanProjectProfilePage() {
             </div>
           )}
         </Card>
+
+        {overall && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Capstone Progress</h3>
+            <div className="mt-4">
+              <ProgressTracker progress={overall} />
+            </div>
+          </Card>
+        )}
 
         {error && (
           <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
