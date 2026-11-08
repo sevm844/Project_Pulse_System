@@ -96,7 +96,7 @@ export default function StudentDashboardPage() {
     nextStep = {
       heading: "Your title is approved",
       text: "Your project title is final. More project tools will appear here as your adviser and coordinator publish them.",
-      action: "View My Project",
+      action: "View Requirements",
     };
   } else if (pendingTitles.length > 0) {
     nextStep = {
@@ -172,7 +172,7 @@ export default function StudentDashboardPage() {
               </div>
 
               <Link
-                href="/student/project"
+                href="/student/requirements"
                 className="p-5 transition hover:bg-[#fbfdfb]"
               >
                 <p className="text-xs font-medium text-[#7b877f]">Title Proposals</p>
@@ -202,7 +202,7 @@ export default function StudentDashboardPage() {
                 {nextStep.text}
               </p>
               <Link
-                href="/student/project"
+                href="/student/requirements"
                 className="mt-5 inline-block rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
               >
                 {nextStep.action}

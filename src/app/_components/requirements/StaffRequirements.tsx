@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, downloadSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
+import AdviserTitleReview from "../groups/AdviserTitleReview";
 import VersionHistory from "./VersionHistory";
 import {
   attentionCount,
@@ -42,8 +43,9 @@ function attention(role: StaffRole, requirement: ApiRequirement) {
   return attentionLabel(role, attentionCount(role, requirement));
 }
 
-function scopeLabel(requirement: ApiRequirement) {
-  if (requirement.scope === "Adviser") return "One adviser's groups";
+function scopeLabel(requirement: ApiRequirement, role: StaffRole) {
+  if (requirement.sections && requirement.sections.length > 0) return requirement.sections.join(", ");
+  if (requirement.scope === "Adviser") return role === "Adviser" ? "All my sections" : "One adviser's groups";
   if (requirement.scope === "Course") return `${requirement.course} groups`;
   return "All groups";
 }
@@ -98,13 +100,16 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
     setOpenId(id);
     setRows([]);
     setNotice("");
-    void loadRows(id);
+
+    // The Title Proposal has no uploaded files: it shows the title review instead.
+    if (requirements.find((item) => item.requirement_id === id)?.kind !== "Title Proposal") void loadRows(id);
   }
 
   // Called after a review, so the counts and the open table stay accurate.
   async function refresh(message?: string) {
     if (message) setNotice(message);
-    await Promise.all([loadRequirements(), openId ? loadRows(openId) : Promise.resolve()]);
+    const openIsTitle = requirements.find((item) => item.requirement_id === openId)?.kind === "Title Proposal";
+    await Promise.all([loadRequirements(), openId && !openIsTitle ? loadRows(openId) : Promise.resolve()]);
   }
 
   async function remove(requirement: ApiRequirement) {
@@ -183,6 +188,7 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
           const flag = attention(role, requirement);
           const progress = stats && stats.groups > 0 ? Math.round((stats.submitted / stats.groups) * 100) : 0;
           const canEdit = role === "Dean" || (role === "Adviser" && requirement.scope === "Adviser");
+          const isTitle = requirement.kind === "Title Proposal";
 
           return (
             <li key={requirement.requirement_id}>
@@ -197,7 +203,7 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
                   <p className="mt-0.5 text-xs text-[#7b877f]">
                     {requirement.stage}
                     {requirement.due_date ? ` · Due ${formatDate(requirement.due_date)}` : ""}
-                    {` · ${scopeLabel(requirement)}`}
+                    {` · ${scopeLabel(requirement, role)}`}
                     {requirement.needs_grammar_check ? " · Grammar check" : ""}
                     {requirement.is_final_output ? " · Final output" : ""}
                   </p>
@@ -236,16 +242,25 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
                         <button type="button" onClick={() => setDialog({ requirement })} className="text-[#4f8f58] hover:underline">
                           Edit
                         </button>
-                        <button type="button" onClick={() => void remove(requirement)} className="text-[#b42318] hover:underline">
-                          Delete
-                        </button>
+                        {!isTitle && (
+                          <button type="button" onClick={() => void remove(requirement)} className="text-[#b42318] hover:underline">
+                            Delete
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {rowsLoading && <p className="px-4 py-6 text-xs text-[#7b877f]">Loading submissions...</p>}
+                  {isTitle && role === "Adviser" && (
+                    <AdviserTitleReview
+                      sections={requirement.sections}
+                      onChanged={() => void loadRequirements()}
+                    />
+                  )}
 
-                  {!rowsLoading && rows.length === 0 && (
+                  {!isTitle && rowsLoading && <p className="px-4 py-6 text-xs text-[#7b877f]">Loading submissions...</p>}
+
+                  {!isTitle && !rowsLoading && rows.length === 0 && (
                     <p className="px-4 py-6 text-xs text-[#9aa59e]">
                       {role === "Grammarian"
                         ? "No approved documents are waiting for a grammar check."
@@ -254,7 +269,7 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
                   )}
 
                   <ul className="divide-y divide-[#edf2ec]">
-                    {rows.map((row) => (
+                    {!isTitle && rows.map((row) => (
                       <SubmissionRow
                         key={row.project_id}
                         role={role}

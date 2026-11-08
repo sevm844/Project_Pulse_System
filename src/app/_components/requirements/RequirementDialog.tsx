@@ -1,10 +1,73 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../_lib/api";
-import { COURSE_OPTIONS, errorMessage } from "../../_lib/groups";
+import { COURSE_OPTIONS, errorMessage, type ApiGroup } from "../../_lib/groups";
 import type { ApiRequirement } from "../../_lib/requirements";
 import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
+
+// A dropdown with checkboxes: pick the sections an assignment is for. Nothing picked = all of them.
+function SectionPicker({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const summary = value.length === 0 ? "All my sections" : value.join(", ");
+
+  function toggle(option: string) {
+    onChange(value.includes(option) ? value.filter((item) => item !== option) : [...value, option]);
+  }
+
+  return (
+    <div
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`${fieldClass} flex items-center justify-between gap-3 text-left`}
+      >
+        <span className="truncate">{summary}</span>
+        <span aria-hidden className="text-xs text-[#9aa59e]">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-[#dfe8df] bg-white py-1">
+          <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-[#203028] hover:bg-[#f3f7f1]">
+            <input type="checkbox" checked={value.length === 0} onChange={() => onChange([])} />
+            All my sections
+          </label>
+
+          {options.map((option) => (
+            <label
+              key={option}
+              className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-[#203028] hover:bg-[#f3f7f1]"
+            >
+              <input type="checkbox" checked={value.includes(option)} onChange={() => toggle(option)} />
+              {option}
+            </label>
+          ))}
+
+          {options.length === 0 && <p className="px-3 py-2 text-xs text-[#9aa59e]">Create a group to see its section here.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -25,8 +88,33 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const [course, setCourse] = useState(requirement?.course ?? "");
   const [grammar, setGrammar] = useState(requirement?.needs_grammar_check ?? false);
   const [finalOutput, setFinalOutput] = useState(requirement?.is_final_output ?? false);
+  const [sections, setSections] = useState<string[]>(requirement?.sections ?? []);
+  const [sectionOptions, setSectionOptions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // The built-in Title Proposal keeps its name and rules: only the instructions, due date and sections change.
+  const isTitle = requirement?.kind === "Title Proposal";
+
+  // An adviser picks from the sections she actually advises.
+  useEffect(() => {
+    if (role !== "Adviser") return;
+    let cancelled = false;
+
+    apiFetch<ApiGroup[]>("/groups")
+      .then((groups) => {
+        if (cancelled) return;
+        const labels = groups.filter((group) => group.group_status !== "Closed").map((group) => `${group.course} ${group.section}`);
+        setSectionOptions([...new Set([...labels, ...(requirement?.sections ?? [])])].sort());
+      })
+      .catch(() => {
+        if (!cancelled) setSectionOptions(requirement?.sections ?? []);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, requirement]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +135,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             course: role === "Dean" ? course || null : null,
             needs_grammar_check: grammar,
             is_final_output: finalOutput,
+            sections: role === "Adviser" && sections.length > 0 ? sections : null,
           }),
         },
       );
@@ -68,47 +157,54 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
         className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_24px_70px_rgba(31,42,36,0.22)]"
       >
         <h2 id="requirement-dialog-title" className="text-lg font-semibold text-[#203028]">
-          {requirement ? "Edit requirement" : "New requirement"}
+          {isTitle ? "Title Proposal" : requirement ? "Edit requirement" : "New requirement"}
         </h2>
         <p className="mt-1 text-xs text-[#7b877f]">
-          {role === "Adviser"
-            ? "Students in your groups will see this in their Requirements."
-            : "Students will see this in their Requirements."}
+          {isTitle
+            ? "This is every group's first assignment. Add your directions for the title proposal."
+            : role === "Adviser"
+              ? "Students in the sections you pick will see this in their Requirements."
+              : "Students will see this in their Requirements."}
         </p>
 
         <div className="mt-5 space-y-4">
-          <label className="block text-xs font-semibold text-[#59645d]">
-            Title
-            <input
-              required
-              maxLength={150}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="e.g., Chapter 1 draft"
-              className={fieldClass}
-            />
-          </label>
+          {!isTitle && (
+            <label className="block text-xs font-semibold text-[#59645d]">
+              Title
+              <input
+                required
+                maxLength={150}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="e.g., Chapter 1 draft"
+                className={fieldClass}
+              />
+            </label>
+          )}
 
           <label className="block text-xs font-semibold text-[#59645d]">
-            Instructions (optional)
+            Instructions for students
             <textarea
-              rows={3}
+              rows={5}
               maxLength={2000}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              className={`${fieldClass} resize-none`}
+              placeholder="Tell your students what to prepare, what format you expect, and what you will look for."
+              className={`${fieldClass} resize-none leading-6`}
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-semibold text-[#59645d]">
-              Stage
-              <select value={stage} onChange={(event) => setStage(event.target.value)} className={fieldClass}>
-                {REQUIREMENT_STAGES.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </label>
+          <div className={isTitle ? "" : "grid grid-cols-2 gap-3"}>
+            {!isTitle && (
+              <label className="block text-xs font-semibold text-[#59645d]">
+                Stage
+                <select value={stage} onChange={(event) => setStage(event.target.value)} className={fieldClass}>
+                  {REQUIREMENT_STAGES.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label className="block text-xs font-semibold text-[#59645d]">
               Due date
@@ -116,6 +212,16 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             </label>
           </div>
 
+          {role === "Adviser" && (
+            <div>
+              <p className="text-xs font-semibold text-[#59645d]">For which sections?</p>
+              <div className="mt-1.5">
+                <SectionPicker options={sectionOptions} value={sections} onChange={setSections} />
+              </div>
+            </div>
+          )}
+
+          {!isTitle && (
           <div>
             <p className="text-xs font-semibold text-[#59645d]">Students submit</p>
             <div className="mt-1.5 inline-flex rounded-lg border border-[#dfe8df] p-0.5 text-xs font-semibold">
@@ -134,6 +240,8 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             </div>
           </div>
 
+          )}
+
           {role === "Dean" && (
             <label className="block text-xs font-semibold text-[#59645d]">
               For
@@ -148,6 +256,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             </label>
           )}
 
+          {!isTitle && (
           <div className="space-y-2.5 text-sm text-[#203028]">
             <label className="flex items-start gap-2.5">
               <input type="checkbox" checked={grammar} onChange={(event) => setGrammar(event.target.checked)} className="mt-1" />
@@ -165,6 +274,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
               </span>
             </label>
           </div>
+          )}
         </div>
 
         {error && (

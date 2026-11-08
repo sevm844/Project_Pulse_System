@@ -52,6 +52,17 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   (Records) track their own progress in their own fields. A Proposal Defense can only be scheduled for a Ready group.
   Requirement `stage` labels live in `Requirement::STAGES` / `REQUIREMENT_STAGES`, separate from the proposal stages.
 
+## Assignments (Requirements page) — Title Proposal and sections
+- **Title Proposal is the first assignment**, not a separate page. Each adviser automatically gets one built-in
+  `requirements` row (`kind = 'Title Proposal'`, created by `Requirement::titleProposalFor`). The student proposes titles and the
+  adviser decides on them inside the Requirements page (`StudentTitleProposals`, `AdviserTitleReview`). The Module 2 rules
+  above still apply unchanged. It cannot be deleted; the adviser may only edit its instructions, due date and sections. The
+  Dean's Requirements list leaves it out (the Dean uses the endorsement queue).
+- **Instructions:** every assignment has "Instructions for students" (`requirements.description`), shown to students as "From <adviser>".
+- **Sections:** an assignment can be limited to chosen sections (`requirements.sections`, labels like "BSIT 4A", NULL = all of the
+  adviser's groups). The dropdown lists the sections the adviser actually advises. `Requirement::appliesTo` enforces it.
+- There is no `/adviser/title-proposals` page any more (the old address redirects to Requirements).
+
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`
 - It automatically attaches the Bearer token from storage

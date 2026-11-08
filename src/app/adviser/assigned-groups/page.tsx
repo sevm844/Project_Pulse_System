@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
@@ -63,6 +64,7 @@ export default function AssignedGroupsPage() {
 
   // The backend already leaves out students who are in a group for this school year + semester.
   const availableStudents = students;
+  const activeSchoolYear = isSchoolYear(schoolYear) ? schoolYear : "";
   const selectedMembers = buildSelectedGroupMembers(availableStudents, leaderUid, selectedIds);
   const memberCount = availableStudents.filter((student) => student.uid === leaderUid || selectedIds.includes(student.uid)).length;
   const validMembers = Boolean(selectedMembers) && !studentsLoading && !studentsError;
@@ -128,8 +130,8 @@ export default function AssignedGroupsPage() {
       try {
         // Adviser-only endpoint: returns Active students only.
         const params = new URLSearchParams();
-        if (isSchoolYear(schoolYear)) {
-          params.set("school_year", schoolYear);
+        if (activeSchoolYear) {
+          params.set("school_year", activeSchoolYear);
           params.set("semester", semester);
         }
         const query = params.toString();
@@ -155,7 +157,7 @@ export default function AssignedGroupsPage() {
     }
     queueMicrotask(loadStudents);
     return () => { cancelled = true; };
-  }, [showCreateWizard, studentLoadAttempt, schoolYear, semester]);
+  }, [showCreateWizard, studentLoadAttempt, activeSchoolYear, semester]);
 
   const confirmedGroups = useMemo(() => groups.filter(isGroupConfirmed), [groups]);
 
@@ -252,8 +254,8 @@ export default function AssignedGroupsPage() {
           )}
         </Card>
 
-        {showCreateWizard && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1f2a24]/55 p-2 sm:p-4 backdrop-blur-sm">
+        {showCreateWizard && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1f2a24]/55 p-2 sm:p-4 backdrop-blur-sm">
             <div className="grid max-h-[calc(100dvh-1rem)] min-h-0 w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-[0_28px_80px_rgba(31,42,36,0.28)] sm:max-h-[calc(100dvh-2rem)] lg:grid-cols-[210px_minmax(0,1fr)]">
               <aside className="hidden border-r border-[#edf2ec] bg-[#f7fbf6] p-4 lg:flex lg:flex-col lg:justify-between">
                 <div>
@@ -315,7 +317,7 @@ export default function AssignedGroupsPage() {
                     </div>
                     <div>
                       <label htmlFor="school-year" className="text-xs font-semibold text-[#59645d]">School Year</label>
-                      <input id="school-year" placeholder="e.g., 2026-2027" value={schoolYear} onChange={(e) => { setSchoolYear(e.target.value); resetMembers(); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]" />
+                      <input id="school-year" placeholder="e.g., 2026-2027" value={schoolYear} onChange={(e) => { const value = e.target.value; if (isSchoolYear(value) || activeSchoolYear) resetMembers(); setSchoolYear(value); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]" />
                     </div>
                   </div>
 
@@ -350,13 +352,13 @@ export default function AssignedGroupsPage() {
                         ))}
                       </select>
                     </div>
-                    <label className="block text-xs font-semibold text-[#59645d]">Semester
-                      <select value={semester} onChange={(event) => { setSemester(event.target.value); resetMembers(); }} className="mt-1 w-full rounded-md border border-[#dfe8df] h-9 px-2.5 py-1.5 text-xs">{GROUP_SEMESTERS.map((item) => <option key={item}>{item}</option>)}</select>
-                    </label>
+                    <div><label htmlFor="semester" className="text-xs font-semibold text-[#59645d]">Semester</label>
+                      <select id="semester" value={semester} onChange={(event) => { setSemester(event.target.value); resetMembers(); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:border-[#94d29a] focus:ring-2 focus:ring-[#d7f7d8]">{GROUP_SEMESTERS.map((item) => <option key={item}>{item}</option>)}</select>
+                    </div>
                   </div>
 
                   <div className="space-y-2.5">
-                    {studentsLoading && <p role="status" className="text-xs text-[#7b877f]">Loading registered students...</p>}
+                    <p role="status" className="h-4 text-xs text-[#7b877f]">{studentsLoading ? "Loading registered students..." : ""}</p>
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
                     {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. Students must be approved by the Research Coordinator first; students already in a group for this school year and semester are excluded.</p>}
                     <label className="block text-xs font-semibold text-[#59645d]">Group Leader
@@ -450,7 +452,8 @@ export default function AssignedGroupsPage() {
                 </div>
               </section>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
 
         <Card className="p-5">
@@ -586,7 +589,7 @@ export default function AssignedGroupsPage() {
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
                         <Link
-                          href="/adviser/title-proposals"
+                          href="/adviser/requirements"
                           className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
                         >
                           Title Proposals

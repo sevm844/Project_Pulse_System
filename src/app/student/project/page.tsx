@@ -2,34 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
-import { StageSteps, titleStatusClass } from "../../_components/ProposalStage";
-import { apiFetch } from "../../_lib/api";
+import { StageSteps } from "../../_components/ProposalStage";
 import {
   errorMessage,
   fetchMyGroup,
   leaveGroup,
   NO_TITLE_YET,
   type ApiGroup,
-  type ApiTitleSubmission,
 } from "../../_lib/groups";
-import { formatDate } from "../../_lib/requirements";
 
-type ProjectTab = "overview" | "titles" | "team";
+type ProjectTab = "overview" | "team";
 
 const tabs: Array<[ProjectTab, string]> = [
   ["overview", "Overview"],
-  ["titles", "Title Proposals"],
   ["team", "Team"],
 ];
-
-const emptyForm = {
-  proposed_title: "",
-  project_description: "",
-  technology_stack: "",
-};
 
 const inputClass =
   "w-full rounded-xl border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -40,11 +30,8 @@ export default function ProjectPage() {
   const [leaveReason, setLeaveReason] = useState("");
   const [tab, setTab] = useState<ProjectTab>("overview");
   const [group, setGroup] = useState<ApiGroup | null>(null);
-  const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -56,13 +43,6 @@ export default function ProjectPage() {
         if (cancelled) return;
 
         setGroup(myGroup);
-
-        if (myGroup?.project) {
-          const submissions = await apiFetch<ApiTitleSubmission[]>(
-            `/projects/${myGroup.project.project_id}/titles`,
-          );
-          if (!cancelled) setTitles(submissions);
-        }
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, "Unable to load your project."));
       }
@@ -76,37 +56,6 @@ export default function ProjectPage() {
       cancelled = true;
     };
   }, []);
-
-  async function submitTitle(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!group?.project) return;
-
-    setSaving(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const created = await apiFetch<ApiTitleSubmission>(
-        `/projects/${group.project.project_id}/titles`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            proposed_title: form.proposed_title.trim(),
-            project_description: form.project_description.trim() || null,
-            technology_stack: form.technology_stack.trim() || null,
-          }),
-        },
-      );
-
-      setTitles((current) => [created, ...current]);
-      setForm(emptyForm);
-      setNotice("Title proposal sent to your adviser for review.");
-    } catch (err) {
-      setError(errorMessage(err, "Unable to submit the title proposal."));
-    }
-
-    setSaving(false);
-  }
 
   async function leave() {
     if (!group) return;
@@ -152,8 +101,6 @@ export default function ProjectPage() {
   const approvedTitle = group.project?.project_title || null;
   const stage = group.project?.proposal_stage ?? "Title Proposal";
   const endorsed = Boolean(group.project?.endorsement);
-  const canPropose = stage === "Title Proposal" && group.group_status === "Active";
-  const inPlay = titles.filter((item) => item.title_status === "Pending" || item.title_status === "Approved").length;
 
   return (
     <StudentShell title="My Project">
@@ -224,162 +171,6 @@ export default function ProjectPage() {
               ))}
             </div>
           </Card>
-        )}
-
-        {tab === "titles" && (
-          <div className="space-y-5">
-            {!canPropose && (
-              <Card className="p-5">
-                <p className="text-sm text-[#59645d]">
-                  {group.group_status !== "Active"
-                    ? "This group is no longer active."
-                    : "Title proposals are closed. Your adviser already sent your approved titles to the Dean."}
-                </p>
-              </Card>
-            )}
-
-            {canPropose && inPlay >= 3 && (
-              <Card className="p-5">
-                <p className="text-sm text-[#59645d]">
-                  You already have 3 titles waiting for a decision or approved. Your adviser will decide which to send to
-                  the Dean.
-                </p>
-              </Card>
-            )}
-
-            {canPropose && inPlay < 3 && (
-              <Card className="p-5">
-                <h3 className="text-lg font-semibold text-[#203028]">
-                  Submit a Title Proposal
-                </h3>
-                <p className="mt-1 text-sm text-[#7b877f]">
-                  Your adviser decides on each proposal. Approved titles go to the Dean for endorsement, and after the
-                  client consultation you choose the one you will defend. You can have up to 3 in play at a time.
-                </p>
-
-                <form onSubmit={submitTitle} className="mt-5 space-y-4">
-                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
-                    <span>Proposed Title</span>
-                    <input
-                      required
-                      maxLength={255}
-                      value={form.proposed_title}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          proposed_title: event.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
-                  </label>
-
-                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
-                    <span>Description (optional)</span>
-                    <textarea
-                      rows={4}
-                      maxLength={5000}
-                      value={form.project_description}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          project_description: event.target.value,
-                        }))
-                      }
-                      className={`${inputClass} resize-none leading-6`}
-                    />
-                  </label>
-
-                  <label className="block space-y-1.5 text-sm font-medium text-[#203028]">
-                    <span>Technology Stack (optional)</span>
-                    <input
-                      maxLength={255}
-                      value={form.technology_stack}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          technology_stack: event.target.value,
-                        }))
-                      }
-                      placeholder="e.g., Next.js, Laravel, PostgreSQL"
-                      className={inputClass}
-                    />
-                  </label>
-
-                  {error && (
-                    <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                      {error}
-                    </p>
-                  )}
-
-                  {notice && (
-                    <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                      {notice}
-                    </p>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={saving || !form.proposed_title.trim()}
-                    className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
-                  >
-                    {saving ? "Sending..." : "Send to Adviser"}
-                  </button>
-                </form>
-              </Card>
-            )}
-
-            <Card className="p-5">
-              <h3 className="text-lg font-semibold text-[#203028]">
-                Your Proposals
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                {titles.length === 0 && (
-                  <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">
-                    You have not submitted any title proposals yet.
-                  </p>
-                )}
-
-                {titles.map((item) => (
-                  <div key={item.title_id} className="rounded-xl bg-[#f8faf7] p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#203028]">
-                          {item.proposed_title}
-                        </p>
-                        <p className="mt-1 text-xs text-[#7b877f]">
-                          Submitted {formatDate(item.submitted_at)}
-                          {item.technology_stack ? ` • ${item.technology_stack}` : ""}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${titleStatusClass[item.title_status]}`}
-                      >
-                        {item.title_status}
-                      </span>
-                    </div>
-
-                    {item.project_description && (
-                      <p className="mt-3 text-sm leading-6 text-[#59645d]">
-                        {item.project_description}
-                      </p>
-                    )}
-
-                    {item.review_remarks && (
-                      <p className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#59645d]">
-                        <span className="font-semibold text-[#203028]">
-                          Adviser remarks:
-                        </span>{" "}
-                        {item.review_remarks}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
         )}
 
         {tab === "team" && (

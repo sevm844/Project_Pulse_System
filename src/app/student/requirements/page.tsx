@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import StudentShell from "../_components/StudentShell";
+import StudentTitleProposals from "../../_components/groups/StudentTitleProposals";
 import VersionHistory from "../../_components/requirements/VersionHistory";
 import { apiFetch, downloadSubmission } from "../../_lib/api";
-import { errorMessage, fetchMyGroup } from "../../_lib/groups";
+import { errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
 import {
   describeStatus,
+  describeTitleProposal,
   feedbackFor,
   formatDate,
   isOverdue,
@@ -26,6 +27,8 @@ const tabLabels: Record<Tab, string> = {
 };
 
 function tabOf(requirement: ApiRequirement): Tab {
+  if (requirement.kind === "Title Proposal") return describeTitleProposal(requirement.title_summary).tab;
+
   const submission = requirement.submission;
 
   if (!submission || submission.status === "Needs Revision") return "todo";
@@ -37,7 +40,7 @@ function tabOf(requirement: ApiRequirement): Tab {
 
 export default function StudentRequirementsPage() {
   const [requirements, setRequirements] = useState<ApiRequirement[]>([]);
-  const [hasTitle, setHasTitle] = useState(false);
+  const [group, setGroup] = useState<ApiGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("todo");
@@ -45,13 +48,13 @@ export default function StudentRequirementsPage() {
 
   const load = useCallback(async () => {
     try {
-      const [list, group] = await Promise.all([
+      const [list, myGroup] = await Promise.all([
         apiFetch<ApiRequirement[]>("/requirements"),
         fetchMyGroup(),
       ]);
 
       setRequirements(list);
-      setHasTitle(Boolean(group?.project?.project_title));
+      setGroup(myGroup);
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Unable to load your requirements."));
@@ -69,17 +72,17 @@ export default function StudentRequirementsPage() {
 
     for (const requirement of requirements) result[tabOf(requirement)] += 1;
 
-    // The project title is always the first requirement.
-    result[hasTitle ? "done" : "todo"] += 1;
-
     return result;
-  }, [hasTitle, requirements]);
+  }, [requirements]);
 
   const visible = requirements.filter((requirement) => tabOf(requirement) === tab);
 
   const byStage = REQUIREMENT_STAGES.map((stage) => ({
     stage,
-    items: visible.filter((requirement) => requirement.stage === stage),
+    // The Title Proposal is the first assignment, so it always comes first in its stage.
+    items: visible
+      .filter((requirement) => requirement.stage === stage)
+      .sort((a, b) => Number(b.kind === "Title Proposal") - Number(a.kind === "Title Proposal")),
   })).filter((section) => section.items.length > 0);
 
   return (
@@ -115,28 +118,9 @@ export default function StudentRequirementsPage() {
           </p>
         )}
 
-        {tab !== "review" && (tab === "done") === hasTitle && (
-          <Link
-            href="/student/project"
-            className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-[#edf2ec] px-4 py-3.5 transition hover:bg-[#fbfdfb]"
-          >
-            <div>
-              <p className="text-sm font-semibold text-[#203028]">Project title</p>
-              <p className="mt-0.5 text-xs text-[#7b877f]">
-                Proposal Defense · {hasTitle ? "Approved by your adviser" : "Submit title proposals to your adviser"}
-              </p>
-            </div>
-
-            <span className="flex items-center gap-2 text-xs text-[#59645d]">
-              <span className={`h-2 w-2 rounded-full ${hasTitle ? toneDot.done : toneDot.idle}`} />
-              {hasTitle ? "Approved" : "Not submitted"}
-            </span>
-          </Link>
-        )}
-
         {loading && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
 
-        {!loading && byStage.length === 0 && (tab === "review" || (tab === "done") !== hasTitle) && (
+        {!loading && byStage.length === 0 && (
           <p className="mt-10 text-center text-sm text-[#9aa59e]">
             {tab === "todo"
               ? "Nothing left to do. You are all caught up."
@@ -157,6 +141,7 @@ export default function StudentRequirementsPage() {
                 <RequirementRow
                   key={requirement.requirement_id}
                   requirement={requirement}
+                  group={group}
                   open={openId === requirement.requirement_id}
                   onToggle={() =>
                     setOpenId((current) =>
@@ -176,19 +161,22 @@ export default function StudentRequirementsPage() {
 
 function RequirementRow({
   requirement,
+  group,
   open,
   onToggle,
   onSaved,
 }: {
   requirement: ApiRequirement;
+  group: ApiGroup | null;
   open: boolean;
   onToggle: () => void;
   onSaved: () => void;
 }) {
   const submission = requirement.submission ?? null;
-  const status = describeStatus(requirement, submission);
+  const isTitle = requirement.kind === "Title Proposal";
+  const status = isTitle ? describeTitleProposal(requirement.title_summary) : describeStatus(requirement, submission);
   const feedback = feedbackFor(submission);
-  const overdue = !submission && isOverdue(requirement.due_date);
+  const overdue = (isTitle ? status.tone === "idle" || status.tone === "problem" : !submission) && isOverdue(requirement.due_date);
   const locked = submission?.status === "Approved";
 
   const [file, setFile] = useState<File | null>(null);
@@ -258,8 +246,15 @@ function RequirementRow({
       {open && (
         <div className="space-y-5 border-t border-[#edf2ec] bg-[#fbfdfb] px-4 py-5 text-sm">
           {requirement.description && (
-            <p className="leading-6 text-[#59645d]">{requirement.description}</p>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9aa59e]">
+                {requirement.created_by ? `From ${requirement.created_by}` : "Instructions"}
+              </p>
+              <p className="mt-1.5 whitespace-pre-line leading-6 text-[#59645d]">{requirement.description}</p>
+            </div>
           )}
+
+          {isTitle && group && <StudentTitleProposals group={group} onChanged={onSaved} />}
 
           {feedback?.text && (
             <div className="border-l-2 border-rose-300 pl-3">
@@ -309,7 +304,7 @@ function RequirementRow({
             </div>
           )}
 
-          {locked ? (
+          {isTitle ? null : locked ? (
             <p className="text-xs text-[#7b877f]">This requirement is approved. No further changes are needed.</p>
           ) : (
             <form onSubmit={submit} className="space-y-3">

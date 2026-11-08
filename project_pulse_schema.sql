@@ -344,6 +344,12 @@ CREATE TABLE audit_logs (
 );
 CREATE INDEX audit_logs_created_idx ON audit_logs (created_at DESC, audit_id DESC);
 
+-- Assignments (added 2026-11-09). Backend migration: 2026_11_09_000000_requirement_kind_and_sections.php
+-- sections: "BSIT 4A" style labels an assignment is limited to (NULL = all). kind: the built-in Title Proposal is one per adviser.
+ALTER TABLE requirements ADD COLUMN sections JSONB;
+ALTER TABLE requirements ADD COLUMN kind VARCHAR(20) NOT NULL DEFAULT 'Standard' CHECK (kind IN ('Standard', 'Title Proposal'));
+CREATE UNIQUE INDEX requirements_one_title_proposal_per_adviser ON requirements (adviser_id) WHERE kind = 'Title Proposal';
+
 -- Module 2 rules (added 2026-11-08). Backend migration: 2026_11_08_000000_module2_proposal_workflow.php
 -- Module 2 owns only its 4 stages; Defenses, Requirements and Records track their own progress.
 ALTER TABLE projects RENAME COLUMN current_stage TO proposal_stage;

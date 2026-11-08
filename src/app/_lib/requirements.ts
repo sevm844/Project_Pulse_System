@@ -20,6 +20,15 @@ export type ApiSubmission = {
   received_at: string | null;
 };
 
+// Where a group stands in the Title Proposal assignment (students only).
+export type TitleSummary = {
+  stage: string;
+  total: number;
+  pending: number;
+  approved: number;
+  needs_revision: number;
+};
+
 export type ApiRequirement = {
   requirement_id: number;
   title: string;
@@ -29,12 +38,17 @@ export type ApiRequirement = {
   due_date: string | null;
   course: string | null;
   scope: "Adviser" | "Course" | "Program";
+  // 'Title Proposal' is the built-in first assignment; everything else is 'Standard'.
+  kind: "Standard" | "Title Proposal";
+  // "BSIT 4A" style labels the assignment is limited to (null = all of the adviser's groups).
+  sections: string[] | null;
   needs_grammar_check: boolean;
   is_final_output: boolean;
   created_by: string | null;
   created_at: string | null;
   // Students get their own group's submission; staff get counts.
   submission?: ApiSubmission | null;
+  title_summary?: TitleSummary;
   stats?: {
     groups: number;
     submitted: number;
@@ -91,6 +105,29 @@ export function describeStatus(
   }
 
   return { label: "Approved", tone: "done" };
+}
+
+// The one label a student sees for the Title Proposal, and which tab it belongs in.
+export function describeTitleProposal(summary: TitleSummary | undefined): {
+  label: string;
+  tone: StatusTone;
+  tab: "todo" | "review" | "done";
+} {
+  if (!summary || summary.total === 0) return { label: "Not started", tone: "idle", tab: "todo" };
+
+  if (summary.stage === "Ready for Proposal Defense") return { label: "Done", tone: "done", tab: "done" };
+  if (summary.stage === "Dean's Endorsement") return { label: "With the Dean", tone: "waiting", tab: "review" };
+  if (summary.stage === "Client Consultation") return { label: "Client consultation", tone: "waiting", tab: "review" };
+
+  if (summary.pending > 0) return { label: "Under review", tone: "waiting", tab: "review" };
+  if (summary.approved > 0) return { label: "Approved by adviser", tone: "waiting", tab: "review" };
+
+  return { label: "Needs revision", tone: "problem", tab: "todo" };
+}
+
+// "BSIT 4A, BSIT 4B" or "All sections".
+export function sectionsLabel(sections: string[] | null | undefined) {
+  return sections && sections.length > 0 ? sections.join(", ") : "All sections";
 }
 
 // What a reviewer wrote that the student should read.
