@@ -12,7 +12,7 @@ function SectionPicker({
   value,
   onChange,
 }: {
-  options: string[];
+  options: string[] | null;
   value: string[];
   onChange: (next: string[]) => void;
 }) {
@@ -52,7 +52,7 @@ function SectionPicker({
             All my sections
           </label>
 
-          {options.map((option) => (
+          {(options ?? []).map((option) => (
             <label
               key={option}
               className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-[#203028] hover:bg-[#f3f7f1]"
@@ -62,7 +62,8 @@ function SectionPicker({
             </label>
           ))}
 
-          {options.length === 0 && <p className="px-3 py-2 text-xs text-[#9aa59e]">Create a group to see its section here.</p>}
+          {options === null && <p className="px-3 py-2 text-xs text-[#9aa59e]">Loading your sections...</p>}
+          {options?.length === 0 && <p className="px-3 py-2 text-xs text-[#9aa59e]">Create a group to see its section here.</p>}
         </div>
       )}
     </div>
@@ -94,7 +95,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const [resubmit, setResubmit] = useState(requirement?.allow_resubmission ?? true);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [removeAttachment, setRemoveAttachment] = useState(false);
-  const [sectionOptions, setSectionOptions] = useState<string[]>([]);
+  const [sectionOptions, setSectionOptions] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 

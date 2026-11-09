@@ -4,7 +4,7 @@ import Card from "../_components/Card";
 
 const tools = [
   ["Users", "Create staff accounts, change roles, disable accounts and reset passwords.", "/dean/administration/users"],
-  ["Groups", "Assign advisers and move groups through the project stages.", "/dean/administration/groups"],
+  ["Groups", "Assign advisers and confirm group closures.", "/dean/administration/groups"],
   ["Audit Logs", "Review who did what across the system.", "/dean/administration/audit-logs"],
   ["Messaging Window", "Set the hours when students may send messages.", "/dean/administration/message-settings"],
 ] as const;

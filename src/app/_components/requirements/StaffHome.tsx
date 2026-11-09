@@ -42,8 +42,9 @@ export default function StaffHome({ role }: { role: HomeRole }) {
   const [groups, setGroups] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const progress = useProgress().items;
-  const risks = useRisks().items;
+  // Only advisers follow groups here; the other roles are not allowed to ask for these.
+  const progress = useProgress(role === "Adviser").items;
+  const risks = useRisks(role === "Adviser").items;
 
   useEffect(() => {
     async function load() {

@@ -6,11 +6,13 @@ import type { ApiProgress } from "../../_lib/progress";
 
 // The progress of every group this user follows. It is a nice-to-have on top of a page, so a failure
 // leaves the list empty instead of breaking the page.
-export function useProgress() {
+export function useProgress(enabled = true) {
   const [items, setItems] = useState<ApiProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let cancelled = false;
 
     apiFetch<ApiProgress[]>("/progress")
@@ -25,7 +27,7 @@ export function useProgress() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   return { items, loading };
 }

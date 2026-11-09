@@ -5,11 +5,13 @@ import { apiFetch } from "../../_lib/api";
 import type { ApiRisk } from "../../_lib/health";
 
 // The groups that need attention. A nice-to-have on top of a page, so a failure leaves the list empty.
-export function useRisks() {
+export function useRisks(enabled = true) {
   const [items, setItems] = useState<ApiRisk[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let cancelled = false;
 
     apiFetch<ApiRisk[]>("/risks")
@@ -24,7 +26,7 @@ export function useRisks() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   return { items, loading };
 }

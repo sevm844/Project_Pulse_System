@@ -20,7 +20,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | # | Task | Result | Notes |
 |---|---|---|---|
 | 1 | Log in. On the dashboard, find which phase your group is in and what to do next. | | |
-| 2 | Open **Requirements**. Find the **Title Proposal** and read your adviser's instructions. | | |
+| 2 | Open **Requirements**. Find the **Title Proposal** (under **In review** when a title is already waiting) and read your adviser's instructions. | | |
 | 3 | (Student 1) Propose a new title for your group. See it appear in your list as "Pending". | | |
 | 4 | (Student 1) Open **Chapter 1 draft**. Try to upload a file that is *not* allowed (for example a picture). Read the message. | | |
 | 5 | (Student 1) Upload a PDF for Chapter 1 draft. See the status change to "Under review". | | |
@@ -29,7 +29,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 8 | (Student 6) Open **Defense**. Find the date, time, room and panel of your proposal defense. | | |
 | 9 | Open **Chat** and send a message to your group or your adviser. | | |
 | 10 | Open **Notifications**. Can you tell what each one is about, and open it? | | |
-| 11 | Open **My Project** and find your team members. Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
+| 11 | Open **My Project** and find your team members (the **Team** tab). Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
 | 12 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
@@ -48,7 +48,7 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 6 | In the same form, limit the file types to PDF only, set a size limit and attach a template file. | | |
 | 7 | (Adviser 2) Open **System architecture diagram** and **Final manuscript**. Review a submission: approve or ask for revision. | | |
 | 8 | Open **Documents**. Find a student's file and preview it. | | |
-| 9 | Open **Assigned Groups**. See each group's members and phase. Try the "Make leader" action on a group. | | |
+| 9 | Open **Assigned Groups**. See each group's members and phase. Try the "Make leader" action on a group (this changes the demo group's leader). | | |
 | 10 | (Adviser 2) Open **Defense** and look at how you would schedule the next defense for UAT Delta. | | |
 | 11 | On the dashboard, find **Groups that need attention**. Which of your groups is behind, and why? | | |
 | 12 | In **Assigned Groups**, press **Show timeline** on a group and read its deadlines. | | |
