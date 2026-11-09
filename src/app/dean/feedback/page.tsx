@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import DeanShell from "../_components/DeanShell";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
+import { downloadCsv } from "../../_lib/finalOutputs";
 import { formatDate } from "../../_lib/requirements";
 
 type Feedback = {
@@ -35,6 +36,9 @@ const categoryClass: Record<Feedback["category"], string> = {
 
 const selectClass =
   "rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs text-[#59645d] outline-none focus:ring-2 focus:ring-[#d7f7d8]";
+
+const exportClass =
+  "rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs font-semibold text-[#123f2b] transition hover:bg-[#f4f8f3]";
 
 export default function DeanFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([]);
@@ -73,6 +77,33 @@ export default function DeanFeedbackPage() {
     }
   }
 
+  // One row per feedback message, whatever the filters show, so the whole record can be kept.
+  function exportFeedback() {
+    downloadCsv("uat-feedback.csv", [
+      ["Date", "Role", "Type", "Status", "Page", "Message"],
+      ...items.map((item) => [item.created_at ? item.created_at.slice(0, 10) : "", item.role, item.category, item.status, item.page, item.message]),
+    ]);
+  }
+
+  // One row per tester (role only, no names): the ten answers, the SUS score and the comment.
+  async function exportSurvey() {
+    try {
+      const data = await apiFetch<{
+        questions: string[];
+        responses: { role: string; answers: number[]; score: number; comment: string | null; at: string | null }[];
+      }>("/survey/responses");
+
+      downloadCsv("uat-usability-survey.csv", [
+        ["Role", ...data.questions.map((_, index) => `Q${index + 1}`), "SUS score", "Comment", "Date"],
+        ...data.responses.map((row) => [row.role, ...row.answers, row.score, row.comment, row.at ? row.at.slice(0, 10) : ""]),
+        [],
+        ...data.questions.map((question, index) => [`Q${index + 1}`, question]),
+      ]);
+    } catch (err) {
+      setError(errorMessage(err, "Unable to export the survey."));
+    }
+  }
+
   const visible = items.filter(
     (item) => (status === "All" || item.status === status) && (category === "All" || item.category === category),
   );
@@ -92,7 +123,14 @@ export default function DeanFeedbackPage() {
         )}
 
         <section className="mt-8" aria-label="Usability survey">
-          <h2 className="text-sm font-semibold text-[#203028]">Usability survey (SUS)</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-[#203028]">Usability survey (SUS)</h2>
+            {summary && summary.count > 0 && (
+              <button type="button" onClick={() => void exportSurvey()} className={exportClass}>
+                Export CSV
+              </button>
+            )}
+          </div>
 
           {summary && summary.count === 0 && <p className="mt-3 text-sm text-[#9aa59e]">Nobody has answered yet.</p>}
 
@@ -138,6 +176,11 @@ export default function DeanFeedbackPage() {
             <h2 className="mr-auto text-sm font-semibold text-[#203028]">
               Feedback <span className="font-normal text-[#9aa59e]">· {open} new</span>
             </h2>
+            {items.length > 0 && (
+              <button type="button" onClick={exportFeedback} className={exportClass}>
+                Export CSV
+              </button>
+            )}
             <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by type" className={selectClass}>
               {["All", "Bug", "Suggestion", "Question", "Praise"].map((item) => (
                 <option key={item} value={item}>

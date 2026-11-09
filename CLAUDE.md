@@ -101,7 +101,8 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   role: `docs/UAT_CHECKLISTS.md` here.
 - **Feedback button** (top right of every role's pages, `FeedbackDialog` in `RoleShell`): feedback (Bug / Suggestion / Question / Praise,
   records the page) and the 10-question System Usability Scale survey (`survey_responses`, one per person, score 0-100).
-  Everyone sends; only the Dean reads them, on `/dean/feedback`.
+  Everyone sends; only the Dean reads them, on `/dean/feedback`, where two "Export CSV" buttons save the feedback list and the survey
+  sheets (`GET /survey/responses`, role only, no names) before `uat:reset` removes them.
 
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`
