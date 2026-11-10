@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import type { ApiGroup } from "../../_lib/groups";
 import { errorMessage } from "../../_lib/groups";
+import RoleCalendar from "../RoleCalendar";
 import RiskList from "../health/RiskList";
 import { useRisks } from "../health/useRisks";
 import { ProgressList } from "../progress/ProgressViews";
@@ -70,7 +71,8 @@ export default function StaffHome({ role }: { role: HomeRole }) {
   const total = waiting.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto grid max-w-5xl gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="min-w-0">
       {error && (
         <p role="alert" className="mb-4 text-sm text-[#b42318]">
           {error}
@@ -152,6 +154,11 @@ export default function StaffHome({ role }: { role: HomeRole }) {
       >
         Open requirements
       </Link>
+      </div>
+
+      <div className="xl:sticky xl:top-6 xl:self-start">
+        <RoleCalendar role={role} />
+      </div>
     </div>
   );
 }

@@ -53,6 +53,15 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   joined earliest becomes leader. If nobody is left the group becomes 'Pending Closure' until the Adviser/Dean confirms; it is
   never deleted. After the Dean's endorsement membership is locked; only the Dean's separate exception removal (reason +
   details, Critical audit entry) can change it.
+- **Closing a group:** a student is in at most one group that is not `Closed` (`Project::currentFor` is the one "current project" rule).
+  A group that lost every member is confirmed closed by its Adviser or the Dean. The Dean alone can also close a group that still has
+  members (`POST /groups/{id}/close` with `reason_category`, plus `reason` for "Other"): for a failed group that will retake, a stopped
+  project, or a disbanded group. That cancels its scheduled defenses, tells the students, adviser and panel, keeps all history, stores
+  `student_groups.closed_reason` and writes a Critical audit entry. Finished/archived groups are deliberately NOT closed automatically:
+  every student screen skips Closed groups, so closing them would hide a graduate's own project from them.
+- **Concurrency:** title proposals and decisions, stage moves, submissions, reviews, receipts, and defense scheduling, evaluation, result and
+  cancel all lock their rows (group, then project, then the item) and re-check the rule inside the lock. A review may send `version_no`
+  and is refused if a newer version was uploaded meanwhile (`StaffRequirements` sends it).
 - **Module boundaries:** after "Ready for Proposal Defense", Module 5 (Defenses), Module 3 (Requirements) and Module 7
   (Records) track their own progress in their own fields. A Proposal Defense can only be scheduled for a Ready group.
   Requirement `stage` labels live in `Requirement::STAGES` / `REQUIREMENT_STAGES`, separate from the proposal stages.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
-import StudentCalendar from "./_components/StudentCalendar";
+import RoleCalendar from "../_components/RoleCalendar";
 import Card from "./_components/Card";
 import { ProgressTracker } from "../_components/progress/ProgressViews";
 import { useProgress } from "../_components/progress/useProgress";
@@ -311,7 +311,7 @@ export default function StudentDashboardPage() {
         </div>
 
         <div className="xl:sticky xl:top-6 xl:self-start">
-          <StudentCalendar />
+          <RoleCalendar role="Student" />
         </div>
       </div>
     </StudentShell>

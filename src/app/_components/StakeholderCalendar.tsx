@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { CalendarEvent } from "../_lib/calendarEvents";
 
 type CalendarNote = {
   id: number;
@@ -15,6 +17,15 @@ type StakeholderCalendarProps = {
   categories: readonly string[];
   variant?: "default" | "glass";
   compact?: boolean;
+  // Real dates from the backend (defenses, due dates). Personal notes are kept in this browser only.
+  events?: CalendarEvent[];
+  eventsLoading?: boolean;
+  eventsFailed?: boolean;
+};
+
+const eventDot: Record<CalendarEvent["kind"], string> = {
+  Defense: "bg-amber-400",
+  Due: "bg-[#4f8f58]",
 };
 
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -76,6 +87,9 @@ export default function StakeholderCalendar({
   categories,
   variant = "default",
   compact = false,
+  events,
+  eventsLoading = false,
+  eventsFailed = false,
 }: StakeholderCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
@@ -105,6 +119,21 @@ export default function StakeholderCalendar({
 
   const selectedDateNotes = notes.filter((note) => note.date === selectedDate);
   const datesWithNotes = new Set(notes.map((note) => note.date));
+  // Without `events` this is a notes-only calendar.
+  const showEvents = events !== undefined;
+  const allEvents = useMemo(() => events ?? [], [events]);
+  const selectedDateEvents = allEvents.filter((event) => event.date === selectedDate);
+  const today = formatDateKey(new Date());
+  const comingUp = allEvents.filter((event) => event.date >= today && !event.done).slice(0, 4);
+
+  function kindsOn(dateKey: string) {
+    return new Set(allEvents.filter((event) => event.date === dateKey).map((event) => event.kind));
+  }
+
+  function showDate(dateKey: string) {
+    setSelectedDate(dateKey);
+    setCurrentMonth(parseDateKey(dateKey));
+  }
 
   function goToPreviousMonth() {
     setCurrentMonth(
@@ -204,6 +233,7 @@ export default function StakeholderCalendar({
           {calendarDays.map((item) => {
             const isSelected = item.key === selectedDate;
             const hasNote = datesWithNotes.has(item.key);
+            const kinds = kindsOn(item.key);
 
             return (
               <button
@@ -220,8 +250,13 @@ export default function StakeholderCalendar({
               >
                 {item.day}
 
-                {hasNote && !isSelected && (
-                  <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-[#123f2b]" />
+                {!isSelected && (hasNote || kinds.size > 0) && (
+                  <span className="absolute bottom-0.5 flex gap-0.5">
+                    {[...kinds].map((kind) => (
+                      <span key={kind} className={`h-1.5 w-1.5 rounded-full ${eventDot[kind]}`} />
+                    ))}
+                    {hasNote && <span className="h-1.5 w-1.5 rounded-full bg-[#123f2b]" />}
+                  </span>
                 )}
               </button>
             );
@@ -236,6 +271,55 @@ export default function StakeholderCalendar({
             : "border-[#edf2ec] bg-[#fbfdfb]"
         }`}
       >
+        {showEvents && (
+          <div className="mb-5">
+            <h3 className={`${panelTitleSize} font-semibold text-[#203028]`}>Coming up</h3>
+
+            {eventsLoading ? (
+              <p className="mt-2 text-xs text-[#7b877f]">Loading dates...</p>
+            ) : comingUp.length === 0 ? (
+              <p className="mt-2 text-xs text-[#7b877f]">
+                {eventsFailed ? "Some dates could not be loaded." : "No upcoming dates."}
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1.5">
+                {comingUp.map((event) => (
+                  <li key={event.id}>
+                    <button
+                      type="button"
+                      onClick={() => showDate(event.date)}
+                      className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-[#f3f7f1]"
+                    >
+                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${eventDot[event.kind]}`} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-[#203028]">
+                          {event.title}
+                        </span>
+                        <span className="block text-[11px] text-[#7b877f]">
+                          {event.kind === "Due" ? "Due " : ""}
+                          {formatDateLabel(event.date)}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex gap-3 text-[10px] text-[#7b877f]">
+              <span className="flex items-center gap-1">
+                <span className={`h-1.5 w-1.5 rounded-full ${eventDot.Defense}`} /> Defense
+              </span>
+              <span className="flex items-center gap-1">
+                <span className={`h-1.5 w-1.5 rounded-full ${eventDot.Due}`} /> Due date
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#123f2b]" /> My note
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className={`${panelTitleSize} font-semibold text-[#203028]`}>{title}</h3>
@@ -249,8 +333,8 @@ export default function StakeholderCalendar({
               isGlass ? "border-white/55 bg-white/34" : "border-[#dfe8df] bg-white"
             }`}
           >
-            {selectedDateNotes.length} note
-            {selectedDateNotes.length === 1 ? "" : "s"}
+            {selectedDateEvents.length + selectedDateNotes.length} item
+            {selectedDateEvents.length + selectedDateNotes.length === 1 ? "" : "s"}
           </span>
         </div>
 
@@ -301,13 +385,35 @@ export default function StakeholderCalendar({
         </div>
 
         <div className="mt-4 space-y-3">
-          {selectedDateNotes.length === 0 ? (
+          {selectedDateEvents.map((event) => (
+            <Link
+              key={event.id}
+              href={event.href}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_1px_2px_rgba(31,42,36,0.04)] transition hover:bg-[#f3f7f1] ${
+                isGlass ? "bg-white/30 backdrop-blur-xl" : "bg-white"
+              }`}
+            >
+              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${eventDot[event.kind]}`} />
+              <span className="min-w-0 flex-1">
+                <span
+                  className={`block break-words text-sm font-semibold ${
+                    event.done ? "text-[#7b877f]" : "text-[#203028]"
+                  }`}
+                >
+                  {event.title}
+                </span>
+                <span className="mt-0.5 block text-xs text-[#7b877f]">{event.detail}</span>
+              </span>
+            </Link>
+          ))}
+
+          {selectedDateEvents.length === 0 && selectedDateNotes.length === 0 ? (
             <div
               className={`rounded-2xl px-4 py-5 text-center text-sm text-[#7b877f] ${
                 isGlass ? "bg-white/24 backdrop-blur-xl" : "bg-white"
               }`}
             >
-              No notes for this date.
+              Nothing on this date.
             </div>
           ) : (
             selectedDateNotes.map((note) => (
@@ -329,7 +435,7 @@ export default function StakeholderCalendar({
                     {note.category}
                   </p>
                   <p className="mt-0.5 text-xs font-medium text-[#59645d]">
-                    Due {formatDateLabel(note.date)}
+                    {formatDateLabel(note.date)}
                   </p>
                 </div>
 

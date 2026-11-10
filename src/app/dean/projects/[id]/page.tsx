@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
+import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
@@ -23,6 +24,7 @@ import {
   type ApiGroup,
   type ApiGroupMember,
   type ApiTitleSubmission,
+  type CloseReason,
   type RemovalReason,
 } from "../../../_lib/groups";
 import { formatDate } from "../../../_lib/requirements";
@@ -39,6 +41,8 @@ export default function DeanProjectProfilePage() {
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState<ApiGroupMember | null>(null);
   const [removeError, setRemoveError] = useState("");
+  const [closing, setClosing] = useState(false);
+  const [closeError, setCloseError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -101,6 +105,23 @@ export default function DeanProjectProfilePage() {
       setRemoving(null);
     } catch (err) {
       setRemoveError(errorMessage(err, "Unable to remove this member."));
+    }
+
+    setBusy(false);
+  }
+
+  async function closeWithReason(category: CloseReason, details: string) {
+    if (!group) return;
+
+    setBusy(true);
+    setCloseError("");
+
+    try {
+      setGroup(await closeGroup(group.group_id, category, details));
+      setNotice("The group was closed. Its history is kept and its students can join a new group.");
+      setClosing(false);
+    } catch (err) {
+      setCloseError(errorMessage(err, "Unable to close this group."));
     }
 
     setBusy(false);
@@ -453,10 +474,43 @@ export default function DeanProjectProfilePage() {
                   Confirm closure
                 </button>
               )}
+
+              {group.group_status === "Active" && (
+                <div className="border-t border-[#edf2ec] pt-3">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setCloseError("");
+                      setClosing(true);
+                    }}
+                    className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+                  >
+                    Close group
+                  </button>
+                  <p className="mt-2 text-[11px] leading-4 text-[#7b877f]">
+                    For a group that failed and will retake, stopped, or was disbanded. Its history is kept.
+                  </p>
+                </div>
+              )}
+
+              {group.group_status === "Closed" && group.closed_reason && (
+                <p className="text-[11px] leading-4 text-[#7b877f]">Closed: {group.closed_reason}</p>
+              )}
             </div>
           </Card>
         </div>
       </div>
+
+      {closing && (
+        <CloseGroupDialog
+          groupName={group.group_name}
+          busy={busy}
+          error={closeError}
+          onCancel={() => setClosing(false)}
+          onSubmit={(category, details) => void closeWithReason(category, details)}
+        />
+      )}
 
       {removing && (
         <RemoveMemberDialog

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
-import DeanCalendar from "./_components/DeanCalendar";
+import RoleCalendar from "../_components/RoleCalendar";
 import Card from "./_components/Card";
 import RiskList from "../_components/health/RiskList";
 import { useRisks } from "../_components/health/useRisks";
@@ -251,7 +251,7 @@ export default function DeanDashboardPage() {
 
         {/* Calendar */}
         <div className="xl:sticky xl:top-6 xl:self-start">
-          <DeanCalendar />
+          <RoleCalendar role="Dean" />
         </div>
       </div>
     </DeanShell>

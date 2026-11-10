@@ -22,6 +22,8 @@ export type ApiGroup = {
   semester: string | null;
   // 'Pending Closure' = every member left and the Adviser or Dean still has to confirm closing it.
   group_status: GroupStatus;
+  // Why a closed group was closed; null while it is open.
+  closed_reason: string | null;
   created_at: string | null;
   adviser: { user_id: number; name: string } | null;
   project: {
@@ -126,7 +128,14 @@ export const removeGroupMember = (groupId: number, userId: number, reasonCategor
 export const setGroupLeader = (groupId: number, userId: number) =>
   apiFetch<ApiGroup>(`/groups/${groupId}/leader`, { method: "PUT", body: JSON.stringify({ user_id: userId }) });
 
-export const closeGroup = (groupId: number) => post(`/groups/${groupId}/close`);
+// Why the Dean closes a group that still has members (the same list the server accepts).
+export const CLOSE_REASONS = ["Failed and will retake", "Stopped the project", "Group disbanded", "Other"] as const;
+export type CloseReason = (typeof CLOSE_REASONS)[number];
+
+// A group with no members left is confirmed closed by its adviser or the Dean (no reason needed). Only the Dean can close a
+// group that still has members, and then a reason is required.
+export const closeGroup = (groupId: number, reasonCategory?: CloseReason, reason?: string) =>
+  post(`/groups/${groupId}/close`, reasonCategory ? { reason_category: reasonCategory, reason: reason || undefined } : undefined);
 
 export function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;

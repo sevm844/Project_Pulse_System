@@ -343,7 +343,8 @@ function SubmissionRow({
     try {
       await apiFetch(`/submissions/${submission?.submission_id}/${path}`, {
         method: "PUT",
-        body: body ? JSON.stringify(body) : undefined,
+        // A decision names the version it was made on, so a newer upload is never approved by mistake.
+        body: body ? JSON.stringify({ ...body, version_no: submission?.version_no }) : undefined,
       });
 
       setAsking(false);
