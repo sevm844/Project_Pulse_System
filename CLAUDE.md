@@ -59,6 +59,13 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   project, or a disbanded group. That cancels its scheduled defenses, tells the students, adviser and panel, keeps all history, stores
   `student_groups.closed_reason` and writes a Critical audit entry. Finished/archived groups are deliberately NOT closed automatically:
   every student screen skips Closed groups, so closing them would hide a graduate's own project from them.
+- **Changing advisers:** one group via `PUT /groups/{id}/adviser`, or all of an adviser's open groups (or chosen `group_ids`) via
+  `POST /advisers/{id}/reassign-groups` (Dean only; the source may be a disabled adviser, the target must be Active; Closed groups never
+  move). Both use `Project::assignAdviser`. An adviser's own assignment applies to the groups they advise now; work a group already handed
+  in for it stays with the group (`Requirement::appliesTo` + `Project::hasHandedIn`) and the new adviser can review it, but cannot edit
+  or delete the previous adviser's assignment. Assignments the group had not started do not follow it.
+- **School term view:** the Dean's Projects and Group Management lists open on the current term (`_lib/terms.ts`: August = 1st semester,
+  January = 2nd, June = summer), with a term select ("All terms" to see everything). The "needs your attention" list is never filtered by term.
 - **Concurrency:** title proposals and decisions, stage moves, submissions, reviews, receipts, and defense scheduling, evaluation, result and
   cancel all lock their rows (group, then project, then the item) and re-check the rule inside the lock. A review may send `version_no`
   and is refused if a newer version was uploaded meanwhile (`StaffRequirements` sends it).

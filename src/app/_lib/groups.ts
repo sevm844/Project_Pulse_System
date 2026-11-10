@@ -72,6 +72,8 @@ export type ApiDeanProject = {
   group_name: string;
   course: string;
   section: string;
+  school_year: string | null;
+  semester: string | null;
   adviser: string | null;
   title: string | null;
   stage: ProposalStage;

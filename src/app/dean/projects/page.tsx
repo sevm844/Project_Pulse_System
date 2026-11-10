@@ -13,8 +13,10 @@ import {
   type ApiDeanProject,
 } from "../../_lib/groups";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import TermSelect from "../../_components/TermSelect";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
+import { ALL_TERMS, defaultTerm, termLabel, termsOf } from "../../_lib/terms";
 import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const inputClass =
@@ -29,6 +31,8 @@ export default function DeanProjectsPage() {
   const [courseFilter, setCourseFilter] = useState("All");
   const [stageFilter, setStageFilter] = useState("All");
   const [adviserFilter, setAdviserFilter] = useState("All");
+  // null = not chosen yet: the list opens on the current school term.
+  const [termChoice, setTermChoice] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +58,9 @@ export default function DeanProjectsPage() {
     [projects],
   );
 
+  const terms = useMemo(() => termsOf(projects), [projects]);
+  const term = termChoice ?? defaultTerm(projects);
+
   const filteredProjects = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
@@ -71,6 +78,7 @@ export default function DeanProjectsPage() {
 
       return (
         (!query || searchable.includes(query)) &&
+        (term === ALL_TERMS || termLabel(project) === term) &&
         (courseFilter === "All" || project.course === courseFilter) &&
         (stageFilter === "All" || project.stage === stageFilter) &&
         (adviserFilter === "All" ||
@@ -79,7 +87,7 @@ export default function DeanProjectsPage() {
             : project.adviser === adviserFilter))
       );
     });
-  }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter]);
+  }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter, term]);
 
   const awaiting = projects.filter((project) => project.stage === "Dean's Endorsement" && project.group_status === "Active");
   const ready = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
@@ -100,6 +108,7 @@ export default function DeanProjectsPage() {
     setCourseFilter("All");
     setStageFilter("All");
     setAdviserFilter("All");
+    setTermChoice(null);
   }
 
   return (
@@ -152,7 +161,7 @@ export default function DeanProjectsPage() {
                 Project Filters
               </h3>
               <p className="mt-1 text-xs text-[#7b877f]">
-                Search and narrow projects by course, stage, or adviser.
+                Opens on the current school term. Narrow by term, course, stage, or adviser.
               </p>
             </div>
 
@@ -165,7 +174,12 @@ export default function DeanProjectsPage() {
             </button>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <label className="text-xs font-semibold text-[#59645d]">
+              Term
+              <TermSelect terms={terms} value={term} onChange={setTermChoice} className={inputClass} />
+            </label>
+
             <label className="text-xs font-semibold text-[#59645d]">
               Search
               <input
