@@ -9,6 +9,7 @@ const navItems: NavItem[] = [
   { label: "Dashboard", icon: "/dashbrd.png", href: "/student" },
   { label: "My Project", icon: "/fold.png", href: "/student/project" },
   { label: "Requirements", icon: "/checklt.png", href: "/student/requirements" },
+  { label: "Manuscript", icon: "/pinNote.png", href: "/student/manuscript" },
   { label: "Documents", icon: "/docs.png", href: "/student/documents" },
   { label: "Defense", icon: "/work.png", href: "/student/defense" },
   { label: "Chat", icon: "/chats.png", href: "/student/chat" },

@@ -177,6 +177,20 @@ export function formatDate(value: string | null) {
   });
 }
 
+// A moment (version saved, draft edited), shown in Philippine time: "Nov 12, 2026, 3:42 PM".
+export function formatDateTime(value: string | null) {
+  if (!value) return "";
+
+  return new Date(value).toLocaleString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Asia/Manila",
+  });
+}
+
 export function isOverdue(dueDate: string | null) {
   if (!dueDate) return false;
 

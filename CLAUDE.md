@@ -95,6 +95,31 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   the content type client-side (`previewSubmission`); never render an uploaded file as HTML. A submitted file stays listed even if the
   assignment's sections change later.
 
+## Manuscript (built-in rich-text document) — `/student/manuscript`
+- One manuscript per project, written in the browser (`ManuscriptEditor`, TipTap). It is stored as the editor's JSON (`manuscripts.draft`),
+  **never HTML**, and rendered only by the editor itself (`ManuscriptView`, read-only). Do not use `dangerouslySetInnerHTML` for it.
+- **Draft** is private to the group (only students can read or save it). It autosaves; every save names the `base_revision` it started from
+  and the server answers 409 if another member saved a newer one (the editor then offers "Load the latest draft").
+- **Versions** (`manuscript_versions`) are frozen copies made by "Submit version": who saved it, when, an optional note, word count, and every
+  member who edited since the previous version. They are never changed. The adviser, the Dean and the group read versions
+  (`GET /projects/{id}/manuscript/versions[/{no}]`, `ManuscriptHistory`, shown on the Dean's project profile and the adviser's group card).
+- **What the server keeps is a whitelist** (`App\Support\ManuscriptContent`): node types, marks and each attribute's value pattern. Pasted papers
+  carry things that cannot be kept safely (pictures on other sites, `#_Toc` contents links, Word style values): the server removes only those,
+  counts them (`dropped` in the save response, plus the cleaned `content` so the editor shows what is really saved) and saves the rest. Only a
+  non-document, an unknown block type, or an oversized/too deep document is refused (422). If the editor gains a new extension or attribute, add it
+  to the whitelist or it is silently dropped (`manuscript_smoke.php` has a document captured from a real session). Pictures are stored inside the
+  document as data URLs (shrunk client-side to under 1 MB each); pasted pictures that are not data URLs are dropped and the student is told.
+- A scrolling bubble beside the scrollbar shows the page on screen ("7 of 70") (`PagedScroll`).
+- Defaults are Arial 11 pt, 1.5 spacing, 1 inch margins; students can change fonts, sizes and spacing like Google Docs, and their captions,
+  titles and references are their own business (the system does not check them).
+- **Pages** (`pagination.ts`, a ProseMirror plugin): Letter size, 1 inch margins. The sheet is one element; the plugin draws grey
+  gaps and top margins as display-only widgets and moves content that would cross a boundary to the next page (paragraphs split line by
+  line; tables, lists and pictures move whole). Nothing is stored for pages, so the same count shows in the editor and in frozen versions.
+  The sheet is at least 816 px wide (it scrolls sideways on a phone) so a page is always the same shape.
+- **Never trim or null-convert manuscript requests**: `bootstrap/app.php` exempts `api/my-manuscript/*` from `TrimStrings` and
+  `ConvertEmptyStringsToNull`, because spaces between bold and plain text are real content (this once produced "broken text block").
+- Not built yet: comparing two versions, comments on selected text, Grammarian access, title page / table of contents / page numbers, export.
+
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
   Final Output (archived). `GET /progress` (`ProgressController`, `App\Support\ProjectProgress`) works it out from the modules that own

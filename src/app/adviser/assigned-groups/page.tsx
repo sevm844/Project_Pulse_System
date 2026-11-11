@@ -9,6 +9,7 @@ import StatusBadge from "../_components/StatusBadge";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
 import GroupTimeline from "../../_components/health/GroupTimeline";
+import ManuscriptHistory from "../../_components/manuscript/ManuscriptHistory";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
@@ -65,6 +66,7 @@ export default function AssignedGroupsPage() {
   const [actionBusy, setActionBusy] = useState(false);
   const [actionNotice, setActionNotice] = useState("");
   const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
+  const [manuscriptOpen, setManuscriptOpen] = useState<number | null>(null);
   const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
 
   // The backend already leaves out students who are in a group for this school year + semester.
@@ -489,6 +491,24 @@ export default function AssignedGroupsPage() {
                   <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
                     <GroupTimeline groupId={group.group_id} />
                   </div>
+                )}
+
+                {group.project && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setManuscriptOpen(manuscriptOpen === group.group_id ? null : group.group_id)}
+                      aria-expanded={manuscriptOpen === group.group_id}
+                      className="mt-2 block text-xs font-semibold text-[#4f8f58] hover:underline"
+                    >
+                      {manuscriptOpen === group.group_id ? "Hide manuscript versions" : "Show manuscript versions"}
+                    </button>
+                    {manuscriptOpen === group.group_id && (
+                      <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
+                        <ManuscriptHistory projectId={group.project.project_id} />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <ul className="mt-3 divide-y divide-[#edf2ec]">

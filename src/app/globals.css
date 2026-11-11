@@ -24,3 +24,57 @@ body {
   color: var(--foreground);
   font-family: var(--font-plus-jakarta-sans), Arial, Helvetica, sans-serif;
 }
+
+/* The manuscript: a white sheet with 1 inch margins, Arial 11 pt and 1.5 line spacing as the starting point.
+   Students change any of it from the toolbar, the way they would in Google Docs. */
+.manuscript-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto;
+  padding: 96px;
+  position: relative;
+  min-width: 816px;
+  background: #fff;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
+  border: 1px solid #dfe8df;
+  box-shadow: 0 1px 6px rgba(18, 63, 43, 0.08);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.manuscript-sheet p { margin: 0 0 0.4em; }
+.manuscript-sheet h1 { font-size: 14pt; font-weight: 700; text-align: center; text-transform: uppercase; margin: 0.6em 0 0.4em; line-height: 1.3; }
+.manuscript-sheet h2 { font-size: 12pt; font-weight: 700; margin: 0.8em 0 0.3em; line-height: 1.3; }
+.manuscript-sheet h3 { font-size: 11pt; font-weight: 700; text-transform: uppercase; margin: 0.8em 0 0.3em; line-height: 1.3; }
+.manuscript-sheet ul, .manuscript-sheet ol { margin: 0 0 0.5em; padding-left: 1.6em; }
+.manuscript-sheet ul { list-style: disc; }
+.manuscript-sheet ol { list-style: decimal; }
+.manuscript-sheet li > p { margin: 0; }
+.manuscript-sheet blockquote { margin: 0.5em 0; padding-left: 1em; border-left: 3px solid #c5cdc7; color: #444; }
+.manuscript-sheet pre { margin: 0.5em 0; padding: 0.6em 0.8em; background: #f4f6f4; border-radius: 6px; font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; }
+.manuscript-sheet code { font-family: "Courier New", monospace; background: #f4f6f4; padding: 0 0.2em; border-radius: 3px; }
+.manuscript-sheet pre code { background: none; padding: 0; }
+.manuscript-sheet a { color: #1a56b3; text-decoration: underline; cursor: pointer; }
+.manuscript-sheet img { display: block; max-width: 100%; height: auto; margin: 0.5em auto; }
+.manuscript-sheet img.ProseMirror-selectednode { outline: 2px solid #4f8f58; }
+.manuscript-sheet .tableWrapper { overflow-x: auto; margin: 0.5em 0; }
+.manuscript-sheet table { border-collapse: collapse; table-layout: fixed; width: 100%; line-height: 1.2; }
+.manuscript-sheet td, .manuscript-sheet th { position: relative; min-width: 1em; padding: 4px 6px; border: 1px solid #777; vertical-align: top; box-sizing: border-box; }
+.manuscript-sheet th { font-weight: 700; background: #f3f6f3; text-align: left; }
+.manuscript-sheet td > p, .manuscript-sheet th > p { margin: 0; }
+.manuscript-sheet .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgba(79, 143, 88, 0.18); pointer-events: none; }
+.manuscript-sheet .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #4f8f58; pointer-events: none; }
+.manuscript-sheet.resize-cursor { cursor: col-resize; }
+.manuscript-sheet div[data-page-break] { position: relative; height: 0; margin: 1.4em 0; border-top: 2px dashed #b8c4bb; }
+.manuscript-sheet div[data-page-break]::after { content: "Page break"; position: absolute; top: -0.7em; left: 50%; transform: translateX(-50%); padding: 0 0.6em; background: #fff; color: #7b877f; font: 600 9pt Arial, sans-serif; }
+.manuscript-sheet div[data-page-break].ProseMirror-selectednode { border-top-color: #4f8f58; }
+.manuscript-sheet mark { border-radius: 2px; padding: 0 1px; }
+.manuscript-sheet.ProseMirror { white-space: pre-wrap; }
+
+/* Page boundaries drawn by pagination.ts: the rest of the page, a grey gap, then the next page's top margin. */
+.manuscript-sheet .pg-break { display: block; position: relative; margin: 0 -96px; text-indent: 0; user-select: none; pointer-events: none; }
+.manuscript-sheet .pg-break .pg-gap { position: absolute; left: -1px; right: -1px; height: 24px; background: #eef2ee; border-top: 1px solid #dfe8df; border-bottom: 1px solid #dfe8df; box-sizing: border-box; }

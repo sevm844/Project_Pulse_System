@@ -9,6 +9,7 @@ import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
+import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
 import { useProgress } from "../../../_components/progress/useProgress";
 import { apiFetch } from "../../../_lib/api";
@@ -209,6 +210,16 @@ export default function DeanProjectProfilePage() {
             <GroupTimeline groupId={group.group_id} />
           </div>
         </Card>
+
+        {group.project && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Manuscript</h3>
+            <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
+            <div className="mt-4">
+              <ManuscriptHistory projectId={group.project.project_id} />
+            </div>
+          </Card>
+        )}
 
         {error && (
           <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
