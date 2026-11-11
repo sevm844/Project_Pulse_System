@@ -2,6 +2,8 @@
 
 import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import ManuscriptCompare from "./ManuscriptCompare";
 import ManuscriptView from "./ManuscriptView";
 import { errorMessage } from "../../_lib/groups";
 import {
@@ -27,6 +29,8 @@ export default function ManuscriptHistory({
   const [open, setOpen] = useState<(ManuscriptVersion & { content: JSONContent }) | null>(null);
   const [opening, setOpening] = useState<number | null>(null);
   const [confirmRestore, setConfirmRestore] = useState(false);
+  // Comparing needs two versions; `to` is the one the comparison opens on (the one before it is the older side).
+  const [compareTo, setCompareTo] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -70,9 +74,20 @@ export default function ManuscriptHistory({
         <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">No version has been submitted yet.</p>
       )}
 
+      {versions && versions.length >= 2 && (
+        <button
+          type="button"
+          onClick={() => setCompareTo(Math.max(...versions.map((v) => v.version_no)))}
+          className="mb-3 w-full rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-2 text-sm font-semibold text-[#123f2b] hover:bg-[#e8f1ea]"
+        >
+          Compare versions
+        </button>
+      )}
+
       <ol className="space-y-3">
         {(versions ?? []).map((version) => {
           const others = version.editors.filter((name) => name !== version.saved_by);
+          const hasPrevious = (versions ?? []).some((v) => v.version_no < version.version_no);
 
           return (
             <li key={version.version_no} className="rounded-xl border border-[#edf2ec] bg-white p-3">
@@ -88,22 +103,38 @@ export default function ManuscriptHistory({
                   </p>
                   {version.note && <p className="mt-1.5 break-words text-xs italic text-[#59645d]">&ldquo;{version.note}&rdquo;</p>}
                 </div>
-                <button
-                  type="button"
-                  disabled={opening !== null}
-                  onClick={() => void view(version.version_no)}
-                  className="shrink-0 rounded-full border border-[#dfe8df] px-3 py-1 text-xs font-semibold hover:bg-[#f3f7f1] disabled:opacity-60"
-                >
-                  {opening === version.version_no ? "Opening..." : "View"}
-                </button>
+                <div className="flex shrink-0 flex-col gap-1.5">
+                  <button
+                    type="button"
+                    disabled={opening !== null}
+                    onClick={() => void view(version.version_no)}
+                    className="rounded-full border border-[#dfe8df] px-3 py-1 text-xs font-semibold hover:bg-[#f3f7f1] disabled:opacity-60"
+                  >
+                    {opening === version.version_no ? "Opening..." : "View"}
+                  </button>
+                  {hasPrevious && (
+                    <button
+                      type="button"
+                      onClick={() => setCompareTo(version.version_no)}
+                      title="See what changed since the version before this one"
+                      className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]"
+                    >
+                      Compare
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           );
         })}
       </ol>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {compareTo !== null && versions && versions.length >= 2 && (
+        <ManuscriptCompare projectId={projectId} versions={versions} initialTo={compareTo} onClose={() => setCompareTo(null)} />
+      )}
+
+      {open && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
           <div role="dialog" aria-modal="true" aria-label={`Manuscript version ${open.version_no}`} className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-xl">
             <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] px-5 py-4">
               <div>
@@ -150,7 +181,8 @@ export default function ManuscriptHistory({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

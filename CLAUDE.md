@@ -118,7 +118,13 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   The sheet is at least 816 px wide (it scrolls sideways on a phone) so a page is always the same shape.
 - **Never trim or null-convert manuscript requests**: `bootstrap/app.php` exempts `api/my-manuscript/*` from `TrimStrings` and
   `ConvertEmptyStringsToNull`, because spaces between bold and plain text are real content (this once produced "broken text block").
-- Not built yet: comparing two versions, comments on selected text, Grammarian access, title page / table of contents / page numbers, export.
+- **Compare versions** (`ManuscriptCompare`, engine in `_lib/manuscriptDiff.ts`, tests in `tests/manuscriptDiff.test.cjs`): any two submitted versions,
+  older on the left. Nothing is stored: both frozen documents are fetched and compared in the browser, first paragraph by paragraph
+  (aligned like a text diff), then word by word inside a paragraph that was rewritten (a replaced pair counts as one edit when enough words
+  survive; pictures are never "edited"). Formatting is ignored on purpose; only words count. Green underline = added, red strikethrough =
+  removed. "Show only changes" folds unchanged runs, Previous/Next walk the changes. The dialogs render through a portal to `document.body`.
+  Who edited is per version (`editors`), not per sentence. Very large, totally different papers fall back to "all removed / all added".
+- Not built yet: comments on selected text, Grammarian access, title page / table of contents / page numbers, export.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
