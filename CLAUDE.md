@@ -59,6 +59,9 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   project, or a disbanded group. That cancels its scheduled defenses, tells the students, adviser and panel, keeps all history, stores
   `student_groups.closed_reason` and writes a Critical audit entry. Finished/archived groups are deliberately NOT closed automatically:
   every student screen skips Closed groups, so closing them would hide a graduate's own project from them.
+  The Dean can undo a close (`POST /groups/{id}/reopen`, reason required, Critical audit entry): the group goes back to Active with its
+  members, project and history; defenses cancelled by the close stay cancelled. Refused if the group has no members or a member has
+  since joined another open group.
 - **Changing advisers:** one group via `PUT /groups/{id}/adviser`, or all of an adviser's open groups (or chosen `group_ids`) via
   `POST /advisers/{id}/reassign-groups` (Dean only; the source may be a disabled adviser, the target must be Active; Closed groups never
   move). Both use `Project::assignAdviser`. An adviser's own assignment applies to the groups they advise now; work a group already handed

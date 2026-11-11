@@ -139,6 +139,9 @@ export type CloseReason = (typeof CLOSE_REASONS)[number];
 export const closeGroup = (groupId: number, reasonCategory?: CloseReason, reason?: string) =>
   post(`/groups/${groupId}/close`, reasonCategory ? { reason_category: reasonCategory, reason: reason || undefined } : undefined);
 
+// Dean only: undo a close. Needs a reason; the students and adviser are told. Defenses cancelled by the close stay cancelled.
+export const reopenGroup = (groupId: number, reason: string) => post(`/groups/${groupId}/reopen`, { reason });
+
 export function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;
 }

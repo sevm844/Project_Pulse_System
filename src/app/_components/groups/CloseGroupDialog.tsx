@@ -31,8 +31,8 @@ export default function CloseGroupDialog({
       <div role="dialog" aria-modal="true" aria-label="Close group" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-[#203028]">Close {groupName}</h3>
         <p className="mt-2 text-sm text-[#59645d]">
-          The group&apos;s history is kept, and its students become free to join a new group. This cannot be undone.
-          The reason is saved to the audit log.
+          The group&apos;s history is kept, and its students become free to join a new group. You can reopen it later,
+          but a cancelled defense has to be scheduled again. The reason is saved to the audit log.
         </p>
 
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">

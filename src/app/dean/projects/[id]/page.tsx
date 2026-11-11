@@ -14,6 +14,7 @@ import { useProgress } from "../../../_components/progress/useProgress";
 import { apiFetch } from "../../../_lib/api";
 import {
   closeGroup,
+  reopenGroup,
   endorseGroup,
   errorMessage,
   NO_ADVISER_YET,
@@ -43,6 +44,8 @@ export default function DeanProjectProfilePage() {
   const [removeError, setRemoveError] = useState("");
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState("");
+  const [reopening, setReopening] = useState(false);
+  const [reopenReason, setReopenReason] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -496,6 +499,64 @@ export default function DeanProjectProfilePage() {
 
               {group.group_status === "Closed" && group.closed_reason && (
                 <p className="text-[11px] leading-4 text-[#7b877f]">Closed: {group.closed_reason}</p>
+              )}
+
+              {group.group_status === "Closed" && group.members.length > 0 && (
+                <div className="border-t border-[#edf2ec] pt-3">
+                  {reopening ? (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-[#203028]">
+                        Why is it being reopened?
+                        <textarea
+                          value={reopenReason}
+                          onChange={(event) => setReopenReason(event.target.value)}
+                          rows={2}
+                          maxLength={300}
+                          className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]"
+                        />
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={busy || reopenReason.trim().length < 5}
+                          onClick={() =>
+                            void run(
+                              () => reopenGroup(group.group_id, reopenReason.trim()),
+                              "The group was reopened. Defenses cancelled when it closed have to be scheduled again.",
+                            ).then(() => setReopening(false))
+                          }
+                          className="rounded-full bg-[#123f2b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60"
+                        >
+                          Reopen group
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReopening(false)}
+                          className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          setReopenReason("");
+                          setReopening(true);
+                        }}
+                        className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1] disabled:opacity-60"
+                      >
+                        Reopen group
+                      </button>
+                      <p className="mt-2 text-[11px] leading-4 text-[#7b877f]">
+                        For a group closed by mistake or allowed to continue. It is refused if a member has joined another open group.
+                      </p>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </Card>
