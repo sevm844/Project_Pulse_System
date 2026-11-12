@@ -30,7 +30,11 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 9 | Open **Chat** and send a message to your group or your adviser. | | |
 | 10 | Open **Notifications**. Can you tell what each one is about, and open it? | | |
 | 11 | Open **My Project** and find your team members (the **Team** tab). Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
-| 12 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 12 | (Student 1) Open **Manuscript**. Write or paste a few paragraphs, make a chapter title and a heading, change a font and size, and add a table. Watch the **page count** under the page and the **page bubble** ("3 of 7") beside the scrollbar while you scroll. | | |
+| 13 | (Student 1) Look at the **Versions** list. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
+| 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
+| 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
+| 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -52,7 +56,9 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 10 | (Adviser 2) Open **Defense** and look at how you would schedule the next defense for UAT Delta. | | |
 | 11 | On the dashboard, find **Groups that need attention**. Which of your groups is behind, and why? | | |
 | 12 | In **Assigned Groups**, press **Show timeline** on a group and read its deadlines. | | |
-| 13 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 13 | (Adviser 1) In **Assigned Groups**, open **UAT Alpha** and press **Show manuscript versions**. Press **Review** on Version 1: select some words and leave a comment on them. | | |
+| 14 | Press **Compare versions** and see what UAT Alpha changed after your comments. Is it clear which of your comments were acted on? Mark one comment **resolved**. | | |
+| 15 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -71,7 +77,9 @@ Email: `uat-dean@uat.test`
 | 7 | Open **Administration → Audit Logs**. Find what happened today. | | |
 | 8 | Open **Reports**. Can you find a list of all groups and their stage? On the dashboard, find **Groups at Risk** and open one to see its timeline. | | |
 | 9 | Open **Feedback**. Read what testers sent and mark one as Resolved. | | |
-| 10 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 10 | Open **Projects → UAT Alpha → Manuscript**. Press **Compare versions** (Version 1 and 2): can you see what was added (green) and removed (red), who edited and when? Use **Show only changes** and **Next**. | | |
+| 11 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
+| 12 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -98,7 +106,9 @@ Email: `uat-grammarian@uat.test`
 | 1 | Log in. Open the **review queue** and find the Final manuscript. | | |
 | 2 | Open the document. Approve it, or ask for fixes with remarks. | | |
 | 3 | Check that the group would see your remarks. | | |
-| 4 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 4 | Open **Manuscripts**. Find **UAT Delta** and show its versions. | | |
+| 5 | Press **Review** on Version 1. Read the two grammar comments, then select other words and leave your own comment. Mark one of your comments resolved. Can you resolve the adviser's comment, if there is one? (You should not be able to.) | | |
+| 6 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -119,4 +129,5 @@ Email: `uat-coordinator@uat.test`
 ## For the facilitator
 
 - Before: `php artisan uat:seed` (see `docs/UAT.md` in the backend project). Hand out the right email to each tester.
+- The demo already contains manuscripts: **UAT Alpha** (two versions, comments, one resolved, one reply) and **UAT Delta** (grammar mistakes with Grammarian comments). Ask one tester to open the downloaded Word file and say what they see.
 - After: the Dean's **Feedback** page shows every message and the usability score. Save it, then `php artisan uat:reset`.
