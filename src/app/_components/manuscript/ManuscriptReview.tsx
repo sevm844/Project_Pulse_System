@@ -288,7 +288,7 @@ export default function ManuscriptReview({
                   <CommentCard
                     key={comment.comment_id}
                     comment={comment}
-                    canResolve={canComment}
+                    canResolve={comment.can_resolve}
                     active={active === comment.comment_id}
                     located={comment.block_index === null || resolveRange(blocks[comment.block_index], comment) !== null}
                     onActivate={() => focusComment(comment.comment_id, "panel")}

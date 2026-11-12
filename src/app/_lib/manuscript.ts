@@ -63,6 +63,8 @@ export type ManuscriptComment = {
   quote: string | null;
   body: string;
   status: "Open" | "Resolved";
+  // Decided by the server: the adviser and the Dean may resolve any comment, the Grammarian only their own, students none.
+  can_resolve: boolean;
   author: string;
   author_role: string | null;
   created_at: string | null;
@@ -87,6 +89,23 @@ export const replyToManuscriptComment = (commentId: number, body: string) =>
 
 export const setManuscriptCommentStatus = (commentId: number, status: "Open" | "Resolved") =>
   apiFetch<ManuscriptComment>(`/manuscript-comments/${commentId}/status`, { method: "PUT", body: JSON.stringify({ status }) });
+
+// One row of the Grammarian's list: a group already in the grammar check and how much of its manuscript there is to read.
+export type GrammarianManuscript = {
+  project_id: number;
+  group_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  adviser: string | null;
+  versions: number;
+  latest_version_no: number | null;
+  latest_saved_at: string | null;
+  open_comments: number;
+  my_open_comments: number;
+};
+
+export const fetchGrammarianManuscripts = () => apiFetch<GrammarianManuscript[]>("/grammarian/manuscripts");
 
 export const FONT_FAMILIES = ["Arial", "Times New Roman", "Calibri", "Cambria", "Georgia", "Verdana", "Courier New"];
 export const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36];

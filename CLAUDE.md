@@ -140,7 +140,12 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   Heading 1-3 styles, real lists and a real table-of-contents field (Word asks to update fields on opening: answer Yes). Not opened in real Word during development, only inspected.
 - **Line spacing means what it means in Word**: "1.5" is 1.5 lines, and a line of Arial is about 1.15 times its size, so the editor draws `line-height: calc(1.5 * 1.15)`
   (CSS default 1.725). This keeps the editor, the PDF and Word at the same page count. The pagination plugin measures each line from its centre (never top and bottom separately).
-- Not built yet: Grammarian access.
+- **Grammarian access** (`/grammarian/manuscripts`, `GET /grammarian/manuscripts`): the Grammarian reads the frozen versions, compares them and writes grammar comments on exact words
+  (same review screen, shown with a Grammarian badge) only for groups already in the grammar check: `Project::scopeManuscriptVisibleTo` = a submission for a `needs_grammar_check`
+  requirement that the adviser approved, or that already has a grammar result (so access does not vanish when a failed check sends the submission back). They never see drafts. They resolve only
+  **their own** comments; the adviser and the Dean can resolve any; the server decides per comment (`can_resolve`), the screen just obeys it. A Grammarian comment also notifies the adviser.
+  Other roles use `Project::visibleTo` unchanged; never add the Grammarian to that scope (it would leak groups to other modules).
+- Not built yet: nothing from the original manuscript plan; ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
