@@ -43,6 +43,11 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Titles:** only the group's Adviser approves / requests revision / rejects. The Dean has NO title-approval action
   (do not add one). Up to 3 titles Pending or Approved at a time. Approving does not set the project title; the single
   chosen title is set at "choose title" and must be one the Dean endorsed.
+- **A title proposal is written in a simple text editor** (`ProposalEditor`, TipTap: bold, italic, underline, bullet and numbered lists only; a Title box above it). The student writes
+  everything in it (context, target audience, technology stack...): there are no separate fields, and nothing is pre-filled. It is stored as editor JSON in
+  `title_submissions.proposal_content` (never HTML), checked by the manuscript whitelist (`ManuscriptContent::check`, max 200 KB), with its plain text copied to
+  `project_description`. `api/projects/*/titles` is exempt from `TrimStrings`/`ConvertEmptyStringsToNull` like the manuscript. `ProposalView` shows it read-only to the student,
+  adviser and Dean (older proposals with only plain text still show). Keep this page simple: do not add structured fields to it.
 - **Dean's endorsement:** records the endorsed (approved) titles, notes, signer and time (`dean_endorsements`); never the
   chosen title.
 - **Return to Adviser:** at Dean's Endorsement the Dean can send the group back (`POST /groups/{id}/return-to-adviser`) with a required
@@ -222,6 +227,8 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   review-queue, certificates, administration, reports, feedback, student-approvals, collection-tracker, archive-records, messages, notifications, profile).
   Each `<Role>Shell` points its items at them; reuse a picture only for the same meaning in another role. If a picture is replaced under the same name, clear
   `.next/dev/cache/images` or the dev server keeps serving the old one.
+- **Every dashboard looks the same:** the content on the left in solid white shadowed cards (`_components/DashboardCard.tsx`: `DashboardCard`, and `DashboardHeader` = eyebrow, title, text and a row of numbers), and `RoleCalendar` at the right edge in a 280 px column
+  (`grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]`, no centred max-width box). The student, adviser (`StaffHome`), grammarian, coordinator, Dean and panelist dashboards all follow it; build new dashboards the same way.
 - `formatDate` lives in `src/app/_lib/requirements.ts`; do not copy it into pages.
 - `src/app/dean/administration/...` — Dean-only pages (users, groups, etc.)
 - `src/app/student/...`, `src/app/adviser/...`, `src/app/panelist/...`,

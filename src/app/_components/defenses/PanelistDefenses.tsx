@@ -11,6 +11,7 @@ import {
 } from "../../_lib/defenses";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import DashboardCard, { DashboardHeader } from "../DashboardCard";
 import DefenseDocuments from "./DefenseDocuments";
 
 const fieldClass =
@@ -45,19 +46,20 @@ export default function PanelistDefenses() {
   const visible = tab === "upcoming" ? upcoming : done;
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="flex flex-wrap gap-x-10 gap-y-4">
-        <div>
-          <p className="text-3xl font-semibold text-[#203028]">{loading ? "–" : upcoming.length}</p>
-          <p className="mt-1 text-xs text-[#7b877f]">upcoming defenses</p>
-        </div>
-        <div>
-          <p className="text-3xl font-semibold text-[#203028]">{loading ? "–" : toEvaluate}</p>
-          <p className="mt-1 text-xs text-[#7b877f]">to evaluate</p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <DashboardHeader
+        eyebrow="Panelist Dashboard"
+        title="Your defenses"
+        text="The defenses you are on the panel of. Open one to read the group's documents and to submit your evaluation."
+        stats={[
+          { label: "Upcoming defenses", value: loading ? "–" : upcoming.length },
+          { label: "To evaluate", value: loading ? "–" : toEvaluate },
+          { label: "Done", value: loading ? "–" : done.length },
+        ]}
+      />
 
-      <div className="mt-8 flex gap-5 border-b border-[#edf2ec] text-xs font-semibold">
+      <DashboardCard className="p-5">
+      <div className="flex gap-5 border-b border-[#edf2ec] text-xs font-semibold">
         {(
           [
             ["upcoming", `Upcoming (${upcoming.length})`],
@@ -90,7 +92,7 @@ export default function PanelistDefenses() {
       )}
 
       {!loading && visible.length === 0 && !error && (
-        <p className="mt-12 text-center text-sm text-[#9aa59e]">
+        <p className="mt-6 rounded-xl bg-[#f8faf7] p-4 text-center text-sm text-[#7b877f]">
           {tab === "upcoming" ? "You have no upcoming defenses." : "Nothing here yet."}
         </p>
       )}
@@ -112,6 +114,7 @@ export default function PanelistDefenses() {
           />
         ))}
       </ul>
+      </DashboardCard>
     </div>
   );
 }

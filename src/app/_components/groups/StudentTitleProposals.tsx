@@ -5,8 +5,11 @@ import { titleStatusClass } from "../ProposalStage";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage, type ApiGroup, type ApiTitleSubmission } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import type { JSONContent } from "@tiptap/react";
+import ProposalEditor from "./ProposalEditor";
+import ProposalView from "./ProposalView";
 
-const emptyForm = { proposed_title: "", project_description: "", technology_stack: "" };
+const emptyForm = { proposed_title: "" };
 
 const inputClass =
   "w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -16,6 +19,8 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
   const project = group.project;
   const [titles, setTitles] = useState<ApiTitleSubmission[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [content, setContent] = useState<JSONContent | null>(null);
+  const [editorKey, setEditorKey] = useState(0); // a new key starts a blank page after sending
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,12 +52,13 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
         method: "POST",
         body: JSON.stringify({
           proposed_title: form.proposed_title.trim(),
-          project_description: form.project_description.trim() || null,
-          technology_stack: form.technology_stack.trim() || null,
+          proposal_content: content,
         }),
       });
 
       setForm(emptyForm);
+      setContent(null);
+      setEditorKey((key) => key + 1);
       setNotice("Sent to your adviser for review.");
       await load();
       onChanged();
@@ -105,23 +111,10 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
             className={inputClass}
           />
 
-          <textarea
-            rows={3}
-            maxLength={5000}
-            value={form.project_description}
-            onChange={(event) => setForm((current) => ({ ...current, project_description: event.target.value }))}
-            placeholder="What will it do? (optional)"
-            aria-label="Description"
-            className={`${inputClass} resize-none leading-6`}
-          />
-
-          <input
-            maxLength={255}
-            value={form.technology_stack}
-            onChange={(event) => setForm((current) => ({ ...current, technology_stack: event.target.value }))}
-            placeholder="Technology stack, e.g. Next.js, Laravel, PostgreSQL (optional)"
-            aria-label="Technology Stack"
-            className={inputClass}
+          <ProposalEditor
+            key={editorKey}
+            onChange={setContent}
+            hint="Write your proposal here. For example: the context of your project, who it is for, and the technologies you will use and why."
           />
 
           {error && (
@@ -165,7 +158,6 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
                   <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
                   <p className="mt-0.5 text-[11px] text-[#9aa59e]">
                     Sent {formatDate(item.submitted_at)}
-                    {item.technology_stack ? ` · ${item.technology_stack}` : ""}
                   </p>
                 </div>
 
@@ -174,9 +166,7 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
                 </span>
               </div>
 
-              {item.project_description && (
-                <p className="mt-2 text-xs leading-5 text-[#59645d]">{item.project_description}</p>
-              )}
+              <ProposalView item={item} />
 
               {item.review_remarks && (
                 <div className="mt-2 border-l-2 border-rose-300 pl-3">

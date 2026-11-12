@@ -31,6 +31,7 @@ import {
   type RemovalReason,
 } from "../../../_lib/groups";
 import { formatDate } from "../../../_lib/requirements";
+import ProposalView from "../../../_components/groups/ProposalView";
 
 export default function DeanProjectProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -256,9 +257,9 @@ export default function DeanProjectProfilePage() {
               {approved.map((item) => (
                 <li key={item.title_id} className="rounded-lg bg-[#f8faf7] px-4 py-3 text-sm font-semibold text-[#203028]">
                   {item.proposed_title}
-                  {item.project_description && (
-                    <span className="mt-1 block text-xs font-normal text-[#59645d]">{item.project_description}</span>
-                  )}
+                  <div className="font-normal">
+                    <ProposalView item={item} />
+                  </div>
                 </li>
               ))}
             </ul>

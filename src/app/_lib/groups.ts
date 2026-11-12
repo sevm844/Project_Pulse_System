@@ -58,6 +58,8 @@ export type ApiTitleSubmission = {
   proposed_title: string;
   project_description: string | null;
   technology_stack: string | null;
+  // The proposal as written in the text editor (the editor's JSON); null on proposals sent before the editor existed.
+  proposal_content: Record<string, unknown> | null;
   title_status: "Pending" | "Approved" | "Needs Revision" | "Rejected";
   submitted_at: string | null;
   review_remarks: string | null;

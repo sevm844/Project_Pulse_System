@@ -13,6 +13,7 @@ import {
   type ApiTitleSubmission,
 } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
 type Decision = "Approved" | "Needs Revision" | "Rejected";
@@ -283,7 +284,6 @@ export default function AdviserTitleReview({
                       <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
                       <p className="mt-0.5 text-[11px] text-[#9aa59e]">
                         Submitted {formatDate(item.submitted_at)}
-                        {item.technology_stack ? ` · ${item.technology_stack}` : ""}
                       </p>
                     </div>
 
@@ -292,9 +292,7 @@ export default function AdviserTitleReview({
                     </span>
                   </div>
 
-                  {item.project_description && (
-                    <p className="mt-2 text-xs leading-5 text-[#59645d]">{item.project_description}</p>
-                  )}
+                  <ProposalView item={item} />
 
                   {item.review_remarks && (
                     <p className="mt-2 text-xs leading-5 text-[#59645d]">

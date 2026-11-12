@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
 import RoleCalendar from "../_components/RoleCalendar";
-import Card from "./_components/Card";
+import Card from "../_components/DashboardCard";
 import RiskList from "../_components/health/RiskList";
 import { useRisks } from "../_components/health/useRisks";
 import { apiFetch } from "../_lib/api";

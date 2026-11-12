@@ -7,7 +7,7 @@ import RoleCalendar from "../_components/RoleCalendar";
 export default function PanelistDashboardPage() {
   return (
     <PanelistShell title="Defenses">
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0">
           <PanelistDefenses />
         </div>
