@@ -25,8 +25,9 @@ export default function CertificatePaper({
   return (
     <article
       aria-label="Certificate"
-      className="mx-auto w-full max-w-[816px] bg-white px-6 py-8 text-[14px] leading-[1.7] text-black shadow-[0_1px_6px_rgba(18,63,43,0.12)] sm:px-14 sm:py-12"
-      style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+      className="mx-auto flex w-full max-w-[816px] flex-col bg-white px-6 py-8 text-[14px] leading-[1.7] text-black shadow-[0_1px_6px_rgba(18,63,43,0.12)] sm:px-14 sm:py-12"
+      // A sheet of short bond paper (Letter, 8.5 x 11 in): it is at least that tall, longer only if the text needs it.
+      style={{ fontFamily: "Arial, Helvetica, sans-serif", aspectRatio: "8.5 / 11" }}
     >
       <div className="flex items-start justify-between gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element -- a fixed local logo, shown at its own shape */}
@@ -34,13 +35,7 @@ export default function CertificatePaper({
         <p className="text-[13px] font-bold">{template.header.form_code}</p>
       </div>
 
-      <div className="mt-3 flex flex-wrap justify-between gap-x-4 border-y border-black py-1 text-[11px]">
-        <span>Revision No.: {template.header.revision_no}</span>
-        <span>Issue Date: {template.header.issue_date}</span>
-        <span>Revision Date: {template.header.revision_date}</span>
-      </div>
-
-      <h2 className="mb-5 mt-9 text-center text-[15px] font-bold">{template.title}</h2>
+      <h2 className="mb-5 mt-14 text-center text-[15px] font-bold">{template.title}</h2>
 
       {template.paragraphs.map((paragraph, index) => (
         <p key={index} className="mb-4 text-justify indent-9">
@@ -71,7 +66,14 @@ export default function CertificatePaper({
         <Field name="signed_date" value={fields.signed_date} editable={editable} onChange={onChange} />
       </p>
 
-      {number && <p className="mt-8 text-right text-[10px] text-[#777]">Certificate No. {number}</p>}
+      <div className="mt-auto pt-10">
+        {number && <p className="mb-1 text-right text-[10px] text-[#777]">Certificate No. {number}</p>}
+        <div className="flex flex-wrap justify-between gap-x-4 text-[11px] leading-snug">
+          <span>Revision No.: {template.header.revision_no}</span>
+          <span>Issue Date: {template.header.issue_date}</span>
+          <span>Revision Date: {template.header.revision_date}</span>
+        </div>
+      </div>
     </article>
   );
 }

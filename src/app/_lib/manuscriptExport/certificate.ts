@@ -49,23 +49,9 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
   const { template: t, fields } = data;
   const logo = await dataUrlOf(LOGO_URL);
   const sign = data.signature ? await signatureSize(data.signature) : null;
-  const hairline = { hLineWidth: (i: number) => (i === 0 || i === 1 ? 0.75 : 0), vLineWidth: () => 0, paddingLeft: () => 0, paddingRight: () => 0, paddingTop: () => 3, paddingBottom: () => 3 };
 
   const content: unknown[] = [
-    { columns: [{ image: logo, width: 190 }, { text: t.header.form_code, bold: true, fontSize: 11, alignment: "right" }], margin: [0, 0, 0, 8] },
-    {
-      table: {
-        widths: ["*", "*", "*"],
-        body: [[
-          { text: `Revision No.: ${t.header.revision_no}`, alignment: "left" },
-          { text: `Issue Date: ${t.header.issue_date}`, alignment: "center" },
-          { text: `Revision Date: ${t.header.revision_date}`, alignment: "right" },
-        ]],
-      },
-      layout: hairline,
-      fontSize: 9,
-      margin: [0, 0, 0, 30],
-    },
+    { columns: [{ image: logo, width: 190 }, { text: t.header.form_code, bold: true, fontSize: 11, alignment: "right" }], margin: [0, 0, 0, 40] },
     { text: t.title, bold: true, fontSize: 12, alignment: "center", margin: [0, 0, 0, 20] },
     ...t.paragraphs.map((p) => ({ text: runsOf(p, fields), alignment: "justify", lineHeight: 1.5, leadingIndent: 36, margin: [0, 0, 0, 14] })),
     { text: t.certified_by, margin: [0, 18, 0, 6] },
@@ -82,7 +68,21 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
     pageMargins: [72, 54, 72, 72],
     defaultStyle: { font: "Arimo", fontSize: 12 },
     content,
-    footer: data.number ? { text: `Certificate No. ${data.number}`, alignment: "right", fontSize: 8, color: "#777777", margin: [72, 0, 72, 0] } : undefined,
+    // The revision line sits at the foot of the sheet, without lines.
+    footer: {
+      margin: [72, 8, 72, 0],
+      fontSize: 9,
+      stack: [
+        ...(data.number ? [{ text: `Certificate No. ${data.number}`, alignment: "right", fontSize: 8, color: "#777777", margin: [0, 0, 0, 4] }] : []),
+        {
+          columns: [
+            { text: `Revision No.: ${t.header.revision_no}`, alignment: "left" },
+            { text: `Issue Date: ${t.header.issue_date}`, alignment: "center" },
+            { text: `Revision Date: ${t.header.revision_date}`, alignment: "right" },
+          ],
+        },
+      ],
+    },
   };
 
   return pdfMake.createPdf(definition).getBlob();
@@ -95,14 +95,6 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
   const sign = data.signature ? { ...(await pictureBytes(data.signature)), ...(await signatureSize(data.signature)) } : null;
   const font = "Arial";
   const text = (value: string, bold = false, size = 24) => new d.TextRun({ text: value, bold, font, size });
-  const none = { style: d.BorderStyle.NONE, size: 0, color: "FFFFFF" };
-  const line = { style: d.BorderStyle.SINGLE, size: 6, color: "000000" };
-  const cell = (value: string, align: (typeof d.AlignmentType)[keyof typeof d.AlignmentType]) =>
-    new d.TableCell({
-      width: { size: 3120, type: d.WidthType.DXA },
-      borders: { top: line, bottom: line, left: none, right: none },
-      children: [new d.Paragraph({ alignment: align, children: [text(value, false, 18)] })],
-    });
 
   const children = [
     new d.Paragraph({
@@ -110,13 +102,7 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
       tabStops: [{ type: d.TabStopType.RIGHT, position: 9360 }],
       spacing: { after: 160 },
     }),
-    new d.Table({
-      width: { size: 9360, type: d.WidthType.DXA },
-      columnWidths: [3120, 3120, 3120],
-      borders: { top: line, bottom: line, left: none, right: none, insideHorizontal: none, insideVertical: none },
-      rows: [new d.TableRow({ children: [cell(`Revision No.: ${t.header.revision_no}`, d.AlignmentType.LEFT), cell(`Issue Date: ${t.header.issue_date}`, d.AlignmentType.CENTER), cell(`Revision Date: ${t.header.revision_date}`, d.AlignmentType.RIGHT)] })],
-    }),
-    new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { before: 520, after: 360 }, children: [text(t.title, true)] }),
+    new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { before: 800, after: 360 }, children: [text(t.title, true)] }),
     ...t.paragraphs.map(
       (p) =>
         new d.Paragraph({
@@ -136,16 +122,23 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
     new d.Paragraph({ spacing: { before: 320 }, children: [text(`${t.date_signed_label}  `), text(fields.signed_date, true)] }),
   ];
 
-  const footer = data.number
-    ? new d.Footer({ children: [new d.Paragraph({ alignment: d.AlignmentType.RIGHT, children: [new d.TextRun({ text: `Certificate No. ${data.number}`, font, size: 16, color: "777777" })] })] })
-    : undefined;
+  // The revision line sits at the foot of the sheet, without lines: left, centre and right on one line.
+  const footer = new d.Footer({
+    children: [
+      ...(data.number ? [new d.Paragraph({ alignment: d.AlignmentType.RIGHT, spacing: { after: 60 }, children: [new d.TextRun({ text: `Certificate No. ${data.number}`, font, size: 16, color: "777777" })] })] : []),
+      new d.Paragraph({
+        tabStops: [{ type: d.TabStopType.CENTER, position: 4680 }, { type: d.TabStopType.RIGHT, position: 9360 }],
+        children: [text(`Revision No.: ${t.header.revision_no}\tIssue Date: ${t.header.issue_date}\tRevision Date: ${t.header.revision_date}`, false, 18)],
+      }),
+    ],
+  });
 
   const doc = new d.Document({
     creator: "Project Pulse",
     title: `${t.title} ${data.number ?? ""}`.trim(),
     sections: [{
       properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1080, right: 1440, bottom: 1440, left: 1440 } } },
-      footers: footer ? { default: footer } : undefined,
+      footers: { default: footer },
       children,
     }],
   });
