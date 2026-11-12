@@ -350,6 +350,39 @@ export function compareDocuments(oldDoc: JSONContent | undefined, newDoc: JSONCo
   return { rows, stats, coarse };
 }
 
+// Did the words a comment pointed at change in the newer version? The comment belongs to the older side of the
+// comparison; its paragraph is found by counting the rows that have an older side (same, changed, removed).
+//   "removed"   the whole paragraph is gone
+//   "changed"   the paragraph was reworded and the commented words were among the replaced ones
+//   "unchanged" the commented words are still as they were (the paragraph may have changed elsewhere)
+// A comment on the whole version has no words to check (null).
+export type AddressedState = "removed" | "changed" | "unchanged";
+
+export function commentState(rows: DiffRow[], comment: { block_index: number | null; start_offset: number | null; end_offset: number | null }): AddressedState | null {
+  if (comment.block_index === null || comment.start_offset === null || comment.end_offset === null) return null;
+
+  let oldIndex = -1;
+  for (const row of rows) {
+    if (row.type === "added") continue;
+    if (++oldIndex !== comment.block_index) continue;
+    if (row.type === "same") return "unchanged";
+    if (row.type === "removed") return "removed";
+    if (row.type !== "changed") return null;
+
+    let at = 0;
+    for (const part of row.parts) {
+      if (part.t === "add") continue;
+      const from = at;
+      at += part.text.length;
+      if (part.t === "del" && from < comment.end_offset && at > comment.start_offset) return "changed";
+    }
+
+    return "unchanged";
+  }
+
+  return null;
+}
+
 // A reviewer mostly wants the changes: unchanged runs fold away, leaving a little context around each change.
 export type Section = { kind: "change"; row: DiffRow; index: number } | { kind: "same"; rows: DiffRow[]; id: number } | { kind: "folded"; count: number; id: number };
 

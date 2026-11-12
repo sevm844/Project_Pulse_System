@@ -124,7 +124,14 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   survive; pictures are never "edited"). Formatting is ignored on purpose; only words count. Green underline = added, red strikethrough =
   removed. "Show only changes" folds unchanged runs, Previous/Next walk the changes. The dialogs render through a portal to `document.body`.
   Who edited is per version (`editors`), not per sentence. Very large, totally different papers fall back to "all removed / all added".
-- Not built yet: comments on selected text, Grammarian access, title page / table of contents / page numbers, export.
+- **Review comments** (`ManuscriptReview`, `ManuscriptCommentController`, tables `manuscript_comments` / `manuscript_comment_replies`): the adviser of the group
+  and the Dean select words in a frozen version (or comment on the whole version); the students read and reply; only the adviser/Dean mark a comment
+  Resolved or reopen it (reopening notifies the group). A comment lives on a **version**, never on the draft, so it keeps pointing at the same words.
+  Its place is `block_index` (the n-th block of `toBlocks()` in `_lib/manuscriptDiff.ts`) plus character offsets inside that block's text, with the quoted
+  words kept as a fallback: **do not change `toBlocks()` without a migration plan for stored comments.** The version list shows open/resolved counts and a
+  Review (staff) or Comments (students) button. The Compare screen lists the older version's comments with what happened to their words
+  (`commentState`: changed / removed / not changed). Formatting is not shown in the review screen (words only), like Compare.
+- Not built yet: Grammarian access, title page / table of contents / page numbers, export.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->

@@ -49,6 +49,45 @@ export const fetchManuscriptVersions = (projectId: number) => apiFetch<Manuscrip
 export const fetchManuscriptVersion = (projectId: number, versionNo: number) =>
   apiFetch<ManuscriptVersion & { content: JSONContent }>(`/projects/${projectId}/manuscript/versions/${versionNo}`);
 
+// Review comments on a frozen version. The adviser and the Dean write them (on words inside one paragraph, or on the
+// whole version) and decide when one is Resolved; the students reply. `block_index` counts the readable blocks of that
+// version (see toBlocks in manuscriptDiff.ts) and the offsets count characters of that block's text.
+export type CommentReply = { reply_id: number; body: string; author: string; author_role: string | null; created_at: string | null };
+
+export type ManuscriptComment = {
+  comment_id: number;
+  version_no: number;
+  block_index: number | null;
+  start_offset: number | null;
+  end_offset: number | null;
+  quote: string | null;
+  body: string;
+  status: "Open" | "Resolved";
+  author: string;
+  author_role: string | null;
+  created_at: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  replies: CommentReply[];
+};
+
+export type CommentAnchor = { block_index: number; start_offset: number; end_offset: number; quote: string };
+
+export const fetchManuscriptComments = (projectId: number, versionNo?: number) =>
+  apiFetch<ManuscriptComment[]>(`/projects/${projectId}/manuscript/comments${versionNo ? `?version=${versionNo}` : ""}`);
+
+export const addManuscriptComment = (projectId: number, versionNo: number, body: string, anchor?: CommentAnchor) =>
+  apiFetch<ManuscriptComment>(`/projects/${projectId}/manuscript/versions/${versionNo}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body, ...anchor }),
+  });
+
+export const replyToManuscriptComment = (commentId: number, body: string) =>
+  apiFetch<ManuscriptComment>(`/manuscript-comments/${commentId}/replies`, { method: "POST", body: JSON.stringify({ body }) });
+
+export const setManuscriptCommentStatus = (commentId: number, status: "Open" | "Resolved") =>
+  apiFetch<ManuscriptComment>(`/manuscript-comments/${commentId}/status`, { method: "PUT", body: JSON.stringify({ status }) });
+
 export const FONT_FAMILIES = ["Arial", "Times New Roman", "Calibri", "Cambria", "Georgia", "Verdana", "Courier New"];
 export const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36];
 export const DEFAULT_FONT = "Arial";

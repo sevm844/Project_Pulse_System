@@ -4,8 +4,8 @@ import type { JSONContent } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { errorMessage } from "../../_lib/groups";
-import { fetchManuscriptVersion, type ManuscriptVersion } from "../../_lib/manuscript";
-import { compareDocuments, toSections, type Block, type DiffRow, type Part } from "../../_lib/manuscriptDiff";
+import { fetchManuscriptComments, fetchManuscriptVersion, type ManuscriptComment, type ManuscriptVersion } from "../../_lib/manuscript";
+import { commentState, compareDocuments, toSections, type AddressedState, type Block, type DiffRow, type Part } from "../../_lib/manuscriptDiff";
 import { formatDateTime } from "../../_lib/requirements";
 
 type Loaded = { from: number; to: number; fromDoc?: JSONContent; toDoc?: JSONContent; error?: string };
@@ -36,6 +36,7 @@ export default function ManuscriptCompare({
   const [onlyChanges, setOnlyChanges] = useState(true);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
   const [current, setCurrent] = useState(-1);
+  const [fromComments, setFromComments] = useState<{ no: number; list: ManuscriptComment[] } | null>(null);
   const cache = useRef(new Map<number, JSONContent>());
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -60,10 +61,30 @@ export default function ManuscriptCompare({
     };
   }, [projectId, fromNo, toNo]);
 
+  // What the reviewers asked for on the older version, so the comparison can show whether it was done.
+  useEffect(() => {
+    let cancelled = false;
+    fetchManuscriptComments(projectId, fromNo)
+      .then((list) => !cancelled && setFromComments({ no: fromNo, list }))
+      .catch(() => !cancelled && setFromComments({ no: fromNo, list: [] }));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, fromNo]);
+
   const ready = loaded && loaded.from === fromNo && loaded.to === toNo ? loaded : null;
   const result = useMemo(() => (ready?.fromDoc && ready.toDoc ? compareDocuments(ready.fromDoc, ready.toDoc) : null), [ready]);
   const sections = useMemo(() => (result ? toSections(result.rows, onlyChanges, expanded) : []), [result, onlyChanges, expanded]);
   const total = result ? result.rows.filter((row) => row.type !== "same").length : 0;
+
+  const asked = useMemo(
+    () =>
+      result && fromComments && fromComments.no === fromNo
+        ? fromComments.list.map((comment) => ({ comment, state: commentState(result.rows, comment) }))
+        : [],
+    [result, fromComments, fromNo],
+  );
 
   const fromVersion = ordered.find((v) => v.version_no === fromNo);
   const toVersion = ordered.find((v) => v.version_no === toNo);
@@ -144,6 +165,8 @@ export default function ManuscriptCompare({
               </span>
             </div>
 
+            {asked.length > 0 && <AskedPanel versionNo={fromNo} asked={asked} />}
+
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[#edf2ec] px-5 py-2.5">
               <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-[#203028]">
                 <input type="checkbox" checked={onlyChanges} onChange={(event) => setOnlyChanges(event.target.checked)} className="h-4 w-4 accent-[#123f2b]" />
@@ -208,6 +231,43 @@ export default function ManuscriptCompare({
       </div>
     </div>,
     document.body,
+  );
+}
+
+const STATE_LABEL: Record<AddressedState, { text: string; cls: string }> = {
+  changed: { text: "Words changed", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  removed: { text: "Paragraph removed", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  unchanged: { text: "Not changed", cls: "bg-amber-50 text-amber-800 border-amber-200" },
+};
+
+// The comments the reviewers left on the older version, each with what happened to the words it pointed at.
+function AskedPanel({ versionNo, asked }: { versionNo: number; asked: { comment: ManuscriptComment; state: AddressedState | null }[] }) {
+  const done = asked.filter((a) => a.state === "changed" || a.state === "removed").length;
+  const untouched = asked.filter((a) => a.state === "unchanged").length;
+
+  return (
+    <details className="group border-b border-[#edf2ec] bg-[#fcfdfb] px-5 py-2.5">
+      <summary className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#203028]">
+        <span>Comments on Version {versionNo}: {asked.length}</span>
+        {done > 0 && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-800">{done} acted on</span>}
+        {untouched > 0 && <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-800">{untouched} not changed</span>}
+        <span className="ml-auto font-normal text-[#7b877f] group-open:hidden">Show</span>
+        <span className="ml-auto hidden font-normal text-[#7b877f] group-open:inline">Hide</span>
+      </summary>
+      <ul className="mt-2 max-h-48 space-y-2 overflow-auto">
+        {asked.map(({ comment, state }) => (
+          <li key={comment.comment_id} className="rounded-lg border border-[#e5ebe5] bg-white px-3 py-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              {state && <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${STATE_LABEL[state].cls}`}>{STATE_LABEL[state].text}</span>}
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${comment.status === "Resolved" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{comment.status}</span>
+              <span className="text-[#7b877f]">{comment.author}</span>
+            </div>
+            {comment.quote && <p className="mt-1 border-l-2 border-amber-400 pl-2 italic text-[#59645d]">&ldquo;{comment.quote.length > 120 ? `${comment.quote.slice(0, 120)}…` : comment.quote}&rdquo;</p>}
+            <p className="mt-1 break-words text-[#203028]">{comment.body}</p>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -304,6 +364,14 @@ function BlockView({ block, mark, parts }: { block: Block; mark?: "add" | "del";
   ) : (
     block.text
   );
+
+  return <BlockShell block={block}>{body}</BlockShell>;
+}
+
+// The frame of one block (heading, list item, table row, picture...) around whatever words it holds. With an `index`
+// the words sit in a marked element, so a reader's selection can be turned back into "paragraph n, characters a to b".
+export function BlockShell({ block, index, children }: { block: Block; index?: number; children: React.ReactNode }) {
+  const body = index === undefined ? children : <span data-text="true" data-block={index}>{children}</span>;
 
   switch (block.kind) {
     case "heading":

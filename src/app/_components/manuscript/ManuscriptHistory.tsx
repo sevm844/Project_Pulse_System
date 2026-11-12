@@ -4,11 +4,14 @@ import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ManuscriptCompare from "./ManuscriptCompare";
+import ManuscriptReview from "./ManuscriptReview";
 import ManuscriptView from "./ManuscriptView";
 import { errorMessage } from "../../_lib/groups";
 import {
+  fetchManuscriptComments,
   fetchManuscriptVersion,
   fetchManuscriptVersions,
+  type ManuscriptComment,
   type ManuscriptVersion,
 } from "../../_lib/manuscript";
 import { formatDateTime } from "../../_lib/requirements";
@@ -19,10 +22,13 @@ export default function ManuscriptHistory({
   projectId,
   reloadKey = 0,
   onUseAsDraft,
+  canReview = false,
 }: {
   projectId: number;
   reloadKey?: number;
   onUseAsDraft?: (content: JSONContent, versionNo: number) => void;
+  // The adviser and the Dean write review comments; students only read and reply.
+  canReview?: boolean;
 }) {
   const [versions, setVersions] = useState<ManuscriptVersion[] | null>(null);
   const [error, setError] = useState("");
@@ -31,6 +37,8 @@ export default function ManuscriptHistory({
   const [confirmRestore, setConfirmRestore] = useState(false);
   // Comparing needs two versions; `to` is the one the comparison opens on (the one before it is the older side).
   const [compareTo, setCompareTo] = useState<number | null>(null);
+  const [reviewNo, setReviewNo] = useState<number | null>(null);
+  const [comments, setComments] = useState<ManuscriptComment[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +46,13 @@ export default function ManuscriptHistory({
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Unable to load the version history."));
+    }
+
+    // The comment counts are a convenience: the list still works if they cannot be loaded.
+    try {
+      setComments(await fetchManuscriptComments(projectId));
+    } catch {
+      setComments([]);
     }
   }, [projectId]);
 
@@ -87,6 +102,8 @@ export default function ManuscriptHistory({
       <ol className="space-y-3">
         {(versions ?? []).map((version) => {
           const others = version.editors.filter((name) => name !== version.saved_by);
+          const mine = comments.filter((c) => c.version_no === version.version_no);
+          const openCount = mine.filter((c) => c.status === "Open").length;
           const hasPrevious = (versions ?? []).some((v) => v.version_no < version.version_no);
 
           return (
@@ -102,6 +119,11 @@ export default function ManuscriptHistory({
                     {others.length > 0 && ` · also edited by ${others.join(", ")}`}
                   </p>
                   {version.note && <p className="mt-1.5 break-words text-xs italic text-[#59645d]">&ldquo;{version.note}&rdquo;</p>}
+                  {mine.length > 0 && (
+                    <p className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${openCount > 0 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+                      {openCount > 0 ? `${openCount} open ${openCount === 1 ? "comment" : "comments"}` : `${mine.length} ${mine.length === 1 ? "comment" : "comments"} resolved`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-col gap-1.5">
                   <button
@@ -112,6 +134,15 @@ export default function ManuscriptHistory({
                   >
                     {opening === version.version_no ? "Opening..." : "View"}
                   </button>
+                  {(canReview || mine.length > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => setReviewNo(version.version_no)}
+                      className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                    >
+                      {canReview ? "Review" : "Comments"}
+                    </button>
+                  )}
                   {hasPrevious && (
                     <button
                       type="button"
@@ -131,6 +162,17 @@ export default function ManuscriptHistory({
 
       {compareTo !== null && versions && versions.length >= 2 && (
         <ManuscriptCompare projectId={projectId} versions={versions} initialTo={compareTo} onClose={() => setCompareTo(null)} />
+      )}
+
+      {reviewNo !== null && (
+        <ManuscriptReview
+          projectId={projectId}
+          versionNo={reviewNo}
+          version={versions?.find((v) => v.version_no === reviewNo)}
+          canComment={canReview}
+          onClose={() => setReviewNo(null)}
+          onChanged={() => void load()}
+        />
       )}
 
       {open && createPortal(

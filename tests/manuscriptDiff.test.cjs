@@ -149,6 +149,31 @@ test("sections fold long unchanged runs and keep one paragraph of context", () =
   assert.equal(open[0].kind, "same");
 });
 
+test("a comment is checked against the newer version: removed, changed, or still unchanged", () => {
+  const a = doc(
+    p("Keep this paragraph exactly."),
+    p("The objectives are to make a better queue system for residents."),
+    p("Delete this whole paragraph about nothing in particular."),
+    p("Another stable paragraph."),
+  );
+  const b = doc(
+    p("Keep this paragraph exactly."),
+    p("The objectives are to reduce waiting time for residents."),
+    p("Another stable paragraph."),
+    p("Brand new ending."),
+  );
+  const r = compareDocuments(a, b);
+  const at = (block, text, quote) => ({ block_index: block, start_offset: text.indexOf(quote), end_offset: text.indexOf(quote) + quote.length });
+  const second = "The objectives are to make a better queue system for residents.";
+  assert.equal(compiled.exports.commentState(r.rows, at(0, "Keep this paragraph exactly.", "Keep this")), "unchanged");
+  assert.equal(compiled.exports.commentState(r.rows, at(1, second, "make a better queue system")), "changed");
+  assert.equal(compiled.exports.commentState(r.rows, at(1, second, "The objectives")), "unchanged"); // same paragraph, other words
+  assert.equal(compiled.exports.commentState(r.rows, at(2, "Delete this whole paragraph about nothing in particular.", "whole paragraph")), "removed");
+  assert.equal(compiled.exports.commentState(r.rows, at(3, "Another stable paragraph.", "stable")), "unchanged"); // index counts old blocks only
+  assert.equal(compiled.exports.commentState(r.rows, { block_index: null, start_offset: null, end_offset: null }), null);
+  assert.equal(compiled.exports.commentState(r.rows, { block_index: 99, start_offset: 0, end_offset: 3 }), null);
+});
+
 test("countWords counts words, not punctuation", () => {
   assert.equal(countWords("It's a well-known fact, isn't it?"), 6);
 });
