@@ -19,8 +19,10 @@ export async function downloadCertificateFile(certificate: Certificate, format: 
 }
 
 // The Certification of Editing/Originality issued to a group: open it, or download it as PDF or Word. Shown to the group,
-// its adviser and the Dean; nothing is shown until the Grammarian has issued one.
-export default function CertificateList({ projectId, emptyText }: { projectId: number; emptyText?: string }) {
+// its adviser, the Coordinator and the Dean; nothing is shown until the Grammarian has issued one.
+// `heading` is printed above the list; with `hideWhenEmpty` nothing at all is drawn until a certificate exists (for the group,
+// its adviser and the Coordinator, who only see the one in force).
+export default function CertificateList({ projectId, emptyText, heading, hideWhenEmpty = false }: { projectId: number; emptyText?: string; heading?: string; hideWhenEmpty?: boolean }) {
   const [items, setItems] = useState<Certificate[] | null>(null);
   const [error, setError] = useState("");
   const [open, setOpen] = useState<Certificate | null>(null);
@@ -50,10 +52,12 @@ export default function CertificateList({ projectId, emptyText }: { projectId: n
     setBusy(null);
   }
 
+  if (hideWhenEmpty && !error && (items === null || items.length === 0)) return null;
   if (items === null && !error) return <p className="text-sm text-[#7b877f]">Loading...</p>;
 
   return (
     <div>
+      {heading && <h4 className="mb-2 text-sm font-semibold text-[#203028]">{heading}</h4>}
       {error && (
         <p role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
           {error}

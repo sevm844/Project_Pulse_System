@@ -34,7 +34,8 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 13 | (Student 1) Look at the **Versions** list. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
 | 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
 | 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
-| 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 16 | (Student 7) After the Grammarian has issued the certificate, open **My Project → Overview**: find the **Certificate of Editing/Originality**, press **View**, then download it as **PDF**. (Student 1 has none yet: the card should not appear.) | | |
+| 17 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -58,7 +59,8 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 12 | In **Assigned Groups**, press **Show timeline** on a group and read its deadlines. | | |
 | 13 | (Adviser 1) In **Assigned Groups**, open **UAT Alpha** and press **Show manuscript versions**. Press **Review** on Version 1: select some words and leave a comment on them. | | |
 | 14 | Press **Compare versions** and see what UAT Alpha changed after your comments. Is it clear which of your comments were acted on? Mark one comment **resolved**. | | |
-| 15 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 15 | (Adviser 2) In **Assigned Groups**, once the certificate for UAT Delta is issued, find it under that group and open it. Does UAT Alpha (Adviser 1) show none? | | |
+| 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -81,7 +83,8 @@ Email: `uat-dean@uat.test`
 | 11 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
 | 12 | Open **Certificates**. The list offers only groups that passed their Final Defense; the demo groups have not, so tick **Show other groups too**, choose **UAT Delta** (a warning says it is an exception), press **View manuscript** to read it, then send it to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
 | 13 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
-| 14 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 14 | Open **Defenses → Schedule defense** and read the note about the order. Try to schedule an **Alpha Defense** for UAT Gamma before its Proposal Defense is passed: it should be refused with a clear message. | | |
+| 15 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -112,7 +115,7 @@ Email: `uat-grammarian@uat.test`
 | 5 | Press **Review** on Version 1. Read the two grammar comments, then select other words and leave your own comment. Mark one of your comments resolved. Can you resolve the adviser's comment, if there is one? (You should not be able to.) | | |
 | 6 | Open **Certificates**. After the Dean sends you UAT Delta's final manuscript (see the Dean's task), it appears under **Waiting for you**. Press **Download manuscript**: do you get the group's paper as a Word document you could check elsewhere? | | |
 | 7 | Upload your signature. Press **Prepare certificate** and look at the form: is it like the university's F-RPO-09? Click a bold highlighted part (the title, authors, degree or a date) and correct it. Can you change the fixed wording here? (You should not.) | | |
-| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? It goes straight to the Dean. | | |
+| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? It goes to the Dean, and the group, its adviser and the Coordinator can read it too. | | |
 | 9 | Press **Edit the certificate form**: it is your form. Change the revision number and save it as a new version. Try to remove a bold field from the wording: it should refuse. | | |
 | 10 | Ask the Dean to send the manuscript again, then press **Did not pass**, write your remarks and return it. | | |
 | 11 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
@@ -129,7 +132,8 @@ Email: `uat-coordinator@uat.test`
 | 2 | Mark it as received. | | |
 | 3 | Open **Group Folders** and find UAT Delta's record. | | |
 | 4 | Open **Student Approvals** and **Archive Records**. Can you tell what each is for? | | |
-| 5 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 5 | In **Group Folders**, open UAT Delta: after the Grammarian issues the certificate, can you see and open it? Open UAT Alpha: does it say the certificate is missing? A group cannot be archived until its certificate exists (the **Archive this project** button stays off). | | |
+| 6 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 

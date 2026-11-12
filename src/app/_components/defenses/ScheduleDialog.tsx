@@ -145,6 +145,9 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
                   ))}
                 </select>
               </label>
+              <p className="col-span-2 -mt-1 text-[11px] leading-4 text-[#7b877f]">
+                Defenses go in order, with no skipping: Proposal, Alpha, Beta, Omega, Final. Each one can be scheduled only after the group passed the one before it.
+              </p>
             </div>
           )}
 

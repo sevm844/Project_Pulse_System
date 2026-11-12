@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
+import CertificateList from "../../_components/certificates/CertificateList";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { StageSteps } from "../../_components/ProposalStage";
 import {
@@ -172,6 +173,12 @@ export default function ProjectPage() {
                 </div>
               ))}
             </div>
+
+            {group.project && (
+              <div className="mt-6">
+                <CertificateList projectId={group.project.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />
+              </div>
+            )}
           </Card>
         )}
 

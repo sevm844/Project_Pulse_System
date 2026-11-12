@@ -107,7 +107,7 @@ export default function GrammarianCertificatesPage() {
             <li>The Dean sends you a group&apos;s final manuscript. It appears under <strong>Waiting for you</strong>.</li>
             <li>Download it and check it outside the system (plagiarism and so on).</li>
             <li>
-              Come back: <strong>Prepare certificate</strong> for a group that passes (it goes straight to the Dean), or <strong>Did not pass</strong> to return it to the Dean with your remarks.
+              Come back: <strong>Prepare certificate</strong> for a group that passes (it goes to the Dean, and the group, its adviser and the Coordinator can read it), or <strong>Did not pass</strong> to return it to the Dean with your remarks.
             </li>
           </ol>
           <Link href="/grammarian/certificates/form" className="mt-3 inline-block rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">

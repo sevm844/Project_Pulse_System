@@ -8,6 +8,7 @@ import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
+import CertificateList from "../../_components/certificates/CertificateList";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import ManuscriptHistory from "../../_components/manuscript/ManuscriptHistory";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
@@ -508,6 +509,9 @@ export default function AssignedGroupsPage() {
                         <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
                       </div>
                     )}
+                    <div className="mt-3">
+                      <CertificateList projectId={group.project.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />
+                    </div>
                   </>
                 )}
 

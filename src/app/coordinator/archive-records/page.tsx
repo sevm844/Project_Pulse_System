@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import CoordinatorShell from "../_components/CoordinatorShell";
+import CertificateList from "../../_components/certificates/CertificateList";
 import OutputList from "../../_components/records/OutputList";
 import { apiFetch } from "../../_lib/api";
 import { downloadCsv, fetchFinalRecords, matchesSearch, type ApiFinalRecord } from "../../_lib/finalOutputs";
@@ -152,6 +153,8 @@ export default function ArchiveRecordsPage() {
                     </p>
 
                     <OutputList outputs={record.outputs} onError={setError} />
+
+                    <CertificateList projectId={record.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />
 
                     <div className="border-t border-[#edf2ec] pt-4">
                       <button

@@ -34,6 +34,8 @@ export type ApiFinalRecord = {
   total: number;
   received: number;
   complete: boolean;
+  // The Grammarian's certificate of editing/originality is in force: required before the project can be archived.
+  has_certificate: boolean;
   archived_at: string | null;
   archived_by: string | null;
   archive_remarks: string | null;

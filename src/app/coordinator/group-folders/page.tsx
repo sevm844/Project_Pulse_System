@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import CoordinatorShell from "../_components/CoordinatorShell";
+import CertificateList from "../../_components/certificates/CertificateList";
 import OutputList from "../../_components/records/OutputList";
 import { apiFetch } from "../../_lib/api";
 import { fetchFinalRecords, matchesSearch, type ApiFinalRecord } from "../../_lib/finalOutputs";
@@ -126,12 +127,23 @@ export default function GroupFoldersPage() {
 
                     <OutputList outputs={record.outputs} onReceived={() => void load()} onError={setError} />
 
+                    <div className="border-t border-[#edf2ec] pt-4">
+                      <CertificateList projectId={record.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />
+                      {!record.has_certificate && (
+                        <p className="text-xs text-[#7b877f]">
+                          No certificate of editing/originality yet. The Grammarian issues it after the Dean sends the final manuscript; the
+                          project can be archived once it is issued.
+                        </p>
+                      )}
+                    </div>
+
                     {record.complete && (
                       <div className="border-t border-[#edf2ec] pt-4">
                         <button
                           type="button"
-                          disabled={busy}
+                          disabled={busy || !record.has_certificate}
                           onClick={() => void archive(record)}
+                          title={record.has_certificate ? undefined : "The certificate of editing/originality must be issued first"}
                           className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
                         >
                           Archive this project

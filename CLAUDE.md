@@ -74,6 +74,9 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Concurrency:** title proposals and decisions, stage moves, submissions, reviews, receipts, and defense scheduling, evaluation, result and
   cancel all lock their rows (group, then project, then the item) and re-check the rule inside the lock. A review may send `version_no`
   and is refused if a newer version was uploaded meanwhile (`StaffRequirements` sends it).
+- **Defense order is strict, no skipping:** Proposal -> Alpha -> Beta -> Omega -> Final (`Defense::TYPES`). A type can be scheduled only after the group
+  passed (Passed or Passed with Revisions) the one before it (`Defense::previousType` / `hasPassed`, checked inside the project lock in
+  `DefenseController::store`). A failed defense is defended again; a cancelled one counts as not held.
 - **Module boundaries:** after "Ready for Proposal Defense", Module 5 (Defenses), Module 3 (Requirements) and Module 7
   (Records) track their own progress in their own fields. A Proposal Defense can only be scheduled for a Ready group.
   Requirement `stage` labels live in `Requirement::STAGES` / `REQUIREMENT_STAGES`, separate from the proposal stages.
@@ -158,10 +161,11 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   **The form is the Grammarian's own**: fixed wording with five fill-in fields (`{{title}} {{authors}} {{degree}} {{done_date}} {{signed_date}}`), versions in `certificate_templates` (v1 seeded by the migration); only the Grammarian saves a new
   version (the wording must keep the first four fields). The Dean has no form editor. She fills the bold fields on the page (prefilled: title, "Surname, First" authors leader first, degree from the course, today's dates), prints her own uploaded
   signature (`user_signatures`), and issues it. A certificate (`certificates`, number `GC-YYYY-NNNN`) keeps a snapshot of the form version, her name and signature, so it never changes when the form is revised; issuing again replaces the earlier one
-  (kept, marked replaced). **Only the Dean (who receives it) and the Grammarian can read certificates; students, advisers and the Coordinator cannot** (`Project::scopeCertificateVisibleTo`). The Grammarian can read the manuscript versions of every
+  (kept, marked replaced). **Who reads certificates: the Dean (who receives it), the Grammarian, the group's own students, its adviser and the Research Coordinator; panelists cannot** (`Project::scopeCertificateVisibleTo`). The group, adviser and Coordinator see only the certificate in force (never a replaced one), shown by `CertificateList` (`hideWhenEmpty`) on the student's My Project overview, the adviser's group card and the Coordinator's Group Folders / Archive Records; they are also notified when it is issued. The Grammarian can read the manuscript versions of every
   group sent to her (`scopeManuscriptVisibleTo`). Logo: `public/certificate/ub-rpo-logo.png`. The editable fields compare text with spaces normalised: a typed trailing space becomes a non-breaking space, and resetting it would throw the cursor to
   the start. `uat:reset` does not touch form versions (they are the Grammarian's, not demo data).
-- Not built yet: certificates are not yet a required document before the final defense or the archive; ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
+- **The certificate is required to archive, not to defend** (`FinalOutputController::archive` refuses with 422 unless `Project::hasCertificate`; `GET /final-outputs` returns `has_certificate`, and Group Folders disables "Archive this project" without it). A group can take any defense without it.
+- Not built yet: ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
