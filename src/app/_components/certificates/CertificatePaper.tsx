@@ -27,7 +27,7 @@ export default function CertificatePaper({
       // A sheet of short bond paper (Letter, 8.5 x 11 in): it is at least that tall, longer only if the text needs it.
       style={{ fontFamily: "Arial, Helvetica, sans-serif", aspectRatio: "8.5 / 11" }}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 opacity-50">
         <p className="text-[13px] font-bold">{template.header.form_code}</p>
         {/* eslint-disable-next-line @next/next/no-img-element -- a fixed local logo, shown at its own shape */}
         <img src="/certificate/ub-rpo-logo.png" alt="University of Batangas Research and Publications Office" className="w-[190px] max-w-[55%]" />
@@ -64,7 +64,7 @@ export default function CertificatePaper({
         <Field name="signed_date" value={fields.signed_date} editable={editable} onChange={onChange} />
       </p>
 
-      <div className="mt-auto pt-10">
+      <div className="mt-auto pt-10 opacity-50">
         <div className="flex flex-wrap justify-between gap-x-4 text-[11px] leading-snug">
           <span>Revision No.: {template.header.revision_no}</span>
           <span>Issue Date: {template.header.issue_date}</span>

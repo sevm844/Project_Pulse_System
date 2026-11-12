@@ -23,13 +23,25 @@ async function pictureBytes(source: string): Promise<{ bytes: Uint8Array; type: 
   return { bytes: buffer, type: buffer[0] === 0xff ? "jpg" : "png" };
 }
 
-const dataUrlOf = async (url: string) =>
-  new Promise<string>(async (resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(await (await fetch(url)).blob());
-  });
+// The header and the foot of the sheet are printed light grey, like a watermark-style letterhead.
+const FADE_GREY = "808080";
+
+// The logo at half strength (drawn on white), so it matches the grey form code and revision line in every file type.
+async function fadedLogo(): Promise<string> {
+  const bitmap = await createImageBitmap(await (await fetch(LOGO_URL)).blob());
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("The logo could not be prepared.");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(bitmap, 0, 0);
+  bitmap.close();
+
+  return canvas.toDataURL("image/png");
+}
 
 // A paragraph of the wording as runs: ordinary text, and the group's fill-in fields in bold.
 const runsOf = (paragraph: string, fields: CertificateFields) =>
@@ -47,11 +59,11 @@ async function signatureSize(signature: string): Promise<{ w: number; h: number 
 export async function buildCertificatePdf(data: CertificateData): Promise<Blob> {
   const pdfMake = await loadPdfMake();
   const { template: t, fields } = data;
-  const logo = await dataUrlOf(LOGO_URL);
+  const logo = await fadedLogo();
   const sign = data.signature ? await signatureSize(data.signature) : null;
 
   const content: unknown[] = [
-    { columns: [{ text: t.header.form_code, bold: true, fontSize: 11, width: "*" }, { image: logo, width: 190 }], margin: [0, 0, 0, 40] },
+    { columns: [{ text: t.header.form_code, bold: true, fontSize: 11, color: `#${FADE_GREY}`, width: "*" }, { image: logo, width: 190 }], margin: [0, 0, 0, 40] },
     { text: t.title, bold: true, fontSize: 12, alignment: "center", margin: [0, 0, 0, 20] },
     ...t.paragraphs.map((p) => ({ text: runsOf(p, fields), alignment: "justify", lineHeight: 1.5, leadingIndent: 36, margin: [0, 0, 0, 14] })),
     { text: t.certified_by, margin: [0, 18, 0, 6] },
@@ -72,6 +84,7 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
     footer: {
       margin: [72, 8, 72, 0],
       fontSize: 9,
+      color: `#${FADE_GREY}`,
       stack: [
         {
           columns: [
@@ -90,14 +103,14 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
 export async function buildCertificateDocx(data: CertificateData): Promise<Blob> {
   const d = await import("docx");
   const { template: t, fields } = data;
-  const logo = await pictureBytes(LOGO_URL);
+  const logo = await pictureBytes(await fadedLogo());
   const sign = data.signature ? { ...(await pictureBytes(data.signature)), ...(await signatureSize(data.signature)) } : null;
   const font = "Arial";
-  const text = (value: string, bold = false, size = 24) => new d.TextRun({ text: value, bold, font, size });
+  const text = (value: string, bold = false, size = 24, color?: string) => new d.TextRun({ text: value, bold, font, size, color });
 
   const children = [
     new d.Paragraph({
-      children: [new d.TextRun({ text: `${t.header.form_code}\t`, bold: true, font, size: 22 }), new d.ImageRun({ type: "png", data: logo.bytes, transformation: { width: 253, height: Math.round(253 * LOGO_RATIO) } })],
+      children: [new d.TextRun({ text: `${t.header.form_code}\t`, bold: true, font, size: 22, color: FADE_GREY }), new d.ImageRun({ type: "png", data: logo.bytes, transformation: { width: 253, height: Math.round(253 * LOGO_RATIO) } })],
       tabStops: [{ type: d.TabStopType.RIGHT, position: 9360 }],
       spacing: { after: 160 },
     }),
@@ -126,7 +139,7 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
     children: [
       new d.Paragraph({
         tabStops: [{ type: d.TabStopType.CENTER, position: 4680 }, { type: d.TabStopType.RIGHT, position: 9360 }],
-        children: [text(`Revision No.: ${t.header.revision_no}\tIssue Date: ${t.header.issue_date}\tRevision Date: ${t.header.revision_date}`, false, 18)],
+        children: [text(`Revision No.: ${t.header.revision_no}\tIssue Date: ${t.header.issue_date}\tRevision Date: ${t.header.revision_date}`, false, 18, FADE_GREY)],
       }),
     ],
   });
