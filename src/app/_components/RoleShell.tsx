@@ -21,6 +21,7 @@ import DashboardSearchIcon from "./DashboardSearchIcon";
 import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
 import SidebarToggle from "./SidebarToggle";
+import { useProfilePhoto } from "./useProfilePhoto";
 
 export type NavItem = {
   label: string;
@@ -29,14 +30,6 @@ export type NavItem = {
   // Extra path prefixes that also highlight this item. Defaults to [href].
   matches?: string[];
 };
-
-// Browser-storage keys for one role's profile photo, shared with that role's profile page.
-export function profileImageKeys(slug: string) {
-  return {
-    image: `project-pulse-${slug}-profile-image`,
-    updatedEvent: `project-pulse-${slug}-profile-image-updated`,
-  };
-}
 
 export type RoleShellProps = {
   title: string;
@@ -65,13 +58,12 @@ export default function RoleShell({
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const keys = profileImageKeys(slug);
   const collapsedKey = `project-pulse-${slug}-sidebar-collapsed`;
   const home = `/${slug}`;
 
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { photo: profileImage, change: changePhoto } = useProfilePhoto(slug);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -87,20 +79,6 @@ export default function RoleShell({
     queueMicrotask(() => setCheckingAccess(false));
   }, [role, router]);
 
-  useEffect(() => {
-    const savedImage = localStorage.getItem(keys.image);
-
-    if (savedImage) queueMicrotask(() => setProfileImage(savedImage));
-
-    function syncProfileImage(event: Event) {
-      setProfileImage((event as CustomEvent<string>).detail || null);
-    }
-
-    window.addEventListener(keys.updatedEvent, syncProfileImage);
-
-    return () => window.removeEventListener(keys.updatedEvent, syncProfileImage);
-  }, [keys.image, keys.updatedEvent]);
-
   function toggleSidebar() {
     const nextValue = !sidebarCollapsed;
 
@@ -110,21 +88,8 @@ export default function RoleShell({
 
   function handleProfileUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const imageData = String(reader.result);
-
-      setProfileImage(imageData);
-      localStorage.setItem(keys.image, imageData);
-      window.dispatchEvent(
-        new CustomEvent(keys.updatedEvent, { detail: imageData }),
-      );
-    };
-
-    reader.readAsDataURL(file);
+    event.target.value = "";
+    if (file) void changePhoto(file);
   }
 
   async function handleLogout() {

@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import type { UserRole } from "../_lib/types";
 import { getStoredUserEmail, getStoredUserName } from "../_utils/authStorage";
-import { profileImageKeys } from "./RoleShell";
+import { useProfilePhoto } from "./useProfilePhoto";
 
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 // Name, email and role come from the signed-in account; only the Dean's office can change them.
-// The profile photo is kept in this browser and shown in the header next to the user's name.
+// The profile photo is saved on the server, so it shows on every device, and appears in the header next to the user's name.
 export default function RoleProfileContent({
   role,
   slug,
@@ -17,34 +17,13 @@ export default function RoleProfileContent({
   role: UserRole;
   slug: string;
 }) {
-  const keys = profileImageKeys(slug);
-  const [avatar, setAvatar] = useState(
-    () => localStorage.getItem(keys.image) || DEFAULT_AVATAR,
-  );
+  const { photo, busy, error, change, remove } = useProfilePhoto(slug);
+  const avatar = photo || DEFAULT_AVATAR;
 
   function changePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const imageData = String(reader.result);
-
-      setAvatar(imageData);
-      localStorage.setItem(keys.image, imageData);
-      window.dispatchEvent(
-        new CustomEvent(keys.updatedEvent, { detail: imageData }),
-      );
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  function removePhoto() {
-    setAvatar(DEFAULT_AVATAR);
-    localStorage.removeItem(keys.image);
-    window.dispatchEvent(new CustomEvent(keys.updatedEvent, { detail: "" }));
+    event.target.value = "";
+    if (file) void change(file);
   }
 
   const details = [
@@ -82,7 +61,8 @@ export default function RoleProfileContent({
               Upload a new one
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={busy}
                 onChange={changePhoto}
                 className="hidden"
               />
@@ -90,14 +70,21 @@ export default function RoleProfileContent({
 
             <button
               type="button"
-              onClick={removePhoto}
-              className="mt-4 text-sm font-semibold text-[#d04545] transition hover:text-[#a93232]"
+              onClick={() => void remove()}
+              disabled={busy || !photo}
+              className="mt-4 text-sm font-semibold text-[#d04545] transition hover:text-[#a93232] disabled:opacity-40"
             >
               Remove photo
             </button>
 
+            {error && (
+              <p role="alert" className="mt-3 text-center text-xs text-red-600">
+                {error}
+              </p>
+            )}
+
             <p className="mt-4 text-center text-[11px] text-[#7b877f]">
-              Saved on this device only.
+              {busy ? "Saving..." : "Saved to your account: it shows on every device you sign in from."}
             </p>
           </div>
         </article>

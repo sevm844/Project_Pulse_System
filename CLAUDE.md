@@ -26,7 +26,9 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - Removed as fake/unused: Dean Academic Terms, Adviser Assignments, Courses & Sections, Roles &
   Permissions, and student Resources pages (roles are fixed by design; advisers are assigned on
   the Groups page)
-- Still on localStorage (per-browser only): profile photos and calendar notes
+- Profile photos and personal calendar notes are saved per person on the server (`ProfileController`, `_lib/profile.ts`, `useProfilePhoto`, `StakeholderCalendar`): the photo is a 256 px square JPEG data
+  URL checked on the server (never SVG), notes are limited to 500. A browser that still holds the old localStorage copies sends them once (the server import skips repeats) and then deletes them.
+- Still on localStorage (convenience only, per browser): sidebar collapsed state, the export dialog's remembered title page
 - Housekeeping: `npm test` runs the unit tests in `tests/`; `npm audit --omit=dev` is clean
   (Next 16.4.x). Unused packages (fortune-sheet, tiptap) were removed. `.env.local` only needs
   `NEXT_PUBLIC_API_URL` if the API is not at http://127.0.0.1:8000/api.

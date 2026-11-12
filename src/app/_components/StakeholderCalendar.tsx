@@ -3,21 +3,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarEvent } from "../_lib/calendarEvents";
-
-type CalendarNote = {
-  id: number;
-  date: string;
-  title: string;
-  category: string;
-};
+import { errorMessage } from "../_lib/groups";
+import { addCalendarNote, fetchCalendarNotes, importCalendarNotes, removeCalendarNote, type CalendarNote } from "../_lib/profile";
 
 type StakeholderCalendarProps = {
   title: string;
+  // Where this browser used to keep the notes. They are saved on the server now; what is found here is moved there once.
   storageKey: string;
   categories: readonly string[];
   variant?: "default" | "glass";
   compact?: boolean;
-  // Real dates from the backend (defenses, due dates). Personal notes are kept in this browser only.
+  // Real dates from the backend (defenses, due dates). Personal notes are saved to the account.
   events?: CalendarEvent[];
   eventsLoading?: boolean;
   eventsFailed?: boolean;
@@ -81,6 +77,43 @@ function getCalendarDays(currentDate: Date) {
   });
 }
 
+// One load at a time per calendar: the notes (and the one-time import of old browser notes) must not run twice when two
+// parts of the page ask at once.
+const loading = new Map<string, Promise<CalendarNote[]>>();
+
+async function loadNotes(storageKey: string): Promise<CalendarNote[]> {
+  try {
+    let saved = await fetchCalendarNotes();
+    let old: Omit<CalendarNote, "id">[] = [];
+
+    try {
+      const raw = JSON.parse(window.localStorage.getItem(storageKey) ?? "[]");
+      old = Array.isArray(raw)
+        ? raw.filter((n) => n && /^\d{4}-\d{2}-\d{2}$/.test(String(n.date)) && String(n.title ?? "").trim()).slice(0, 200).map((n) => ({
+            date: String(n.date), title: String(n.title).trim().slice(0, 200), category: String(n.category ?? "General").slice(0, 40),
+          }))
+        : [];
+    } catch {
+      old = [];
+    }
+
+    if (saved.length === 0 && old.length > 0) {
+      try {
+        saved = await importCalendarNotes(old);
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // they stay in the browser and are tried again next time
+      }
+    } else if (saved.length > 0 && old.length > 0) {
+      window.localStorage.removeItem(storageKey);
+    }
+
+    return saved;
+  } catch {
+    throw new Error("load failed");
+  }
+}
+
 export default function StakeholderCalendar({
   title,
   storageKey,
@@ -97,20 +130,25 @@ export default function StakeholderCalendar({
   const [noteTitle, setNoteTitle] = useState("");
   const [category, setCategory] = useState(categories[0] ?? "General");
 
+  const [noteError, setNoteError] = useState("");
+
+  // The notes live on the server, so they follow the person to every device. Notes this browser kept before are sent once.
   useEffect(() => {
-    const savedNotes = localStorage.getItem(storageKey);
-    if (!savedNotes) return;
+    let cancelled = false;
+    let pending = loading.get(storageKey);
+    if (!pending) {
+      pending = loadNotes(storageKey).finally(() => loading.delete(storageKey));
+      loading.set(storageKey, pending);
+    }
 
-    const parsedNotes = JSON.parse(savedNotes) as CalendarNote[];
-    if (!Array.isArray(parsedNotes)) return;
+    pending
+      .then((saved) => !cancelled && setNotes(saved))
+      .catch(() => !cancelled && setNoteError("Your notes could not be loaded. Please refresh the page."));
 
-    queueMicrotask(() => setNotes(parsedNotes));
+    return () => {
+      cancelled = true;
+    };
   }, [storageKey]);
-
-  function saveNotes(nextNotes: CalendarNote[]) {
-    setNotes(nextNotes);
-    localStorage.setItem(storageKey, JSON.stringify(nextNotes));
-  }
 
   const calendarDays = useMemo(
     () => getCalendarDays(currentMonth),
@@ -147,26 +185,31 @@ export default function StakeholderCalendar({
     );
   }
 
-  function addNote() {
+  async function addNote() {
     const cleanTitle = noteTitle.trim();
     if (!cleanTitle) return;
+    setNoteError("");
 
-    saveNotes([
-      ...notes,
-      {
-        id: Date.now(),
-        date: selectedDate,
-        title: cleanTitle,
-        category,
-      },
-    ]);
-    setNoteTitle("");
-    setSelectedDate(formatDateKey(new Date()));
-    setCurrentMonth(new Date());
+    try {
+      const saved = await addCalendarNote({ date: selectedDate, title: cleanTitle, category });
+      setNotes((list) => [...list, saved]);
+      setNoteTitle("");
+      setSelectedDate(formatDateKey(new Date()));
+      setCurrentMonth(new Date());
+    } catch (err) {
+      setNoteError(errorMessage(err, "The note could not be saved. Please try again."));
+    }
   }
 
-  function removeNote(id: number) {
-    saveNotes(notes.filter((note) => note.id !== id));
+  async function removeNote(id: number) {
+    setNoteError("");
+
+    try {
+      await removeCalendarNote(id);
+      setNotes((list) => list.filter((note) => note.id !== id));
+    } catch (err) {
+      setNoteError(errorMessage(err, "The note could not be removed. Please try again."));
+    }
   }
 
   const isGlass = variant === "glass";
@@ -349,7 +392,7 @@ export default function StakeholderCalendar({
             value={noteTitle}
             onChange={(e) => setNoteTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") addNote();
+              if (e.key === "Enter") void addNote();
             }}
             placeholder="Add note for selected date..."
             className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8] ${
@@ -376,12 +419,17 @@ export default function StakeholderCalendar({
 
             <button
               type="button"
-              onClick={addNote}
+              onClick={() => void addNote()}
               className="rounded-xl bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
             >
               Add
             </button>
           </div>
+          {noteError && (
+            <p role="alert" className="mt-2 text-xs text-red-600">
+              {noteError}
+            </p>
+          )}
         </div>
 
         <div className="mt-4 space-y-3">
@@ -441,7 +489,7 @@ export default function StakeholderCalendar({
 
                 <button
                   type="button"
-                  onClick={() => removeNote(note.id)}
+                  onClick={() => void removeNote(note.id)}
                   className="rounded-lg px-2 py-1 text-xs font-semibold text-[#9ba69d] hover:bg-rose-50 hover:text-rose-600"
                 >
                   Delete
