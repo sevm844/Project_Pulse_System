@@ -505,7 +505,7 @@ export default function AssignedGroupsPage() {
                     </button>
                     {manuscriptOpen === group.group_id && (
                       <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
-                        <ManuscriptHistory projectId={group.project.project_id} canReview />
+                        <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
                       </div>
                     )}
                   </>

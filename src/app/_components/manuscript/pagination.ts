@@ -85,9 +85,12 @@ function measure(view: EditorView): Unit[] {
     }
 
     lines.forEach((line, index) => {
+      // Both edges come from the one centre: measured separately, a line that starts a hair after a page gap could have
+      // its top counted before the gap and its bottom after it (it then looked a whole gap taller than it is).
+      const centre = natural(line.mid);
       units.push({
-        top: natural(line.mid - lineHeight / 2),
-        bottom: natural(line.mid + lineHeight / 2),
+        top: centre - lineHeight / 2,
+        bottom: centre + lineHeight / 2,
         kind: "line",
         el,
         first: index === 0,

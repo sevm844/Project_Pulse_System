@@ -4,9 +4,10 @@ import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ManuscriptCompare from "./ManuscriptCompare";
+import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptReview from "./ManuscriptReview";
 import ManuscriptView from "./ManuscriptView";
-import { errorMessage } from "../../_lib/groups";
+import { errorMessage, type ApiGroup } from "../../_lib/groups";
 import {
   fetchManuscriptComments,
   fetchManuscriptVersion,
@@ -23,12 +24,15 @@ export default function ManuscriptHistory({
   reloadKey = 0,
   onUseAsDraft,
   canReview = false,
+  group,
 }: {
   projectId: number;
   reloadKey?: number;
   onUseAsDraft?: (content: JSONContent, versionNo: number) => void;
   // The adviser and the Dean write review comments; students only read and reply.
   canReview?: boolean;
+  // Fills in the title page when a version is downloaded. Students do not pass it: their own group is loaded.
+  group?: ApiGroup | null;
 }) {
   const [versions, setVersions] = useState<ManuscriptVersion[] | null>(null);
   const [error, setError] = useState("");
@@ -38,6 +42,7 @@ export default function ManuscriptHistory({
   // Comparing needs two versions; `to` is the one the comparison opens on (the one before it is the older side).
   const [compareTo, setCompareTo] = useState<number | null>(null);
   const [reviewNo, setReviewNo] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const [comments, setComments] = useState<ManuscriptComment[]>([]);
 
   const load = useCallback(async () => {
@@ -164,6 +169,17 @@ export default function ManuscriptHistory({
         <ManuscriptCompare projectId={projectId} versions={versions} initialTo={compareTo} onClose={() => setCompareTo(null)} />
       )}
 
+      {downloading && open && (
+        <ManuscriptExportDialog
+          projectId={projectId}
+          group={group}
+          loadMyGroup={!group && Boolean(onUseAsDraft)}
+          label={`Version ${open.version_no}`}
+          getContent={() => open.content}
+          onClose={() => setDownloading(false)}
+        />
+      )}
+
       {reviewNo !== null && (
         <ManuscriptReview
           projectId={projectId}
@@ -187,9 +203,14 @@ export default function ManuscriptHistory({
                 {open.editors.length > 0 && <p className="mt-0.5 text-[11px] text-[#7b877f]">Edited by {open.editors.join(", ")}</p>}
                 {open.note && <p className="mt-1 text-xs italic text-[#59645d]">&ldquo;{open.note}&rdquo;</p>}
               </div>
-              <button type="button" onClick={() => setOpen(null)} className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
-                Close
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button type="button" onClick={() => setDownloading(true)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
+                  Download
+                </button>
+                <button type="button" onClick={() => setOpen(null)} className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
+                  Close
+                </button>
+              </div>
             </div>
 
             <ManuscriptView content={open.content} />

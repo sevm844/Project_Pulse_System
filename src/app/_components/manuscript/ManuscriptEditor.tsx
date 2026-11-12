@@ -2,6 +2,7 @@
 
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptHistory from "./ManuscriptHistory";
 import PagedScroll from "./PagedScroll";
 import Toolbar from "./Toolbar";
@@ -31,6 +32,7 @@ export default function ManuscriptEditor() {
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState("");
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [toolbarError, setToolbarError] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -306,6 +308,9 @@ export default function ManuscriptEditor() {
           </PagedScroll>
           <div className="flex items-center justify-between border-t border-[#dfe8df] bg-white px-4 py-2 text-xs text-[#59645d]">
             <span>{pages} {pages === 1 ? "page" : "pages"}</span>
+            <button type="button" disabled={!editor || projectId === null} onClick={() => setExportOpen(true)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50">
+              Export PDF / Word
+            </button>
             <span>{editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words</span>
           </div>
         </div>
@@ -318,6 +323,10 @@ export default function ManuscriptEditor() {
           {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
         </aside>
       </div>
+
+      {exportOpen && editor && projectId !== null && (
+        <ManuscriptExportDialog projectId={projectId} loadMyGroup label="Draft" getContent={() => editor.getJSON()} onClose={() => setExportOpen(false)} />
+      )}
 
       {submitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

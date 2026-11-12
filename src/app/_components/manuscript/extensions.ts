@@ -61,7 +61,8 @@ const BlockFormat = Extension.create({
           lineHeight: {
             default: null,
             parseHTML: (element) => spacingOf(element.style.lineHeight),
-            renderHTML: (attributes) => (attributes.lineHeight ? { style: `line-height: ${attributes.lineHeight}` } : {}),
+            // 1.5 means 1.5 lines the way Word and Google Docs count them: a line of Arial is about 1.15 times its size.
+            renderHTML: (attributes) => (attributes.lineHeight ? { style: `line-height: calc(${attributes.lineHeight} * 1.15)` } : {}),
           },
           textIndent: {
             default: null,

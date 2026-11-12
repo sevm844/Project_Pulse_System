@@ -110,7 +110,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   to the whitelist or it is silently dropped (`manuscript_smoke.php` has a document captured from a real session). Pictures are stored inside the
   document as data URLs (shrunk client-side to under 1 MB each); pasted pictures that are not data URLs are dropped and the student is told.
 - A scrolling bubble beside the scrollbar shows the page on screen ("7 of 70") (`PagedScroll`).
-- Defaults are Arial 11 pt, 1.5 spacing, 1 inch margins; students can change fonts, sizes and spacing like Google Docs, and their captions,
+- Defaults are Arial 11 pt, 1.5 lines of spacing (Word's meaning, see below), 1 inch margins; students can change fonts, sizes and spacing like Google Docs, and their captions,
   titles and references are their own business (the system does not check them).
 - **Pages** (`pagination.ts`, a ProseMirror plugin): Letter size, 1 inch margins. The sheet is one element; the plugin draws grey
   gaps and top margins as display-only widgets and moves content that would cross a boundary to the next page (paragraphs split line by
@@ -131,7 +131,16 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   words kept as a fallback: **do not change `toBlocks()` without a migration plan for stored comments.** The version list shows open/resolved counts and a
   Review (staff) or Comments (students) button. The Compare screen lists the older version's comments with what happened to their words
   (`commentState`: changed / removed / not changed). Formatting is not shown in the review screen (words only), like Compare.
-- Not built yet: Grammarian access, title page / table of contents / page numbers, export.
+- **Export to PDF and Word** (`ManuscriptExportDialog`, `_lib/manuscriptExport/`: `model.ts` reads the saved JSON into simple blocks, `pdf.ts` = pdfmake,
+  `docx.ts` = docx library): the student's "Export PDF / Word" button (current draft) and "Download" in every version viewer (students, adviser, Dean). Made entirely
+  in the browser, loaded only when used (dynamic imports), nothing is sent to the server. Options: title page (pre-filled from the group: members with the leader first,
+  adviser, term, chosen title; every field editable and remembered per project in localStorage), table of contents (from headings 1-3), page numbers (bottom centre, the
+  title page has none). Letter size, 1 inch margins. The PDF draws with Arimo / Tinos / Cousine (SIL OFL look-alikes of Arial / Times New Roman / Courier New with the same
+  letter widths, files in `public/fonts/export/`, fetched on export); Calibri, Cambria, Georgia and Verdana fall back to those in the PDF only. The Word file keeps the font names, uses
+  Heading 1-3 styles, real lists and a real table-of-contents field (Word asks to update fields on opening: answer Yes). Not opened in real Word during development, only inspected.
+- **Line spacing means what it means in Word**: "1.5" is 1.5 lines, and a line of Arial is about 1.15 times its size, so the editor draws `line-height: calc(1.5 * 1.15)`
+  (CSS default 1.725). This keeps the editor, the PDF and Word at the same page count. The pagination plugin measures each line from its centre (never top and bottom separately).
+- Not built yet: Grammarian access.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->

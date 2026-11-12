@@ -40,7 +40,7 @@ body {
   color: #111;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 11pt;
-  line-height: 1.5;
+  line-height: 1.725; /* 1.5 lines, as Word counts them (Arial is about 1.15 times its size) */
   border: 1px solid #dfe8df;
   box-shadow: 0 1px 6px rgba(18, 63, 43, 0.08);
   outline: none;

@@ -216,7 +216,7 @@ export default function DeanProjectProfilePage() {
             <h3 className="text-lg font-semibold text-[#203028]">Manuscript</h3>
             <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
             <div className="mt-4">
-              <ManuscriptHistory projectId={group.project.project_id} canReview />
+              <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
             </div>
           </Card>
         )}
