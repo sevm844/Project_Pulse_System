@@ -214,6 +214,10 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 ## Folder structure notes
 - Every role portal wraps its pages in `<Role>Shell`, a thin wrapper (nav items only) around the shared
   `src/app/_components/RoleShell.tsx`. Change the sidebar/header layout there once, not per role.
+- Sidebar pictures live in `public/nav/` (96 px square, transparent, one per meaning: dashboard, projects, defense, requirements, documents, manuscript,
+  review-queue, certificates, administration, reports, feedback, student-approvals, collection-tracker, archive-records, messages, notifications, profile).
+  Each `<Role>Shell` points its items at them; reuse a picture only for the same meaning in another role. If a picture is replaced under the same name, clear
+  `.next/dev/cache/images` or the dev server keeps serving the old one.
 - `formatDate` lives in `src/app/_lib/requirements.ts`; do not copy it into pages.
 - `src/app/dean/administration/...` — Dean-only pages (users, groups, etc.)
 - `src/app/student/...`, `src/app/adviser/...`, `src/app/panelist/...`,

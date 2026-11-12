@@ -6,17 +6,17 @@ import RoleShell, {
 } from "../../_components/RoleShell";
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "/dashbrd.png", href: "/dean" },
-  { label: "Projects", icon: "/fold.png", href: "/dean/projects", matches: ["/dean/projects", "/dean/assigned-groups"] },
-  { label: "Defenses", icon: "/work.png", href: "/dean/defense" },
-  { label: "Requirements", icon: "/checklt.png", href: "/dean/requirements" },
-  { label: "Documents", icon: "/docs.png", href: "/dean/documents" },
-  { label: "Certificates", icon: "/pinNote.png", href: "/dean/certificates" },
-  { label: "Administration", icon: "/profile.png", href: "/dean/administration" },
-  { label: "Reports", icon: "/docs.png", href: "/dean/reports" },
-  { label: "Feedback", icon: "/chats.png", href: "/dean/feedback" },
-  { label: "Messages", icon: "/chats.png", href: "/dean/messages" },
-  { label: "Profile", icon: "/profile.png", href: "/dean/profile", matches: ["/dean/profile", "/dean/notifications"] },
+  { label: "Dashboard", icon: "/nav/dashboard.png", href: "/dean" },
+  { label: "Projects", icon: "/nav/projects.png", href: "/dean/projects", matches: ["/dean/projects", "/dean/assigned-groups"] },
+  { label: "Defenses", icon: "/nav/defense.png", href: "/dean/defense" },
+  { label: "Requirements", icon: "/nav/requirements.png", href: "/dean/requirements" },
+  { label: "Documents", icon: "/nav/documents.png", href: "/dean/documents" },
+  { label: "Certificates", icon: "/nav/certificates.png", href: "/dean/certificates" },
+  { label: "Administration", icon: "/nav/administration.png", href: "/dean/administration" },
+  { label: "Reports", icon: "/nav/reports.png", href: "/dean/reports" },
+  { label: "Feedback", icon: "/nav/feedback.png", href: "/dean/feedback" },
+  { label: "Messages", icon: "/nav/messages.png", href: "/dean/messages" },
+  { label: "Profile", icon: "/nav/profile.png", href: "/dean/profile", matches: ["/dean/profile", "/dean/notifications"] },
 ];
 
 export default function DeanShell(props: RoleShellProps) {

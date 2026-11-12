@@ -169,9 +169,9 @@ export default function RoleShell({
                       <Image
                         src={icon}
                         alt=""
-                        width={16}
-                        height={16}
-                        className="opacity-70"
+                        width={18}
+                        height={18}
+                        className="opacity-80"
                       />
                       {!sidebarCollapsed && <span>{label}</span>}
                     </Link>

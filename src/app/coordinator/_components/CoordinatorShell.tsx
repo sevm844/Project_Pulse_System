@@ -6,15 +6,15 @@ import RoleShell, {
 } from "../../_components/RoleShell";
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "/dashbrd.png", href: "/coordinator" },
-  { label: "Student Approvals", icon: "/profile.png", href: "/coordinator/student-approvals" },
-  { label: "Requirements", icon: "/docs.png", href: "/coordinator/requirements" },
-  { label: "Group Folders", icon: "/fold.png", href: "/coordinator/group-folders" },
-  { label: "Collection Tracker", icon: "/checklt.png", href: "/coordinator/collection-tracker" },
-  { label: "Archive Records", icon: "/resources.png", href: "/coordinator/archive-records" },
-  { label: "Messages", icon: "/chats.png", href: "/coordinator/messages" },
-  { label: "Notifications", icon: "/notif.png", href: "/coordinator/notifications" },
-  { label: "Profile", icon: "/profile.png", href: "/coordinator/profile" },
+  { label: "Dashboard", icon: "/nav/dashboard.png", href: "/coordinator" },
+  { label: "Student Approvals", icon: "/nav/student-approvals.png", href: "/coordinator/student-approvals" },
+  { label: "Requirements", icon: "/nav/requirements.png", href: "/coordinator/requirements" },
+  { label: "Group Folders", icon: "/nav/projects.png", href: "/coordinator/group-folders" },
+  { label: "Collection Tracker", icon: "/nav/collection-tracker.png", href: "/coordinator/collection-tracker" },
+  { label: "Archive Records", icon: "/nav/archive-records.png", href: "/coordinator/archive-records" },
+  { label: "Messages", icon: "/nav/messages.png", href: "/coordinator/messages" },
+  { label: "Notifications", icon: "/nav/notifications.png", href: "/coordinator/notifications" },
+  { label: "Profile", icon: "/nav/profile.png", href: "/coordinator/profile" },
 ];
 
 export default function CoordinatorShell(props: RoleShellProps) {

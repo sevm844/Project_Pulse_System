@@ -6,13 +6,13 @@ import RoleShell, {
 } from "../../_components/RoleShell";
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "/dashbrd.png", href: "/grammarian" },
-  { label: "Review Queue", icon: "/docs.png", href: "/grammarian/review-queue" },
-  { label: "Manuscripts", icon: "/pinNote.png", href: "/grammarian/manuscripts" },
-  { label: "Certificates", icon: "/docs.png", href: "/grammarian/certificates" },
-  { label: "Messages", icon: "/chats.png", href: "/grammarian/messages" },
-  { label: "Notifications", icon: "/notif.png", href: "/grammarian/notifications" },
-  { label: "Profile", icon: "/profile.png", href: "/grammarian/profile" },
+  { label: "Dashboard", icon: "/nav/dashboard.png", href: "/grammarian" },
+  { label: "Review Queue", icon: "/nav/review-queue.png", href: "/grammarian/review-queue" },
+  { label: "Manuscripts", icon: "/nav/manuscript.png", href: "/grammarian/manuscripts" },
+  { label: "Certificates", icon: "/nav/certificates.png", href: "/grammarian/certificates" },
+  { label: "Messages", icon: "/nav/messages.png", href: "/grammarian/messages" },
+  { label: "Notifications", icon: "/nav/notifications.png", href: "/grammarian/notifications" },
+  { label: "Profile", icon: "/nav/profile.png", href: "/grammarian/profile" },
 ];
 
 export default function GrammarianShell(props: RoleShellProps) {

@@ -6,10 +6,10 @@ import RoleShell, {
 } from "../../_components/RoleShell";
 
 const navItems: NavItem[] = [
-  { label: "Defenses", icon: "/work.png", href: "/panelist" },
-  { label: "Messages", icon: "/chats.png", href: "/panelist/messages" },
-  { label: "Notifications", icon: "/notif.png", href: "/panelist/notifications" },
-  { label: "Profile", icon: "/profile.png", href: "/panelist/profile" },
+  { label: "Defenses", icon: "/nav/defense.png", href: "/panelist" },
+  { label: "Messages", icon: "/nav/messages.png", href: "/panelist/messages" },
+  { label: "Notifications", icon: "/nav/notifications.png", href: "/panelist/notifications" },
+  { label: "Profile", icon: "/nav/profile.png", href: "/panelist/profile" },
 ];
 
 export default function PanelistShell(props: RoleShellProps) {

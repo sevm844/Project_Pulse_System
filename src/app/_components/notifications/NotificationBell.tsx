@@ -42,7 +42,7 @@ export default function NotificationBell({ href }: { href: string }) {
       title="Notifications"
       className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-[#dfe8df] bg-white transition hover:bg-[#f3f7f1]"
     >
-      <Image src="/notif.png" alt="" width={18} height={18} />
+      <Image src="/nav/notifications.png" alt="" width={18} height={18} />
 
       {unread > 0 && (
         <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#123f2b] px-1 text-[9px] font-semibold text-white">

@@ -6,14 +6,14 @@ import RoleShell, {
 } from "../../_components/RoleShell";
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: "/dashbrd.png", href: "/adviser" },
-  { label: "Assigned Groups", icon: "/fold.png", href: "/adviser/assigned-groups" },
-  { label: "Requirements", icon: "/checklt.png", href: "/adviser/requirements" },
-  { label: "Documents", icon: "/docs.png", href: "/adviser/documents" },
-  { label: "Defense", icon: "/work.png", href: "/adviser/defense" },
-  { label: "Messages", icon: "/chats.png", href: "/adviser/messages" },
-  { label: "Notifications", icon: "/notif.png", href: "/adviser/notifications" },
-  { label: "Profile", icon: "/profile.png", href: "/adviser/profile" },
+  { label: "Dashboard", icon: "/nav/dashboard.png", href: "/adviser" },
+  { label: "Assigned Groups", icon: "/nav/projects.png", href: "/adviser/assigned-groups" },
+  { label: "Requirements", icon: "/nav/requirements.png", href: "/adviser/requirements" },
+  { label: "Documents", icon: "/nav/documents.png", href: "/adviser/documents" },
+  { label: "Defense", icon: "/nav/defense.png", href: "/adviser/defense" },
+  { label: "Messages", icon: "/nav/messages.png", href: "/adviser/messages" },
+  { label: "Notifications", icon: "/nav/notifications.png", href: "/adviser/notifications" },
+  { label: "Profile", icon: "/nav/profile.png", href: "/adviser/profile" },
 ];
 
 export default function AdviserShell(props: RoleShellProps) {
