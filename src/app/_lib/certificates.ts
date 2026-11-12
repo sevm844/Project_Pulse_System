@@ -63,7 +63,7 @@ export type CertificateQueue = {
 };
 
 // The Dean's side: what can be sent, and every sending with what became of it.
-export type ReferralCandidate = { project_id: number; group_name: string; course: string; section: string; project_title: string | null; versions: number; latest_version_no: number | null; status: string | null };
+export type ReferralCandidate = { project_id: number; group_name: string; course: string; section: string; project_title: string | null; versions: number; latest_version_no: number | null; status: string | null; current_phase: string; final_defense_passed: boolean };
 export type Referral = {
   referral_id: number;
   project_id: number;

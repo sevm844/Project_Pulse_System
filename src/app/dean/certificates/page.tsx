@@ -1,8 +1,12 @@
 "use client";
 
+import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import DeanShell from "../_components/DeanShell";
 import CertificateList from "../../_components/certificates/CertificateList";
+import ManuscriptView from "../../_components/manuscript/ManuscriptView";
+import { fetchManuscriptVersion } from "../../_lib/manuscript";
 import { fetchReferralCandidates, fetchReferrals, sendToGrammarian, type Referral, type ReferralCandidate } from "../../_lib/certificates";
 import { errorMessage } from "../../_lib/groups";
 import { formatDateTime } from "../../_lib/requirements";
@@ -19,6 +23,8 @@ export default function DeanCertificatesPage() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const [reading, setReading] = useState<{ title: string; content: JSONContent | null; error: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -37,12 +43,29 @@ export default function DeanCertificatesPage() {
   }, [load]);
 
   const chosen = candidates?.find((c) => c.project_id === projectId);
+  // Normally only groups that passed their Final Defense are offered: those are the final manuscripts. The Dean can widen the
+  // list for an exception; the chosen group always stays in it.
+  const offered = (candidates ?? []).filter((c) => showAll || c.final_defense_passed || c.project_id === projectId);
+  const hiddenCount = (candidates ?? []).length - offered.length;
 
   function choose(id: number | "") {
     setProjectId(id);
     const candidate = candidates?.find((c) => c.project_id === id);
     setVersionNo(candidate?.latest_version_no ?? "");
+    if (candidate && !candidate.final_defense_passed) setShowAll(true);
     setDone("");
+  }
+
+  async function readManuscript() {
+    if (!chosen || versionNo === "") return;
+    const title = `${chosen.group_name} - Version ${versionNo}`;
+    setReading({ title, content: null, error: "" });
+
+    try {
+      setReading({ title, content: (await fetchManuscriptVersion(chosen.project_id, versionNo)).content, error: "" });
+    } catch (err) {
+      setReading({ title, content: null, error: errorMessage(err, "The manuscript could not be opened.") });
+    }
   }
 
   async function send() {
@@ -96,6 +119,7 @@ export default function DeanCertificatesPage() {
 
         <section className="rounded-2xl border border-[#dfe8df] bg-white p-5" aria-label="Send a manuscript">
           <h3 className="text-base font-semibold text-[#203028]">Send a manuscript to the Grammarian</h3>
+          <p className="mt-1 text-xs text-[#7b877f]">Groups that passed their Final Defense and have a submitted manuscript are listed here.</p>
           {candidates && candidates.length === 0 ? (
             <p className="mt-2 text-sm text-[#7b877f]">No group can be sent right now: a group needs a submitted manuscript version, and a group already with the Grammarian has to be answered first.</p>
           ) : (
@@ -104,12 +128,20 @@ export default function DeanCertificatesPage() {
                 Group
                 <select value={projectId} onChange={(event) => choose(event.target.value ? Number(event.target.value) : "")} aria-label="Group" className="mt-1 block w-full rounded-lg border border-[#dfe8df] bg-white px-2.5 py-2 text-sm">
                   <option value="">Choose a group...</option>
-                  {(candidates ?? []).map((c) => (
+                  {offered.map((c) => (
                     <option key={c.project_id} value={c.project_id}>
-                      {c.group_name} ({c.course} {c.section}){c.status === "Not Passed" ? " - returned before" : c.status === "Passed" ? " - certificate received" : ""}
+                      {c.group_name} ({c.course} {c.section}){c.final_defense_passed ? "" : ` - not yet through the Final Defense (${c.current_phase})`}
+                      {c.status === "Not Passed" ? " - returned before" : c.status === "Passed" ? " - certificate received" : ""}
                     </option>
                   ))}
                 </select>
+                <span className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 font-normal text-[#59645d]">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="h-4 w-4 accent-[#123f2b]" />
+                    Show other groups too (an exception)
+                  </label>
+                  {!showAll && hiddenCount > 0 && <span className="text-[#7b877f]">{hiddenCount} more with a manuscript, not yet through the Final Defense.</span>}
+                </span>
               </label>
               <label className="text-xs font-semibold text-[#203028]">
                 Manuscript version
@@ -127,9 +159,17 @@ export default function DeanCertificatesPage() {
                 Note for the Grammarian (optional)
                 <textarea value={note} onChange={(event) => setNote(event.target.value)} rows={2} maxLength={500} aria-label="Note for the Grammarian" className="mt-1 block w-full rounded-lg border border-[#dfe8df] px-2.5 py-2 text-sm" placeholder="e.g. Final manuscript after the Final Defense. Please check before Friday." />
               </label>
-              <div className="md:col-span-2">
+              {chosen && !chosen.final_defense_passed && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 md:col-span-2">
+                  {chosen.group_name} has not passed its Final Defense yet (now at {chosen.current_phase}). Send it only if this is an exception.
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 md:col-span-2">
                 <button type="button" disabled={busy || !chosen || versionNo === ""} onClick={() => void send()} className="rounded-full bg-[#123f2b] px-5 py-2 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50">
                   {busy ? "Sending..." : "Send to the Grammarian"}
+                </button>
+                <button type="button" disabled={!chosen || versionNo === ""} onClick={() => void readManuscript()} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-5 py-2 text-sm font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50">
+                  View manuscript
                 </button>
               </div>
             </div>
@@ -187,6 +227,29 @@ export default function DeanCertificatesPage() {
           </ul>
         </section>
       </div>
+
+      {reading &&
+        createPortal(
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-3 sm:p-4">
+            <div role="dialog" aria-modal="true" aria-label="Manuscript" className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+              <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] bg-[#f3f8f4] px-5 py-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]">Manuscript (read only)</p>
+                  <h3 className="mt-0.5 break-words text-base font-semibold text-[#203028]">{reading.title}</h3>
+                </div>
+                <button type="button" onClick={() => setReading(null)} className="shrink-0 rounded-full border border-[#dfe8df] bg-white px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
+                  Close
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto p-4">
+                {reading.error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{reading.error}</p>}
+                {!reading.error && !reading.content && <p className="text-sm text-[#7b877f]">Opening the manuscript...</p>}
+                {reading.content && <ManuscriptView content={reading.content} />}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </DeanShell>
   );
 }

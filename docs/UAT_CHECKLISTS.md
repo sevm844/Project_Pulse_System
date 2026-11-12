@@ -79,7 +79,7 @@ Email: `uat-dean@uat.test`
 | 9 | Open **Feedback**. Read what testers sent and mark one as Resolved. | | |
 | 10 | Open **Projects → UAT Alpha → Manuscript**. Press **Compare versions** (Version 1 and 2): can you see what was added (green) and removed (red), who edited and when? Use **Show only changes** and **Next**. | | |
 | 11 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
-| 12 | Open **Certificates**. Send **UAT Delta**'s final manuscript to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
+| 12 | Open **Certificates**. The list offers only groups that passed their Final Defense; the demo groups have not, so tick **Show other groups too**, choose **UAT Delta** (a warning says it is an exception), press **View manuscript** to read it, then send it to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
 | 13 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
 | 14 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
