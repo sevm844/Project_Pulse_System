@@ -152,6 +152,26 @@ export default function ManuscriptReview({
     });
   }
 
+  // Mouse, finger (long-press and drag the handles) and keyboard all end up as a change of the selection, so that is what is
+  // listened to. Reading it a moment later lets the selection settle while a handle is still being dragged.
+  const readRef = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    readRef.current = readSelection;
+  });
+  useEffect(() => {
+    let timer: number | undefined;
+    const onChange = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => readRef.current(), 200);
+    };
+    document.addEventListener("selectionchange", onChange);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("selectionchange", onChange);
+    };
+  }, []);
+
   function startComment(target: CommentAnchor | "whole") {
     setComposing(target);
     setDraft("");
@@ -216,8 +236,8 @@ export default function ManuscriptReview({
         {!blocks && !error && <p className="px-5 py-10 text-center text-sm text-[#7b877f]">Opening version...</p>}
 
         {blocks && (
-          <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div ref={paper} onMouseUp={() => setTimeout(readSelection, 0)} onKeyUp={readSelection} className="min-h-[40vh] overflow-auto bg-[#eef2ee] p-3 sm:p-5">
+          <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
+            <div ref={paper} className="max-h-[48vh] min-h-[30vh] overflow-auto bg-[#eef2ee] p-3 sm:p-5 lg:max-h-none">
               <article className="mx-auto max-w-3xl rounded-lg bg-white px-5 py-6 text-[14px] leading-relaxed text-[#1f2a24] shadow-sm sm:px-9">
                 {blocks.length === 0 && <p className="text-sm text-[#7b877f]">This version has no text.</p>}
                 {blocks.map((block, index) => (
@@ -248,7 +268,7 @@ export default function ManuscriptReview({
                 )}
               </div>
 
-              <div className="min-h-0 flex-1 space-y-3 overflow-auto p-4">
+              <div className="space-y-3 p-4 lg:min-h-0 lg:flex-1 lg:overflow-auto">
                 {composing !== null && (
                   <div className="rounded-xl border border-[#123f2b]/40 bg-white p-3 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]">New comment</p>
@@ -303,7 +323,10 @@ export default function ManuscriptReview({
         {pick && canComment && (
           <button
             type="button"
-            onMouseDown={(event) => event.preventDefault()}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              startComment({ block_index: pick.block, start_offset: pick.start, end_offset: pick.end, quote: pick.quote });
+            }}
             onClick={() => startComment({ block_index: pick.block, start_offset: pick.start, end_offset: pick.end, quote: pick.quote })}
             style={{ position: "fixed", left: Math.max(8, pick.x - 60), top: pick.y }}
             className="z-[110] rounded-full bg-[#123f2b] px-4 py-1.5 text-xs font-semibold text-white shadow-lg hover:bg-[#0f3324]"

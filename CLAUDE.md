@@ -131,6 +131,8 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   words kept as a fallback: **do not change `toBlocks()` without a migration plan for stored comments.** The version list shows open/resolved counts and a
   Review (staff) or Comments (students) button. The Compare screen lists the older version's comments with what happened to their words
   (`commentState`: changed / removed / not changed). Formatting is not shown in the review screen (words only), like Compare.
+  On a phone the review dialog scrolls as a whole (paper capped, comments below with full height); selecting words works with a finger because the screen listens to
+  `selectionchange` (not the mouse), and the "+ Comment" button acts on pointer-down so a tap cannot clear the selection first.
 - **Export to PDF and Word** (`ManuscriptExportDialog`, `_lib/manuscriptExport/`: `model.ts` reads the saved JSON into simple blocks, `pdf.ts` = pdfmake,
   `docx.ts` = docx library): the student's "Export PDF / Word" button (current draft) and "Download" in every version viewer (students, adviser, Dean). Made entirely
   in the browser, loaded only when used (dynamic imports), nothing is sent to the server. Options: title page (pre-filled from the group: members with the leader first,
