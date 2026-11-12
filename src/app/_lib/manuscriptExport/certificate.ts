@@ -51,7 +51,7 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
   const sign = data.signature ? await signatureSize(data.signature) : null;
 
   const content: unknown[] = [
-    { columns: [{ image: logo, width: 190 }, { text: t.header.form_code, bold: true, fontSize: 11, alignment: "right" }], margin: [0, 0, 0, 40] },
+    { columns: [{ text: t.header.form_code, bold: true, fontSize: 11, width: "*" }, { image: logo, width: 190 }], margin: [0, 0, 0, 40] },
     { text: t.title, bold: true, fontSize: 12, alignment: "center", margin: [0, 0, 0, 20] },
     ...t.paragraphs.map((p) => ({ text: runsOf(p, fields), alignment: "justify", lineHeight: 1.5, leadingIndent: 36, margin: [0, 0, 0, 14] })),
     { text: t.certified_by, margin: [0, 18, 0, 6] },
@@ -73,7 +73,6 @@ export async function buildCertificatePdf(data: CertificateData): Promise<Blob> 
       margin: [72, 8, 72, 0],
       fontSize: 9,
       stack: [
-        ...(data.number ? [{ text: `Certificate No. ${data.number}`, alignment: "right", fontSize: 8, color: "#777777", margin: [0, 0, 0, 4] }] : []),
         {
           columns: [
             { text: `Revision No.: ${t.header.revision_no}`, alignment: "left" },
@@ -98,7 +97,7 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
 
   const children = [
     new d.Paragraph({
-      children: [new d.ImageRun({ type: "png", data: logo.bytes, transformation: { width: 253, height: Math.round(253 * LOGO_RATIO) } }), new d.TextRun({ text: `\t${t.header.form_code}`, bold: true, font, size: 22 })],
+      children: [new d.TextRun({ text: `${t.header.form_code}\t`, bold: true, font, size: 22 }), new d.ImageRun({ type: "png", data: logo.bytes, transformation: { width: 253, height: Math.round(253 * LOGO_RATIO) } })],
       tabStops: [{ type: d.TabStopType.RIGHT, position: 9360 }],
       spacing: { after: 160 },
     }),
@@ -125,7 +124,6 @@ export async function buildCertificateDocx(data: CertificateData): Promise<Blob>
   // The revision line sits at the foot of the sheet, without lines: left, centre and right on one line.
   const footer = new d.Footer({
     children: [
-      ...(data.number ? [new d.Paragraph({ alignment: d.AlignmentType.RIGHT, spacing: { after: 60 }, children: [new d.TextRun({ text: `Certificate No. ${data.number}`, font, size: 16, color: "777777" })] })] : []),
       new d.Paragraph({
         tabStops: [{ type: d.TabStopType.CENTER, position: 4680 }, { type: d.TabStopType.RIGHT, position: 9360 }],
         children: [text(`Revision No.: ${t.header.revision_no}\tIssue Date: ${t.header.issue_date}\tRevision Date: ${t.header.revision_date}`, false, 18)],

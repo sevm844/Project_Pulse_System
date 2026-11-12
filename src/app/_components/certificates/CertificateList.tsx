@@ -110,7 +110,7 @@ export default function CertificateList({ projectId, emptyText }: { projectId: n
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-auto bg-[#eef2ee] p-3 sm:p-5">
-                <CertificatePaper template={open.template} fields={open.fields} editorName={open.editor_name} signature={open.editor_signature} number={open.certificate_no} />
+                <CertificatePaper template={open.template} fields={open.fields} editorName={open.editor_name} signature={open.editor_signature} />
               </div>
             </div>
           </div>,

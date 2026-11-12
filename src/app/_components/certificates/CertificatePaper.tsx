@@ -12,7 +12,6 @@ export default function CertificatePaper({
   onChange,
   editorName,
   signature,
-  number,
 }: {
   template: CertificateTemplate;
   fields: CertificateFields;
@@ -20,7 +19,6 @@ export default function CertificatePaper({
   onChange?: (field: FieldName, value: string) => void;
   editorName: string;
   signature: string | null;
-  number?: string | null;
 }) {
   return (
     <article
@@ -30,9 +28,9 @@ export default function CertificatePaper({
       style={{ fontFamily: "Arial, Helvetica, sans-serif", aspectRatio: "8.5 / 11" }}
     >
       <div className="flex items-start justify-between gap-4">
+        <p className="text-[13px] font-bold">{template.header.form_code}</p>
         {/* eslint-disable-next-line @next/next/no-img-element -- a fixed local logo, shown at its own shape */}
         <img src="/certificate/ub-rpo-logo.png" alt="University of Batangas Research and Publications Office" className="w-[190px] max-w-[55%]" />
-        <p className="text-[13px] font-bold">{template.header.form_code}</p>
       </div>
 
       <h2 className="mb-5 mt-14 text-center text-[15px] font-bold">{template.title}</h2>
@@ -67,7 +65,6 @@ export default function CertificatePaper({
       </p>
 
       <div className="mt-auto pt-10">
-        {number && <p className="mb-1 text-right text-[10px] text-[#777]">Certificate No. {number}</p>}
         <div className="flex flex-wrap justify-between gap-x-4 text-[11px] leading-snug">
           <span>Revision No.: {template.header.revision_no}</span>
           <span>Issue Date: {template.header.issue_date}</span>
