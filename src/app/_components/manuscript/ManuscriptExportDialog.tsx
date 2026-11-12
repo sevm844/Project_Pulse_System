@@ -78,7 +78,7 @@ export default function ManuscriptExportDialog({
 
       try {
         const saved = JSON.parse(window.localStorage.getItem(storageKey(projectId)) ?? "null") as Saved | null;
-        if (saved?.fields && !cancelled) {
+        if (saved?.fields && !cancelled && !startPlain) {
           setTitlePage(saved.titlePage !== false);
           setToc(saved.toc !== false);
           setPageNumbers(saved.pageNumbers !== false);
@@ -97,7 +97,7 @@ export default function ManuscriptExportDialog({
     return () => {
       cancelled = true;
     };
-  }, [projectId, group, loadMyGroup]);
+  }, [projectId, group, loadMyGroup, startPlain]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && !busy && onClose();
@@ -113,10 +113,12 @@ export default function ManuscriptExportDialog({
     setError("");
 
     try {
-      try {
-        window.localStorage.setItem(storageKey(projectId), JSON.stringify({ titlePage, toc, pageNumbers, fields } satisfies Saved));
-      } catch {
-        // remembering is a convenience only
+      if (!startPlain) {
+        try {
+          window.localStorage.setItem(storageKey(projectId), JSON.stringify({ titlePage, toc, pageNumbers, fields } satisfies Saved));
+        } catch {
+          // remembering is a convenience only
+        }
       }
 
       const page = { ...fields, authors: fields.authors.map((a) => a.trim()).filter(Boolean) };
@@ -135,6 +137,43 @@ export default function ManuscriptExportDialog({
 
   const input = "mt-1 block w-full rounded-lg border border-[#dfe8df] bg-white px-2.5 py-1.5 text-sm text-[#203028]";
   const labelCls = "block text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]";
+
+  // Plain download (the Grammarian checking a manuscript elsewhere): the paper as it was submitted, nothing to fill in.
+  if (startPlain) {
+    return createPortal(
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-3 sm:p-4">
+        <div role="dialog" aria-modal="true" aria-label="Download manuscript" className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
+          <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] bg-[#f3f8f4] px-5 py-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]">Manuscript for checking</p>
+              <h3 className="mt-0.5 break-words text-base font-semibold text-[#203028]">{label}</h3>
+            </div>
+            <button type="button" onClick={onClose} disabled={busy !== null} aria-label="Close" className="shrink-0 rounded-full border border-[#dfe8df] bg-white px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1] disabled:opacity-50">
+              Close
+            </button>
+          </div>
+
+          <div className="space-y-4 px-5 py-5">
+            <p className="text-sm text-[#59645d]">Choose the file type. The paper is saved as it was submitted, ready to check in your own tools.</p>
+            {error && (
+              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                {error}
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button type="button" disabled={busy !== null} onClick={() => void download("docx")} className="rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-3 text-sm font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50">
+                {busy === "docx" ? "Making the Word file..." : "Download Word"}
+              </button>
+              <button type="button" disabled={busy !== null} onClick={() => void download("pdf")} className="rounded-xl bg-[#123f2b] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50">
+                {busy === "pdf" ? "Making the PDF..." : "Download PDF"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-3 sm:p-4">
