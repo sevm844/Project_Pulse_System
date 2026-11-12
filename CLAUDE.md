@@ -149,7 +149,15 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   requirement that the adviser approved, or that already has a grammar result (so access does not vanish when a failed check sends the submission back). They never see drafts. They resolve only
   **their own** comments; the adviser and the Dean can resolve any; the server decides per comment (`can_resolve`), the screen just obeys it. A Grammarian comment also notifies the adviser.
   Other roles use `Project::visibleTo` unchanged; never add the Grammarian to that scope (it would leak groups to other modules).
-- Not built yet: nothing from the original manuscript plan; ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
+- **Grammarian's certificate** (`CertificateController`, `/grammarian/certificates`, `CertificatePaper`, `_lib/manuscriptExport/certificate.ts`): the university form F-RPO-09 "Certification of Editing/Originality".
+  The wording is fixed text with five fill-in fields (`{{title}} {{authors}} {{degree}} {{done_date}} {{signed_date}}`), stored as versions in `certificate_templates` (v1 seeded by the migration);
+  **only the Dean saves a new version** (`/dean/administration/certificate-form`; the wording must keep the first four fields). The Grammarian fills the bold fields on the page (prefilled from the group: title,
+  "Surname, First" authors leader first, degree from the course, today's dates), can print their own uploaded signature picture (`user_signatures`), and issues it: allowed **only for groups whose grammar-flagged submission the
+  Grammarian approved** (`Project::scopeCertificateEligible`). A certificate (`certificates`, number `GC-YYYY-NNNN`) keeps a snapshot of the form version, the editor's name and signature, so it never changes when the form is revised;
+  issuing again replaces the earlier one (kept, marked replaced). Read by the group, its adviser, the Dean, the Research Coordinator and the Grammarian (`CertificateList` on My Project, the adviser's group card and the Dean's project
+  profile). The logo is `public/certificate/ub-rpo-logo.png`. The editable fields compare text with spaces normalised: a typed trailing space becomes a non-breaking space, and resetting it would throw the cursor to the start.
+  `uat:reset` does not touch the form versions (they are the Dean's, not demo data).
+- Not built yet: certificates are not yet a required document before the final defense or the archive; ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
 
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->

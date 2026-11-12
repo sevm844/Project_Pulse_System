@@ -10,10 +10,15 @@ export async function exportManuscript(content: JSONContent, format: ExportForma
   const blocks = blocksFromDocument(content, await measurePictures(pictureSources(content)));
   const blob = format === "pdf" ? await (await import("./pdf")).buildPdf(blocks, options) : await (await import("./docx")).buildDocx(blocks, options);
 
+  saveBlob(blob, `${safeFileName(options.fileName)}.${format}`);
+}
+
+// Hand a finished file to the browser as a download.
+export function saveBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${safeFileName(options.fileName)}.${format}`;
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();

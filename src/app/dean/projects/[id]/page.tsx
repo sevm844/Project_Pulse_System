@@ -9,6 +9,7 @@ import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
+import CertificateList from "../../../_components/certificates/CertificateList";
 import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
 import { useProgress } from "../../../_components/progress/useProgress";
@@ -217,6 +218,16 @@ export default function DeanProjectProfilePage() {
             <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
             <div className="mt-4">
               <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
+            </div>
+          </Card>
+        )}
+
+        {group.project && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Certificate of editing/originality</h3>
+            <p className="mt-1 text-sm text-[#7b877f]">Issued by the Grammarian once the manuscript passes the grammar check.</p>
+            <div className="mt-4">
+              <CertificateList projectId={group.project.project_id} />
             </div>
           </Card>
         )}

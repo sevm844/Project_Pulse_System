@@ -159,7 +159,8 @@ function titlePage(page: TitlePage): Node[] {
   return nodes;
 }
 
-export async function buildPdf(blocks: Block[], options: ExportOptions): Promise<Blob> {
+// pdfmake with the three look-alike fonts registered; shared by the manuscript and the certificate.
+export async function loadPdfMake() {
   const pdfMake = (await import("pdfmake/build/pdfmake")).default;
   const root = `${window.location.origin}/fonts/export/`;
 
@@ -172,6 +173,12 @@ export async function buildPdf(blocks: Block[], options: ExportOptions): Promise
       ]),
     ),
   );
+
+  return pdfMake;
+}
+
+export async function buildPdf(blocks: Block[], options: ExportOptions): Promise<Blob> {
+  const pdfMake = await loadPdfMake();
 
   const content: Node[] = [];
   if (options.titlePage) content.push(...titlePage(options.titlePage));

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
+import CertificateList from "../../_components/certificates/CertificateList";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { StageSteps } from "../../_components/ProposalStage";
 import {
@@ -171,6 +172,16 @@ export default function ProjectPage() {
                   </p>
                 </div>
               ))}
+            </div>
+          </Card>
+        )}
+
+        {tab === "overview" && group.project && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Certificate of editing/originality</h3>
+            <p className="mt-1 text-sm text-[#7b877f]">Issued by the Grammarian after your manuscript passes the grammar check. Download it for your final documents.</p>
+            <div className="mt-4">
+              <CertificateList projectId={group.project.project_id} />
             </div>
           </Card>
         )}
