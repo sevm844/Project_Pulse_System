@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { label: "Defenses", icon: "/work.png", href: "/dean/defense" },
   { label: "Requirements", icon: "/checklt.png", href: "/dean/requirements" },
   { label: "Documents", icon: "/docs.png", href: "/dean/documents" },
+  { label: "Certificates", icon: "/pinNote.png", href: "/dean/certificates" },
   { label: "Administration", icon: "/profile.png", href: "/dean/administration" },
   { label: "Reports", icon: "/docs.png", href: "/dean/reports" },
   { label: "Feedback", icon: "/chats.png", href: "/dean/feedback" },

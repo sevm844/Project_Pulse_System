@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import DeanShell from "../../_components/DeanShell";
+import Link from "next/link";
+import GrammarianShell from "../../_components/GrammarianShell";
 import CertificatePaper from "../../../_components/certificates/CertificatePaper";
 import { fetchCertificateTemplate, saveCertificateTemplate, type CertificateTemplate, type FieldName, type TemplateResponse } from "../../../_lib/certificates";
 import { errorMessage } from "../../../_lib/groups";
@@ -22,7 +23,7 @@ const SAMPLE = {
   signed_date: "June 24, 2025",
 };
 
-// The wording of the Grammarian's Certification of Editing/Originality (university form F-RPO-09). Only the Dean saves it,
+// The wording of the Grammarian's own Certification of Editing/Originality (university form F-RPO-09). She saves it,
 // as a new version; certificates already issued keep the version they were issued on.
 export default function CertificateFormPage() {
   const [saved, setSaved] = useState<TemplateResponse | null>(null);
@@ -90,13 +91,17 @@ export default function CertificateFormPage() {
   const label = "block text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]";
 
   return (
-    <DeanShell title="Certificate Form">
+    <GrammarianShell title="Certificate Form">
       <div className="space-y-5">
+        <Link href="/grammarian/certificates" className="text-xs font-semibold text-[#59645d] underline">
+          &larr; All certificates
+        </Link>
+
         <div className="rounded-2xl border border-[#dfe8df] bg-white p-5">
           <h2 className="text-lg font-semibold text-[#203028]">Certificate of Editing/Originality: the form</h2>
           <p className="mt-1 text-sm text-[#59645d]">
-            This is the university&apos;s form (F-RPO-09) that the Grammarian fills in for each group. Change the wording or the revision details here when the university revises the
-            form. The Grammarian can only fill in the highlighted fields. Each save is a new version; certificates already issued keep the version they were issued on.
+            This is the university&apos;s form (F-RPO-09). Change the wording or the revision details here when the university revises it. The highlighted fields are filled in for each
+            group when you issue a certificate. Each save is a new version; certificates already issued keep the version they were issued on.
           </p>
         </div>
 
@@ -201,6 +206,6 @@ export default function CertificateFormPage() {
           </div>
         )}
       </div>
-    </DeanShell>
+    </GrammarianShell>
   );
 }

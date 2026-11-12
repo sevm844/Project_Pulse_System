@@ -39,6 +39,7 @@ export default function ManuscriptExportDialog({
   projectId,
   group,
   loadMyGroup = false,
+  startPlain = false,
   label,
   getContent,
   onClose,
@@ -47,13 +48,15 @@ export default function ManuscriptExportDialog({
   group?: ApiGroup | null;
   // Students have no group object here; it is fetched for the title page.
   loadMyGroup?: boolean;
+  // Start with no title page, contents or page numbers: just the manuscript (for checking it elsewhere).
+  startPlain?: boolean;
   label: string; // "Draft" or "Version 2": part of the file name
   getContent: () => Promise<JSONContent> | JSONContent;
   onClose: () => void;
 }) {
-  const [titlePage, setTitlePage] = useState(true);
-  const [toc, setToc] = useState(true);
-  const [pageNumbers, setPageNumbers] = useState(true);
+  const [titlePage, setTitlePage] = useState(!startPlain);
+  const [toc, setToc] = useState(!startPlain);
+  const [pageNumbers, setPageNumbers] = useState(!startPlain);
   const [fields, setFields] = useState<TitlePage>(() => defaultTitlePage(group ?? null));
   const [ready, setReady] = useState(!loadMyGroup || Boolean(group));
   const [busy, setBusy] = useState<ExportFormat | null>(null);

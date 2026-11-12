@@ -113,7 +113,7 @@ export default function PrepareCertificatePage() {
         {issued && (
           <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
             <h2 className="text-base font-semibold text-emerald-900">Certificate {issued.certificate_no} issued</h2>
-            <p className="mt-1 text-sm text-emerald-900/80">{issued.group_name} and its adviser have been told. Download a copy to print or keep.</p>
+            <p className="mt-1 text-sm text-emerald-900/80">The certificate for {issued.group_name} was sent to the Dean. Download a copy to print or keep.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" disabled={downloading !== null} onClick={() => void download("pdf")} className="rounded-full bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50">
                 {downloading === "pdf" ? "Making the PDF..." : "Download PDF"}

@@ -7,7 +7,6 @@ const tools = [
   ["Groups", "Assign advisers and confirm group closures.", "/dean/administration/groups"],
   ["Audit Logs", "Review who did what across the system.", "/dean/administration/audit-logs"],
   ["Messaging Window", "Set the hours when students may send messages.", "/dean/administration/message-settings"],
-  ["Certificate Form", "The wording of the Grammarian's certificate of editing/originality (form F-RPO-09).", "/dean/administration/certificate-form"],
 ] as const;
 
 export default function DeanAdministrationPage() {

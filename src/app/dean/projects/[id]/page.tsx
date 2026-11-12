@@ -225,7 +225,7 @@ export default function DeanProjectProfilePage() {
         {group.project && (
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Certificate of editing/originality</h3>
-            <p className="mt-1 text-sm text-[#7b877f]">Issued by the Grammarian once the manuscript passes the grammar check.</p>
+            <p className="mt-1 text-sm text-[#7b877f]">Received from the Grammarian when this group passes the grammar check.</p>
             <div className="mt-4">
               <CertificateList projectId={group.project.project_id} />
             </div>

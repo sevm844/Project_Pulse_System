@@ -34,8 +34,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 13 | (Student 1) Look at the **Versions** list. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
 | 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
 | 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
-| 16 | (Student 7) After the Grammarian issues UAT Delta's certificate, open **My Project** and find it. Open it and download it. | | |
-| 17 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -80,8 +79,9 @@ Email: `uat-dean@uat.test`
 | 9 | Open **Feedback**. Read what testers sent and mark one as Resolved. | | |
 | 10 | Open **Projects → UAT Alpha → Manuscript**. Press **Compare versions** (Version 1 and 2): can you see what was added (green) and removed (red), who edited and when? Use **Show only changes** and **Next**. | | |
 | 11 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
-| 12 | Open **Administration → Certificate Form**. Read the wording of the Grammarian's certificate. Change the revision number, save it as a new version, and see that certificates already issued keep their old wording. Try to remove a bold field from the wording: it should refuse. | | |
-| 13 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 12 | Open **Certificates**. Send **UAT Delta**'s final manuscript to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
+| 13 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
+| 14 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -110,10 +110,12 @@ Email: `uat-grammarian@uat.test`
 | 3 | Check that the group would see your remarks. | | |
 | 4 | Open **Manuscripts**. Find **UAT Delta** and show its versions. | | |
 | 5 | Press **Review** on Version 1. Read the two grammar comments, then select other words and leave your own comment. Mark one of your comments resolved. Can you resolve the adviser's comment, if there is one? (You should not be able to.) | | |
-| 6 | Approve UAT Delta's **Final manuscript** in the review queue (the grammar check). Then open **Certificates**: UAT Delta should now be ready. | | |
-| 7 | Upload your signature. Press **Prepare certificate** for UAT Delta and look at the form: is it like the university's F-RPO-09? Click a bold highlighted part (the title, authors, degree or a date) and correct it. Can you change the fixed wording? (You should not be able to.) | | |
-| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? | | |
-| 9 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 6 | Open **Certificates**. After the Dean sends you UAT Delta's final manuscript (see the Dean's task), it appears under **Waiting for you**. Press **Download manuscript**: do you get the group's paper as a Word document you could check elsewhere? | | |
+| 7 | Upload your signature. Press **Prepare certificate** and look at the form: is it like the university's F-RPO-09? Click a bold highlighted part (the title, authors, degree or a date) and correct it. Can you change the fixed wording here? (You should not.) | | |
+| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? It goes straight to the Dean. | | |
+| 9 | Press **Edit the certificate form**: it is your form. Change the revision number and save it as a new version. Try to remove a bold field from the wording: it should refuse. | | |
+| 10 | Ask the Dean to send the manuscript again, then press **Did not pass**, write your remarks and return it. | | |
+| 11 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 

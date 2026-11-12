@@ -40,10 +40,47 @@ export type Certificate = {
 export type TemplateVersion = { version_no: number; note: string | null; saved_by: string | null; saved_at: string };
 export type TemplateResponse = { version_no: number; content: CertificateTemplate; updated_at: string; history?: TemplateVersion[] };
 
-export type CertificateRow = { project_id: number; group_name: string; course: string; section: string; project_title: string | null; adviser: string | null };
+// A manuscript the Dean sent to the Grammarian, on the Grammarian's desk.
+export type DeskRow = {
+  referral_id: number;
+  project_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  project_title: string | null;
+  adviser: string | null;
+  version_no: number;
+  note: string | null;
+  sent_by: string | null;
+  sent_at: string;
+  remarks: string | null;
+  decided_at: string | null;
+};
 export type CertificateQueue = {
-  ready: CertificateRow[];
-  issued: (CertificateRow & { certificate_id: number; certificate_no: string; issued_at: string })[];
+  waiting: DeskRow[];
+  issued: (DeskRow & { certificate_id: number | null; certificate_no: string | null; issued_at: string | null })[];
+  returned: DeskRow[];
+};
+
+// The Dean's side: what can be sent, and every sending with what became of it.
+export type ReferralCandidate = { project_id: number; group_name: string; course: string; section: string; project_title: string | null; versions: number; latest_version_no: number | null; status: string | null };
+export type Referral = {
+  referral_id: number;
+  project_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  project_title: string | null;
+  version_no: number;
+  note: string | null;
+  sent_by: string | null;
+  sent_at: string;
+  status: "Sent" | "Passed" | "Not Passed";
+  remarks: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  certificate_id: number | null;
+  certificate_no: string | null;
 };
 
 export type CertificateDraft = {
@@ -55,6 +92,13 @@ export type CertificateDraft = {
   has_signature: boolean;
   already_issued: string | null;
 };
+
+export const fetchReferralCandidates = () => apiFetch<ReferralCandidate[]>("/grammar-referrals/candidates");
+export const fetchReferrals = () => apiFetch<Referral[]>("/grammar-referrals");
+export const sendToGrammarian = (projectId: number, versionNo: number, note: string) =>
+  apiFetch<{ referral_id: number }>(`/projects/${projectId}/grammar-referrals`, { method: "POST", body: JSON.stringify({ version_no: versionNo, note: note.trim() || undefined }) });
+export const returnNotPassed = (referralId: number, remarks: string) =>
+  apiFetch<{ status: string }>(`/grammar-referrals/${referralId}/return`, { method: "PUT", body: JSON.stringify({ remarks }) });
 
 export const fetchCertificateTemplate = () => apiFetch<TemplateResponse>("/certificate-template");
 export const saveCertificateTemplate = (content: CertificateTemplate, note: string) =>

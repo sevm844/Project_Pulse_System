@@ -149,14 +149,16 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   requirement that the adviser approved, or that already has a grammar result (so access does not vanish when a failed check sends the submission back). They never see drafts. They resolve only
   **their own** comments; the adviser and the Dean can resolve any; the server decides per comment (`can_resolve`), the screen just obeys it. A Grammarian comment also notifies the adviser.
   Other roles use `Project::visibleTo` unchanged; never add the Grammarian to that scope (it would leak groups to other modules).
-- **Grammarian's certificate** (`CertificateController`, `/grammarian/certificates`, `CertificatePaper`, `_lib/manuscriptExport/certificate.ts`): the university form F-RPO-09 "Certification of Editing/Originality".
-  The wording is fixed text with five fill-in fields (`{{title}} {{authors}} {{degree}} {{done_date}} {{signed_date}}`), stored as versions in `certificate_templates` (v1 seeded by the migration);
-  **only the Dean saves a new version** (`/dean/administration/certificate-form`; the wording must keep the first four fields). The Grammarian fills the bold fields on the page (prefilled from the group: title,
-  "Surname, First" authors leader first, degree from the course, today's dates), can print their own uploaded signature picture (`user_signatures`), and issues it: allowed **only for groups whose grammar-flagged submission the
-  Grammarian approved** (`Project::scopeCertificateEligible`). A certificate (`certificates`, number `GC-YYYY-NNNN`) keeps a snapshot of the form version, the editor's name and signature, so it never changes when the form is revised;
-  issuing again replaces the earlier one (kept, marked replaced). Read by the group, its adviser, the Dean, the Research Coordinator and the Grammarian (`CertificateList` on My Project, the adviser's group card and the Dean's project
-  profile). The logo is `public/certificate/ub-rpo-logo.png`. The editable fields compare text with spaces normalised: a typed trailing space becomes a non-breaking space, and resetting it would throw the cursor to the start.
-  `uat:reset` does not touch the form versions (they are the Dean's, not demo data).
+- **Grammarian's certificate and the flow around it** (`GrammarReferralController`, `CertificateController`; Grammarian pages `/grammarian/certificates`, `.../form`, `.../[projectId]`; Dean page `/dean/certificates`): the university form F-RPO-09
+  "Certification of Editing/Originality". **The flow (the school's own): the Dean sends a group's final manuscript (a submitted version he picks, plus a note) to the Grammarian -> she downloads it as a plain Word/PDF document and checks it
+  OUTSIDE the system (plagiarism etc.; the system has no such tool) -> she comes back and either issues the certificate, which goes straight to the Dean, or returns the group as not passed with remarks (Dean and adviser notified).**
+  One waiting sending per group (`grammar_referrals`, partial unique index); a group can be sent again after a pass or a return. Only the NEWEST sending counts for eligibility (`Project::scopeCertificateEligible`).
+  **The form is the Grammarian's own**: fixed wording with five fill-in fields (`{{title}} {{authors}} {{degree}} {{done_date}} {{signed_date}}`), versions in `certificate_templates` (v1 seeded by the migration); only the Grammarian saves a new
+  version (the wording must keep the first four fields). The Dean has no form editor. She fills the bold fields on the page (prefilled: title, "Surname, First" authors leader first, degree from the course, today's dates), prints her own uploaded
+  signature (`user_signatures`), and issues it. A certificate (`certificates`, number `GC-YYYY-NNNN`) keeps a snapshot of the form version, her name and signature, so it never changes when the form is revised; issuing again replaces the earlier one
+  (kept, marked replaced). **Only the Dean (who receives it) and the Grammarian can read certificates; students, advisers and the Coordinator cannot** (`Project::scopeCertificateVisibleTo`). The Grammarian can read the manuscript versions of every
+  group sent to her (`scopeManuscriptVisibleTo`). Logo: `public/certificate/ub-rpo-logo.png`. The editable fields compare text with spaces normalised: a typed trailing space becomes a non-breaking space, and resetting it would throw the cursor to
+  the start. `uat:reset` does not touch form versions (they are the Grammarian's, not demo data).
 - Not built yet: certificates are not yet a required document before the final defense or the archive; ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
 
 ## Overall progress tracker
