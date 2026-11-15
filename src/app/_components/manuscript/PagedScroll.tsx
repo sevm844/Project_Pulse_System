@@ -9,10 +9,12 @@ export default function PagedScroll({
   pages,
   className = "",
   padding = 20,
+  outerClassName = "",
   children,
 }: {
   pages: number;
   className?: string;
+  outerClassName?: string;
   // Space between the top of the scrolling area and the first page, so the page number lines up.
   padding?: number;
   children: ReactNode;
@@ -44,7 +46,7 @@ export default function PagedScroll({
   );
 
   return (
-    <div className="relative">
+    <div className={`relative ${outerClassName}`}>
       <div ref={scroller} onScroll={update} className={`overflow-auto ${className}`}>
         {children}
       </div>

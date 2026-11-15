@@ -93,3 +93,9 @@ body {
     opacity: 1;
   }
 }
+
+/* Review screen: the words a comment is about, drawn over the page. */
+.manuscript-sheet .rv-mark { cursor: pointer; border-radius: 2px; }
+.manuscript-sheet .rv-open { background: #fef3c7; border-bottom: 2px solid #fbbf24; }
+.manuscript-sheet .rv-resolved { background: #ecfdf5; border-bottom: 1px solid #6ee7b7; }
+.manuscript-sheet .rv-active { background: #fcd34d; box-shadow: 0 0 0 1px #f59e0b; }

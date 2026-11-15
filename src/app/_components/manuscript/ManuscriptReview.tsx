@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { errorMessage } from "../../_lib/groups";
 import {
@@ -15,9 +15,11 @@ import {
 } from "../../_lib/manuscript";
 import { toBlocks, type Block } from "../../_lib/manuscriptDiff";
 import { formatDateTime } from "../../_lib/requirements";
-import { BlockShell } from "./ManuscriptCompare";
+import type { JSONContent } from "@tiptap/react";
+import PagedScroll from "./PagedScroll";
+import ReviewPaper, { type PaperMark, type PaperPick } from "./ReviewPaper";
 
-type Pick = { block: number; start: number; end: number; quote: string; x: number; y: number };
+type Pick = PaperPick;
 type Filter = "All" | "Open" | "Resolved";
 
 // Where the words of a comment sit now. The saved range is used when it still holds the quoted words; otherwise the
@@ -49,6 +51,8 @@ export default function ManuscriptReview({
   onChanged?: () => void;
 }) {
   const [blocks, setBlocks] = useState<Block[] | null>(null);
+  const [content, setContent] = useState<JSONContent | null>(null);
+  const [pages, setPages] = useState(1);
   const [comments, setComments] = useState<ManuscriptComment[]>([]);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<Filter>("All");
@@ -66,6 +70,7 @@ export default function ManuscriptReview({
     Promise.all([fetchManuscriptVersion(projectId, versionNo), fetchManuscriptComments(projectId, versionNo)])
       .then(([v, list]) => {
         if (cancelled) return;
+        setContent(v.content);
         setBlocks(toBlocks(v.content));
         setComments(list);
       })
@@ -83,19 +88,17 @@ export default function ManuscriptReview({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const ranges = useMemo(() => {
-    const byBlock = new Map<number, { id: number; from: number; to: number }[]>();
-    if (!blocks) return byBlock;
+  const marks = useMemo<PaperMark[]>(() => {
+    if (!blocks) return [];
+    const out: PaperMark[] = [];
     for (const c of comments) {
       const range = resolveRange(blocks[c.block_index ?? -1], c);
       if (!range || c.block_index === null) continue;
-      byBlock.set(c.block_index, [...(byBlock.get(c.block_index) ?? []), { id: c.comment_id, from: range[0], to: range[1] }]);
+      out.push({ id: c.comment_id, block: c.block_index, from: range[0], to: range[1], tone: active === c.comment_id ? "active" : c.status === "Open" ? "open" : "resolved" });
     }
 
-    return byBlock;
-  }, [blocks, comments]);
-
-  const status = useMemo(() => new Map(comments.map((c) => [c.comment_id, c.status])), [comments]);
+    return out;
+  }, [blocks, comments, active]);
 
   const counts = { All: comments.length, Open: comments.filter((c) => c.status === "Open").length, Resolved: comments.filter((c) => c.status === "Resolved").length };
   const shown = useMemo(
@@ -113,64 +116,6 @@ export default function ManuscriptReview({
     },
     [onChanged],
   );
-
-  // Turn the words the reader selected into a place in the version: the paragraph and the characters inside it.
-  function readSelection() {
-    const selection = window.getSelection();
-    if (!canComment || !selection || selection.rangeCount === 0 || selection.isCollapsed) return setPick(null);
-
-    const range = selection.getRangeAt(0);
-    const host = (node: Node) => (node instanceof Element ? node : node.parentElement)?.closest<HTMLElement>("[data-text]") ?? null;
-    const first = host(range.startContainer);
-    if (!first || !paper.current?.contains(first)) return setPick(null);
-
-    const last = host(range.endContainer);
-    const offsetIn = (el: HTMLElement, node: Node, at: number) => {
-      const before = document.createRange();
-      before.selectNodeContents(el);
-      before.setEnd(node, at);
-
-      return before.toString().length;
-    };
-
-    const text = first.textContent ?? "";
-    let start = offsetIn(first, range.startContainer, range.startOffset);
-    // A selection that runs on into the next paragraph is cut at the end of the first one.
-    let end = last === first ? offsetIn(first, range.endContainer, range.endOffset) : text.length;
-    while (start < end && /\s/.test(text[start])) start++;
-    while (end > start && /\s/.test(text[end - 1])) end--;
-    if (end - start < 1) return setPick(null);
-
-    const rect = range.getBoundingClientRect();
-    setPick({
-      block: Number(first.dataset.block),
-      start,
-      end,
-      quote: text.slice(start, Math.min(end, start + 600)),
-      x: Math.min(rect.right, window.innerWidth - 150),
-      y: rect.bottom + 8,
-    });
-  }
-
-  // Mouse, finger (long-press and drag the handles) and keyboard all end up as a change of the selection, so that is what is
-  // listened to. Reading it a moment later lets the selection settle while a handle is still being dragged.
-  const readRef = useRef<() => void>(() => undefined);
-  useEffect(() => {
-    readRef.current = readSelection;
-  });
-  useEffect(() => {
-    let timer: number | undefined;
-    const onChange = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => readRef.current(), 200);
-    };
-    document.addEventListener("selectionchange", onChange);
-
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("selectionchange", onChange);
-    };
-  }, []);
 
   function startComment(target: CommentAnchor | "whole") {
     setComposing(target);
@@ -237,16 +182,23 @@ export default function ManuscriptReview({
 
         {blocks && (
           <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_380px] lg:overflow-hidden">
-            <div ref={paper} className="max-h-[60vh] min-h-[40vh] overflow-auto bg-[#e6ebe6] p-3 sm:p-5 lg:max-h-none">
-              {blocks.length === 0 && <p className="text-sm text-[#7b877f]">This version has no text.</p>}
-              <PagedPaper
-                blocks={blocks}
-                renderBlock={(block, index) => (
-                  <BlockShell block={block} index={index}>
-                    <Highlighted text={block.text} ranges={ranges.get(index) ?? []} active={active} status={status} onPick={(id) => focusComment(id, "paper")} />
-                  </BlockShell>
-                )}
-              />
+            <div className="relative min-h-0">
+              <PagedScroll pages={pages} outerClassName="h-full" className="h-full max-h-[60vh] min-h-[40vh] bg-[#e6ebe6] p-3 sm:p-5 lg:max-h-none">
+                <div ref={paper}>
+                  {blocks.length === 0 && <p className="mb-3 text-sm text-[#7b877f]">This version has no text.</p>}
+                  {content && (
+                    <ReviewPaper
+                      content={content}
+                      blocks={blocks}
+                      marks={marks}
+                      canComment={canComment}
+                      onPages={setPages}
+                      onSelect={setPick}
+                      onMarkClick={(id) => focusComment(id, "paper")}
+                    />
+                  )}
+                </div>
+              </PagedScroll>
             </div>
 
             <aside ref={panel} className="flex min-h-0 flex-col border-t border-[#edf2ec] bg-[#f8faf7] lg:border-l lg:border-t-0" aria-label="Comments">
@@ -339,178 +291,6 @@ export default function ManuscriptReview({
     </div>,
     document.body,
   );
-}
-
-// A paragraph's words with the commented stretches marked: amber while the comment is open, soft green once resolved.
-// Letter size at 96 dpi, 1 inch margins: the same page the manuscript editor and the exports use.
-const PAGE_W = 816;
-const PAGE_H = 1056;
-const MARGIN = 72;
-
-// The paper shown page by page, each page its own sheet with the page number above it. The blocks are measured once at the real text width
-// (an invisible copy), then handed out to pages greedily; a paragraph is never cut, so a very long one makes its page taller.
-function PagedPaper({ blocks, renderBlock }: { blocks: Block[]; renderBlock: (block: Block, index: number) => React.ReactNode }) {
-  const box = useRef<HTMLDivElement>(null);
-  const measure = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-  const [layout, setLayout] = useState<{ key: string; pages: [number, number][] } | null>(null);
-
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => setWidth(el.clientWidth));
-    observer.observe(el);
-    setWidth(el.clientWidth);
-
-    return () => observer.disconnect();
-  }, []);
-
-  // While the paper scrolls, a small bubble beside the scrollbar says which page is on screen ("7 of 70"), like the editor.
-  const [bubble, setBubble] = useState<{ page: number; top: number; left: number; show: boolean } | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const scroller = box.current?.parentElement;
-    if (!scroller) return;
-
-    const onScroll = () => {
-      const rect = scroller.getBoundingClientRect();
-      const room = scroller.scrollHeight - scroller.clientHeight;
-      const fraction = room > 0 ? scroller.scrollTop / room : 0;
-      const sheets = Array.from(box.current?.querySelectorAll<HTMLElement>("[data-page]") ?? []);
-      let page = 1;
-      sheets.forEach((sheet, i) => {
-        // The last page whose top has passed the middle of the visible area.
-        if (sheet.getBoundingClientRect().top - rect.top <= scroller.clientHeight / 2) page = i + 1;
-      });
-
-      setBubble({ page, top: rect.top + fraction * Math.max(0, scroller.clientHeight - 34), left: rect.right - 90, show: true });
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-      hideTimer.current = setTimeout(() => setBubble((current) => (current ? { ...current, show: false } : current)), 1400);
-    };
-
-    scroller.addEventListener("scroll", onScroll);
-
-    return () => {
-      scroller.removeEventListener("scroll", onScroll);
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-    };
-  }, []);
-
-  const pageW = Math.max(280, Math.min(PAGE_W, width));
-  const k = pageW / PAGE_W;
-  const padX = MARGIN * k;
-  const contentW = pageW - 2 * padX;
-  const contentH = (PAGE_H - 2 * MARGIN) * k;
-  const key = `${blocks.length}:${Math.round(contentW)}`;
-  const ready = layout?.key === key;
-
-  useLayoutEffect(() => {
-    const root = measure.current;
-    if (ready || !root || width === 0) return;
-
-    const tops = Array.from(root.children).map((el) => (el as HTMLElement).offsetTop);
-    const total = root.scrollHeight;
-    const pages: [number, number][] = [];
-    let start = 0;
-    let y0 = tops[0] ?? 0;
-
-    for (let i = 0; i < tops.length; i++) {
-      const bottom = i + 1 < tops.length ? tops[i + 1] : total;
-      if (i > start && bottom - y0 > contentH) {
-        pages.push([start, i]);
-        start = i;
-        y0 = tops[i];
-      }
-    }
-    if (tops.length > 0) pages.push([start, tops.length]);
-    setLayout({ key, pages });
-  }, [ready, key, width, contentH, blocks]);
-
-  return (
-    <div ref={box} className="relative">
-      {width > 0 && !ready && (
-        <>
-          <p className="py-10 text-center text-sm text-[#7b877f]">Laying out the pages...</p>
-          <div ref={measure} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 -z-10 text-[14px] leading-relaxed" style={{ width: contentW }}>
-            {blocks.map((block, index) => (
-              <div key={index}>
-                <BlockShell block={block}>{block.text}</BlockShell>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {ready &&
-        layout.pages.map(([from, to], page) => (
-          <div key={page} data-page className="mb-6 last:mb-0">
-            <div className="mx-auto bg-white shadow-[0_2px_10px_rgba(31,42,36,0.18)]" style={{ width: pageW, minHeight: (pageW * PAGE_H) / PAGE_W, padding: `${MARGIN * k}px ${padX}px` }}>
-              <div className="flow-root text-[14px] leading-relaxed text-[#1f2a24]">
-                {blocks.slice(from, to).map((block, offset) => (
-                  <div key={from + offset}>{renderBlock(block, from + offset)}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      {bubble && ready && layout.pages.length > 1 && (
-        <div
-          aria-hidden
-          style={{ position: "fixed", top: bubble.top, left: bubble.left }}
-          className={`pointer-events-none z-[105] rounded-lg bg-[#202124] px-3 py-1.5 text-xs font-semibold text-white shadow-lg transition-opacity duration-200 ${bubble.show ? "opacity-100" : "opacity-0"}`}
-        >
-          {bubble.page} of {layout.pages.length}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Highlighted({
-  text,
-  ranges,
-  active,
-  status,
-  onPick,
-}: {
-  text: string;
-  ranges: { id: number; from: number; to: number }[];
-  active: number | null;
-  status: Map<number, "Open" | "Resolved">;
-  onPick: (id: number) => void;
-}) {
-  if (ranges.length === 0) return <>{text}</>;
-
-  const points = [...new Set([0, text.length, ...ranges.flatMap((r) => [r.from, r.to])])].filter((p) => p >= 0 && p <= text.length).sort((a, b) => a - b);
-  const pieces: React.ReactNode[] = [];
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const [from, to] = [points[i], points[i + 1]];
-    const ids = ranges.filter((r) => r.from <= from && r.to >= to).map((r) => r.id);
-    const piece = text.slice(from, to);
-
-    if (ids.length === 0) {
-      pieces.push(<span key={from}>{piece}</span>);
-      continue;
-    }
-
-    const open = ids.filter((id) => status.get(id) === "Open");
-    const lead = ids.includes(active ?? -1) ? (active as number) : (open[0] ?? ids[0]);
-    const style = ids.includes(active ?? -1)
-      ? "bg-amber-300 ring-1 ring-amber-500"
-      : open.length > 0
-        ? "bg-amber-100 border-b-2 border-amber-400"
-        : "bg-emerald-50 border-b border-emerald-300";
-
-    pieces.push(
-      <mark key={from} data-mark={ids.join(" ")} onClick={() => onPick(lead)} className={`cursor-pointer rounded-sm text-inherit ${style}`}>
-        {piece}
-      </mark>,
-    );
-  }
-
-  return <>{pieces}</>;
 }
 
 function CommentCard({
