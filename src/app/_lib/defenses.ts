@@ -25,6 +25,8 @@ export type ApiEvaluation = {
   score: number | null;
   recommendation: (typeof DEFENSE_RECOMMENDATIONS)[number] | null;
   remarks: string | null;
+  // The Proposal Defense rubric ratings (null for the other defenses).
+  rubric?: { version: number; ratings: Record<string, number>; total: number; max: number } | null;
   evaluated_at: string | null;
 };
 
@@ -40,10 +42,14 @@ export type ApiDefense = {
   defense_date: string | null;
   defense_time: string | null;
   venue: string | null;
+  duration_minutes: number;
+  end_time: string | null;
   status: DefenseStatus;
   result: (typeof DEFENSE_RESULTS)[number] | null;
   remarks: string | null;
   panel: ApiPanelMember[];
+  // The group's members (Surname, First), leader first. Not sent to students.
+  members?: string[];
   // Dean and Adviser only.
   average_score?: number | null;
   evaluations?: ApiEvaluation[];
@@ -96,3 +102,36 @@ export function defenseState(defense: ApiDefense) {
 
   return { label: "Scheduled", dot: "bg-amber-400" };
 }
+
+// ---- the schedule sheet
+
+export type ApiEligibleGroup = {
+  project_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  project_title: string | null;
+  adviser: string | null;
+  eligible: boolean;
+  // Why this group cannot be scheduled for the chosen defense yet.
+  reason: string | null;
+};
+
+// One line of the whole schedule of an adviser's groups, as a student reads it (no results, no evaluations).
+export type ApiScheduleRow = {
+  defense_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  defense_type: string;
+  defense_date: string;
+  defense_time: string;
+  end_time: string;
+  venue: string | null;
+  status: "Scheduled" | "Done";
+  panel: { name: string | null; role: "Chair" | "Member" }[];
+  mine: boolean;
+};
+
+// The answer to a batch save that was refused: what is wrong with which row (keyed by project id, or defense id when editing).
+export type RowErrors = Record<string, string[]>;

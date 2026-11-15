@@ -6,10 +6,13 @@ const API_URL =
 
 export class ApiError extends Error {
   status: number;
+  // The server's whole answer, for the few screens that need more than the message (the schedule sheet reads row_errors).
+  data: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.status = status;
+    this.data = data;
   }
 }
 
@@ -96,6 +99,7 @@ export async function apiFetch<T>(
     throw new ApiError(
       firstFieldError ?? data?.message ?? "Something went wrong.",
       response.status,
+      data,
     );
   }
 
@@ -163,6 +167,17 @@ export async function previewSubmission(submissionId: number, mimeType: string):
 
   // The type is set here (PDF or image only), so a file can never be shown as a web page.
   return URL.createObjectURL(new Blob([blob], { type: mimeType }));
+}
+
+// The Dean's similarity report (a PDF): saved to the computer, or opened in the browser (the type is forced to PDF, never a web page).
+export async function downloadSimilarityReport(reportId: number, fileName: string | null) {
+  saveBlob(await fetchPrivateFile(`/similarity-reports/${reportId}/file`), fileName);
+}
+
+export async function previewSimilarityReport(reportId: number): Promise<string> {
+  const blob = await fetchPrivateFile(`/similarity-reports/${reportId}/file`);
+
+  return URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
 }
 
 // The database says "Research Coordinator"; the existing pages say "Coordinator".

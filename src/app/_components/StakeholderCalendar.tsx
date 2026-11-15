@@ -371,11 +371,7 @@ export default function StakeholderCalendar({
             </p>
           </div>
 
-          <span
-            className={`rounded-full border px-3 py-1 text-xs font-semibold text-[#59645d] ${
-              isGlass ? "border-white/55 bg-white/34" : "border-[#dfe8df] bg-white"
-            }`}
-          >
+          <span className="text-xs font-semibold text-[#59645d]">
             {selectedDateEvents.length + selectedDateNotes.length} item
             {selectedDateEvents.length + selectedDateNotes.length === 1 ? "" : "s"}
           </span>

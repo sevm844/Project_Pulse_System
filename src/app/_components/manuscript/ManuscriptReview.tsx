@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { errorMessage } from "../../_lib/groups";
 import {
@@ -210,8 +210,8 @@ export default function ManuscriptReview({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-3 sm:p-4">
-      <div role="dialog" aria-modal="true" aria-label={`${canComment ? "Review" : "Comments on"} version ${versionNo}`} className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+    <div className="fixed inset-0 z-[100] bg-white">
+      <div role="dialog" aria-modal="true" aria-label={`${canComment ? "Review" : "Comments on"} version ${versionNo}`} className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] px-5 py-4">
           <div>
             <h3 className="text-lg font-semibold text-[#203028]">{canComment ? "Review" : "Comments on"} version {versionNo}</h3>
@@ -236,16 +236,17 @@ export default function ManuscriptReview({
         {!blocks && !error && <p className="px-5 py-10 text-center text-sm text-[#7b877f]">Opening version...</p>}
 
         {blocks && (
-          <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
-            <div ref={paper} className="max-h-[48vh] min-h-[30vh] overflow-auto bg-[#eef2ee] p-3 sm:p-5 lg:max-h-none">
-              <article className="mx-auto max-w-3xl rounded-lg bg-white px-5 py-6 text-[14px] leading-relaxed text-[#1f2a24] shadow-sm sm:px-9">
-                {blocks.length === 0 && <p className="text-sm text-[#7b877f]">This version has no text.</p>}
-                {blocks.map((block, index) => (
-                  <BlockShell key={index} block={block} index={index}>
+          <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_380px] lg:overflow-hidden">
+            <div ref={paper} className="max-h-[60vh] min-h-[40vh] overflow-auto bg-[#e6ebe6] p-3 sm:p-5 lg:max-h-none">
+              {blocks.length === 0 && <p className="text-sm text-[#7b877f]">This version has no text.</p>}
+              <PagedPaper
+                blocks={blocks}
+                renderBlock={(block, index) => (
+                  <BlockShell block={block} index={index}>
                     <Highlighted text={block.text} ranges={ranges.get(index) ?? []} active={active} status={status} onPick={(id) => focusComment(id, "paper")} />
                   </BlockShell>
-                ))}
-              </article>
+                )}
+              />
             </div>
 
             <aside ref={panel} className="flex min-h-0 flex-col border-t border-[#edf2ec] bg-[#f8faf7] lg:border-l lg:border-t-0" aria-label="Comments">
@@ -341,6 +342,131 @@ export default function ManuscriptReview({
 }
 
 // A paragraph's words with the commented stretches marked: amber while the comment is open, soft green once resolved.
+// Letter size at 96 dpi, 1 inch margins: the same page the manuscript editor and the exports use.
+const PAGE_W = 816;
+const PAGE_H = 1056;
+const MARGIN = 72;
+
+// The paper shown page by page, each page its own sheet with the page number above it. The blocks are measured once at the real text width
+// (an invisible copy), then handed out to pages greedily; a paragraph is never cut, so a very long one makes its page taller.
+function PagedPaper({ blocks, renderBlock }: { blocks: Block[]; renderBlock: (block: Block, index: number) => React.ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const measure = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [layout, setLayout] = useState<{ key: string; pages: [number, number][] } | null>(null);
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setWidth(el.clientWidth));
+    observer.observe(el);
+    setWidth(el.clientWidth);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // While the paper scrolls, a small bubble beside the scrollbar says which page is on screen ("7 of 70"), like the editor.
+  const [bubble, setBubble] = useState<{ page: number; top: number; left: number; show: boolean } | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const scroller = box.current?.parentElement;
+    if (!scroller) return;
+
+    const onScroll = () => {
+      const rect = scroller.getBoundingClientRect();
+      const room = scroller.scrollHeight - scroller.clientHeight;
+      const fraction = room > 0 ? scroller.scrollTop / room : 0;
+      const sheets = Array.from(box.current?.querySelectorAll<HTMLElement>("[data-page]") ?? []);
+      let page = 1;
+      sheets.forEach((sheet, i) => {
+        // The last page whose top has passed the middle of the visible area.
+        if (sheet.getBoundingClientRect().top - rect.top <= scroller.clientHeight / 2) page = i + 1;
+      });
+
+      setBubble({ page, top: rect.top + fraction * Math.max(0, scroller.clientHeight - 34), left: rect.right - 90, show: true });
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setBubble((current) => (current ? { ...current, show: false } : current)), 1400);
+    };
+
+    scroller.addEventListener("scroll", onScroll);
+
+    return () => {
+      scroller.removeEventListener("scroll", onScroll);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, []);
+
+  const pageW = Math.max(280, Math.min(PAGE_W, width));
+  const k = pageW / PAGE_W;
+  const padX = MARGIN * k;
+  const contentW = pageW - 2 * padX;
+  const contentH = (PAGE_H - 2 * MARGIN) * k;
+  const key = `${blocks.length}:${Math.round(contentW)}`;
+  const ready = layout?.key === key;
+
+  useLayoutEffect(() => {
+    const root = measure.current;
+    if (ready || !root || width === 0) return;
+
+    const tops = Array.from(root.children).map((el) => (el as HTMLElement).offsetTop);
+    const total = root.scrollHeight;
+    const pages: [number, number][] = [];
+    let start = 0;
+    let y0 = tops[0] ?? 0;
+
+    for (let i = 0; i < tops.length; i++) {
+      const bottom = i + 1 < tops.length ? tops[i + 1] : total;
+      if (i > start && bottom - y0 > contentH) {
+        pages.push([start, i]);
+        start = i;
+        y0 = tops[i];
+      }
+    }
+    if (tops.length > 0) pages.push([start, tops.length]);
+    setLayout({ key, pages });
+  }, [ready, key, width, contentH, blocks]);
+
+  return (
+    <div ref={box} className="relative">
+      {width > 0 && !ready && (
+        <>
+          <p className="py-10 text-center text-sm text-[#7b877f]">Laying out the pages...</p>
+          <div ref={measure} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 -z-10 text-[14px] leading-relaxed" style={{ width: contentW }}>
+            {blocks.map((block, index) => (
+              <div key={index}>
+                <BlockShell block={block}>{block.text}</BlockShell>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {ready &&
+        layout.pages.map(([from, to], page) => (
+          <div key={page} data-page className="mb-6 last:mb-0">
+            <div className="mx-auto bg-white shadow-[0_2px_10px_rgba(31,42,36,0.18)]" style={{ width: pageW, minHeight: (pageW * PAGE_H) / PAGE_W, padding: `${MARGIN * k}px ${padX}px` }}>
+              <div className="flow-root text-[14px] leading-relaxed text-[#1f2a24]">
+                {blocks.slice(from, to).map((block, offset) => (
+                  <div key={from + offset}>{renderBlock(block, from + offset)}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      {bubble && ready && layout.pages.length > 1 && (
+        <div
+          aria-hidden
+          style={{ position: "fixed", top: bubble.top, left: bubble.left }}
+          className={`pointer-events-none z-[105] rounded-lg bg-[#202124] px-3 py-1.5 text-xs font-semibold text-white shadow-lg transition-opacity duration-200 ${bubble.show ? "opacity-100" : "opacity-0"}`}
+        >
+          {bubble.page} of {layout.pages.length}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Highlighted({
   text,
   ranges,
@@ -436,9 +562,9 @@ function CommentCard({
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <p className="text-xs text-[#59645d]">
             <span className="font-semibold text-[#203028]">{comment.author}</span>
-            {comment.author_role && <span className="ml-1 rounded bg-[#eef2ee] px-1.5 py-0.5 text-[10px] font-semibold text-[#59645d]">{comment.author_role}</span>}
+            {comment.author_role && <span className="ml-1 text-[11px] font-normal text-[#7b877f]">· {comment.author_role}</span>}
           </p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${resolved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{comment.status}</span>
+          <span className={`text-[10px] font-bold uppercase tracking-wide ${resolved ?"text-emerald-700" : " text-amber-700"}`}>{comment.status}</span>
         </div>
         <p className="mt-0.5 text-[11px] text-[#7b877f]">{formatDateTime(comment.created_at)}</p>
         <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-[#203028]">{comment.body}</p>

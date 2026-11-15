@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
 import RoleCalendar from "../_components/RoleCalendar";
-import Card from "../_components/DashboardCard";
+import Card, { HeroCard, greetingFor, heroEyebrowClass, heroTextClass, heroTitleClass } from "../_components/DashboardCard";
+import { getStoredUserName } from "../_utils/authStorage";
 import RiskList from "../_components/health/RiskList";
 import { useRisks } from "../_components/health/useRisks";
 import { apiFetch } from "../_lib/api";
+import { todayInManila } from "../_lib/defenses";
+import { formatDate } from "../_lib/requirements";
 import {
   errorMessage,
   NO_ADVISER_YET,
@@ -80,9 +83,21 @@ export default function DeanDashboardPage() {
     <DeanShell title="Dean Dashboard">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-6">
-          <h1 className="text-2xl font-bold tracking-tight text-[#203028]">
-            Dean Dashboard
-          </h1>
+          <HeroCard tone="green">
+            <div className="p-6 sm:p-7">
+              <p className={heroEyebrowClass("green")}>{loading ? "Dean" : formatDate(todayInManila())}</p>
+              <h1 className={heroTitleClass}>
+                {loading ? "Welcome" : `${greetingFor()}, ${getStoredUserName() ?? "Dean"}`}
+              </h1>
+              <p className={heroTextClass}>
+                {loading
+                  ? "Checking the projects..."
+                  : awaitingEndorsement > 0
+                    ? `${awaitingEndorsement} group${awaitingEndorsement === 1 ? " is" : "s are"} waiting for your endorsement.`
+                    : "No group is waiting for your endorsement right now."}
+              </p>
+            </div>
+          </HeroCard>
 
           {error && (
             <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">

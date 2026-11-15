@@ -6,6 +6,7 @@ import { apiFetch } from "../../_lib/api";
 import { errorMessage, type ApiGroup, type ApiTitleSubmission } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import type { JSONContent } from "@tiptap/react";
+import InterviewLetter from "./InterviewLetter";
 import ProposalEditor from "./ProposalEditor";
 import ProposalView from "./ProposalView";
 
@@ -161,7 +162,7 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
                   </p>
                 </div>
 
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
+                <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
                   {item.title_status}
                 </span>
               </div>
@@ -178,6 +179,8 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
           ))}
         </ul>
       </div>
+
+      <InterviewLetter groupId={group.group_id} groupName={group.group_name} />
     </div>
   );
 }

@@ -13,6 +13,8 @@ import {
   type ApiTitleSubmission,
 } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import { fetchInterviewLetter, giveInterviewLetter, type InterviewLetterState } from "../../_lib/interviewLetter";
+import LetterViewer from "./LetterViewer";
 import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
@@ -38,6 +40,8 @@ export default function AdviserTitleReview({
   const [deciding, setDeciding] = useState<{ id: number; status: Exclude<Decision, "Approved"> } | null>(null);
   const [remarks, setRemarks] = useState("");
   const [chosen, setChosen] = useState<Record<number, number>>({});
+  // Each group's letter for interview (given or not). The Send to Dean button waits for it.
+  const [letters, setLetters] = useState<Record<number, InterviewLetterState>>({});
 
   const sectionKey = sections ? sections.join("|") : "";
 
@@ -58,6 +62,11 @@ export default function AdviserTitleReview({
         })),
       );
 
+      const letterRows = await Promise.all(
+        groups.map(async (group) => [group.group_id, group.project ? await fetchInterviewLetter(group.group_id).catch(() => undefined) : undefined] as const),
+      );
+
+      setLetters(Object.fromEntries(letterRows.filter((row): row is readonly [number, InterviewLetterState] => row[1] !== undefined)));
       setItems(loaded);
       setError("");
     } catch (err) {
@@ -108,7 +117,7 @@ export default function AdviserTitleReview({
   }
 
   // Runs a stage action for one group (send to the Dean / choose the title), then refreshes the list.
-  async function stageAction(group: ApiGroup, action: () => Promise<ApiGroup>, message: string) {
+  async function stageAction(group: ApiGroup, action: () => Promise<unknown>, message: string) {
     setSavingId(group.group_id);
     setError("");
     setNotice("");
@@ -158,6 +167,7 @@ export default function AdviserTitleReview({
         const busy = savingId === group.group_id;
         const endorsed = group.project?.endorsement?.titles ?? [];
         const pick = chosen[group.group_id];
+        const letter = letters[group.group_id];
 
         const blocker = !approved.length
           ? "Approve at least one title first."
@@ -165,7 +175,9 @@ export default function AdviserTitleReview({
             ? "Decide on every pending title first."
             : !confirmed
               ? "Every member must accept the group invitation first."
-              : "";
+              : letter && !letter.given
+                ? "Give the group its letter for interview first."
+                : "";
 
         return (
           <section key={group.group_id} className="rounded-xl border border-[#edf2ec] bg-white p-4">
@@ -209,7 +221,36 @@ export default function AdviserTitleReview({
                   <span className="font-semibold">{approved.length}</span> approved title
                   {approved.length === 1 ? "" : "s"} (up to 3 is ideal).
                 </p>
-                {blocker && <p className="mt-1 text-xs text-[#7b877f]">{blocker}</p>}
+                <div className="mt-3 border-t border-[#e6eee6] pt-3">
+                  <p className="text-sm font-semibold text-[#203028]">Letter for interview</p>
+                  {letter?.given ? (
+                    <>
+                      <p className="mt-1 text-xs text-[#59645d]">
+                        Given to the group on {formatDate(letter.given_at)}.{" "}
+                        {letter.edited_at ? `The group saved its changes on ${formatDate(letter.edited_at)}.` : "The group has not edited it yet."}
+                      </p>
+                      <div className="mt-2">
+                        <LetterViewer groupId={group.group_id} groupName={group.group_name} />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-xs text-[#59645d]">
+                        Give the group the school&apos;s sample letter. The students rewrite it for their project and print it before you send them to the Dean.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={busy || approved.length === 0}
+                        onClick={() => void stageAction(group, () => giveInterviewLetter(group.group_id), `${group.group_name} was given its letter for interview.`)}
+                        className="mt-2 rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-40"
+                      >
+                        Give letter to group
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {blocker && <p className="mt-3 text-xs text-[#7b877f]">{blocker}</p>}
                 <button
                   type="button"
                   disabled={busy || Boolean(blocker)}
@@ -287,7 +328,7 @@ export default function AdviserTitleReview({
                       </p>
                     </div>
 
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
+                    <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
                       {item.title_status}
                     </span>
                   </div>

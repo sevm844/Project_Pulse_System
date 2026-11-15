@@ -75,7 +75,7 @@ export default function CertificateList({ projectId, emptyText, heading, hideWhe
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#203028]">
                   {certificate.certificate_no}
-                  {certificate.superseded && <span className="ml-2 rounded-full bg-[#eef2ee] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#59645d]">Replaced</span>}
+                  {certificate.superseded && <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-[#59645d]">Replaced</span>}
                 </p>
                 <p className="mt-0.5 text-xs text-[#59645d]">
                   Issued by {certificate.editor_name} &middot; {formatDateTime(certificate.issued_at)}

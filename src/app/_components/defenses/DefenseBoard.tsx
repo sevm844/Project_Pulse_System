@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import {
@@ -11,13 +12,14 @@ import {
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import DefenseDocuments from "./DefenseDocuments";
+import RubricDialog from "./RubricDialog";
 import ScheduleDialog from "./ScheduleDialog";
 
 type Role = "Adviser" | "Dean";
 
 const blurb: Record<Role, string> = {
-  Adviser: "Schedule your groups' defenses, choose the panel, and read the evaluations.",
-  Dean: "Schedule defenses, follow the panels' evaluations, and record each final result.",
+  Adviser: "Schedule all your groups' defenses at once, choose the panel, read the evaluations, and record the result of each Proposal Defense.",
+  Dean: "Schedule defenses for many groups at once, follow the panels' evaluations, and record the result of every defense after the Proposal Defense.",
 };
 
 export default function DefenseBoard({ role }: { role: Role }) {
@@ -59,13 +61,12 @@ export default function DefenseBoard({ role }: { role: Role }) {
     <div className="mx-auto max-w-4xl">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-xl text-sm leading-6 text-[#7b877f]">{blurb[role]}</p>
-        <button
-          type="button"
-          onClick={() => setDialog({})}
+        <Link
+          href={role === "Adviser" ? "/adviser/defense/schedule" : "/dean/defense/schedule"}
           className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]"
         >
           Schedule defense
-        </button>
+        </Link>
       </div>
 
       <div className="mt-6 flex gap-5 border-b border-[#edf2ec] text-xs font-semibold">
@@ -160,6 +161,10 @@ function DefenseRow({
   const [result, setResult] = useState<string>(DEFENSE_RESULTS[0]);
   const [remarks, setRemarks] = useState("");
   const [busy, setBusy] = useState(false);
+  // The adviser records the Proposal Defense (the group is still hers); the Dean records every later defense.
+  const isProposal = defense.defense_type === "Proposal Defense";
+  const canRecord = isProposal ? role === "Adviser" || (role === "Dean" && !defense.adviser) : role === "Dean";
+  const [viewing, setViewing] = useState<{ id: number; name: string } | null>(null);
 
   const state = defenseState(defense);
   const evaluated = defense.panel.filter((member) => member.evaluated).length;
@@ -253,10 +258,19 @@ function DefenseRow({
                     <p className="flex justify-between gap-4 text-[#203028]">
                       <span className="font-semibold">{evaluation.name}</span>
                       <span>
-                        {evaluation.score} · {evaluation.recommendation}
+                        {evaluation.rubric ? `${evaluation.rubric.total} / ${evaluation.rubric.max} (${evaluation.score}%)` : evaluation.score} · {evaluation.recommendation}
                       </span>
                     </p>
                     {evaluation.remarks && <p className="mt-1 leading-5 text-[#7b877f]">{evaluation.remarks}</p>}
+                    {evaluation.rubric && (
+                      <button
+                        type="button"
+                        onClick={() => setViewing({ id: evaluation.panelist_id, name: evaluation.name ?? "Panelist" })}
+                        className="mt-1.5 text-[11px] font-semibold text-[#4f8f58] hover:underline"
+                      >
+                        View rubric
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -274,7 +288,12 @@ function DefenseRow({
 
           {scheduled && (
             <div className="space-y-3 border-t border-[#edf2ec] pt-4">
-              {role === "Dean" && (
+              {!canRecord && (
+                <p className="text-xs text-[#7b877f]">
+                  {isProposal ? "The group's adviser records the Proposal Defense result." : "The Dean records this result once every panelist has evaluated."}
+                </p>
+              )}
+              {canRecord && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-[#203028]">Record the result</p>
                   {!everyoneDone && (
@@ -325,6 +344,8 @@ function DefenseRow({
           )}
         </div>
       )}
+
+      {viewing && <RubricDialog defenseId={defense.defense_id} panelistId={viewing.id} panelistName={viewing.name} onClose={() => setViewing(null)} />}
     </li>
   );
 }

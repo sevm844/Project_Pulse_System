@@ -28,10 +28,10 @@ type Summary = {
 };
 
 const categoryClass: Record<Feedback["category"], string> = {
-  Bug: "bg-rose-50 text-rose-700",
-  Suggestion: "bg-sky-50 text-sky-700",
-  Question: "bg-amber-50 text-amber-700",
-  Praise: "bg-emerald-50 text-emerald-700",
+  Bug: "text-rose-700",
+  Suggestion: "text-sky-700",
+  Question: "text-amber-700",
+  Praise: "text-emerald-700",
 };
 
 const selectClass =
@@ -210,7 +210,7 @@ export default function DeanFeedbackPage() {
               <li key={item.feedback_id} className="py-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${categoryClass[item.category]}`}>{item.category}</span>
+                    <span className={`text-[11px] font-semibold ${categoryClass[item.category]}`}>{item.category}</span>
                     <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#203028]">{item.message}</p>
                     <p className="mt-1.5 text-[11px] text-[#9aa59e]">
                       {item.from} ({item.role}){item.page ? ` · ${item.page}` : ""}

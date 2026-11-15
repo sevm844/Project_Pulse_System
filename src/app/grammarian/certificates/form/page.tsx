@@ -193,7 +193,7 @@ export default function CertificateFormPage() {
                   {(saved.history ?? []).map((v) => (
                     <li key={v.version_no} className="text-sm">
                       <span className="font-semibold text-[#203028]">Version {v.version_no}</span>
-                      {v.version_no === saved.version_no && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">In use</span>}
+                      {v.version_no === saved.version_no && <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-emerald-700">In use</span>}
                       <span className="ml-2 text-xs text-[#59645d]">
                         {v.saved_by ?? "The system"} &middot; {formatDateTime(v.saved_at)}
                       </span>

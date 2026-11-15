@@ -235,9 +235,9 @@ export default function ManuscriptCompare({
 }
 
 const STATE_LABEL: Record<AddressedState, { text: string; cls: string }> = {
-  changed: { text: "Words changed", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-  removed: { text: "Paragraph removed", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-  unchanged: { text: "Not changed", cls: "bg-amber-50 text-amber-800 border-amber-200" },
+  changed: { text: "Words changed", cls: "text-emerald-800" },
+  removed: { text: "Paragraph removed", cls: "text-emerald-800" },
+  unchanged: { text: "Not changed", cls: "text-amber-800" },
 };
 
 // The comments the reviewers left on the older version, each with what happened to the words it pointed at.
@@ -249,8 +249,8 @@ function AskedPanel({ versionNo, asked }: { versionNo: number; asked: { comment:
     <details className="group border-b border-[#edf2ec] bg-[#fcfdfb] px-5 py-2.5">
       <summary className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#203028]">
         <span>Comments on Version {versionNo}: {asked.length}</span>
-        {done > 0 && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-800">{done} acted on</span>}
-        {untouched > 0 && <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-800">{untouched} not changed</span>}
+        {done > 0 && <span className="text-emerald-800">{done} acted on</span>}
+        {untouched > 0 && <span className="text-amber-800">{untouched} not changed</span>}
         <span className="ml-auto font-normal text-[#7b877f] group-open:hidden">Show</span>
         <span className="ml-auto hidden font-normal text-[#7b877f] group-open:inline">Hide</span>
       </summary>
@@ -258,8 +258,8 @@ function AskedPanel({ versionNo, asked }: { versionNo: number; asked: { comment:
         {asked.map(({ comment, state }) => (
           <li key={comment.comment_id} className="rounded-lg border border-[#e5ebe5] bg-white px-3 py-2 text-xs">
             <div className="flex flex-wrap items-center gap-2">
-              {state && <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${STATE_LABEL[state].cls}`}>{STATE_LABEL[state].text}</span>}
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${comment.status === "Resolved" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{comment.status}</span>
+              {state && <span className={`text-[10px] font-bold uppercase tracking-wide ${STATE_LABEL[state].cls}`}>{STATE_LABEL[state].text}</span>}
+              <span className={`text-[10px] font-bold uppercase tracking-wide ${comment.status ==="Resolved"? " text-emerald-700" : " text-amber-700"}`}>{comment.status}</span>
               <span className="text-[#7b877f]">{comment.author}</span>
             </div>
             {comment.quote && <p className="mt-1 border-l-2 border-amber-400 pl-2 italic text-[#59645d]">&ldquo;{comment.quote.length > 120 ? `${comment.quote.slice(0, 120)}…` : comment.quote}&rdquo;</p>}
@@ -317,13 +317,13 @@ function VersionCard({
 
 function Chip({ tone, value, label }: { tone: "green" | "red" | "amber"; value: number; label: string }) {
   const style = {
-    green: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    red: "bg-red-50 text-red-800 border-red-200",
-    amber: "bg-amber-50 text-amber-800 border-amber-200",
+    green: "text-emerald-800",
+    red: "text-red-800",
+    amber: "text-amber-800",
   }[tone];
 
   return (
-    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${style}`}>
+    <span className={`text-xs font-semibold ${style}`}>
       {number(value)} {label}
     </span>
   );

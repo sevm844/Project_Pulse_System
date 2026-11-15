@@ -24,6 +24,7 @@ export default function ManuscriptHistory({
   reloadKey = 0,
   onUseAsDraft,
   canReview = false,
+  plainDownload = false,
   group,
 }: {
   projectId: number;
@@ -31,6 +32,8 @@ export default function ManuscriptHistory({
   onUseAsDraft?: (content: JSONContent, versionNo: number) => void;
   // The adviser and the Dean write review comments; students only read and reply.
   canReview?: boolean;
+  // Download as just the manuscript (no title page, contents or page numbers): for the Dean and the Grammarian, who check it elsewhere.
+  plainDownload?: boolean;
   // Fills in the title page when a version is downloaded. Students do not pass it: their own group is loaded.
   group?: ApiGroup | null;
 }) {
@@ -125,7 +128,7 @@ export default function ManuscriptHistory({
                   </p>
                   {version.note && <p className="mt-1.5 break-words text-xs italic text-[#59645d]">&ldquo;{version.note}&rdquo;</p>}
                   {mine.length > 0 && (
-                    <p className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${openCount > 0 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+                    <p className={`mt-1.5 text-[11px] font-semibold ${openCount > 0 ? "text-amber-700" : "text-emerald-700"}`}>
                       {openCount > 0 ? `${openCount} open ${openCount === 1 ? "comment" : "comments"}` : `${mine.length} ${mine.length === 1 ? "comment" : "comments"} resolved`}
                     </p>
                   )}
@@ -174,6 +177,7 @@ export default function ManuscriptHistory({
           projectId={projectId}
           group={group}
           loadMyGroup={!group && Boolean(onUseAsDraft)}
+          startPlain={plainDownload}
           label={`Version ${open.version_no}`}
           getContent={() => open.content}
           onClose={() => setDownloading(false)}

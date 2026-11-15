@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../_lib/api";
 import {
@@ -11,7 +12,9 @@ import {
 } from "../../_lib/defenses";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
-import DashboardCard, { DashboardHeader } from "../DashboardCard";
+import { hasRubric } from "../../_lib/rubric";
+import DashboardCard from "../DashboardCard";
+import PanelistHero from "./PanelistHero";
 import DefenseDocuments from "./DefenseDocuments";
 
 const fieldClass =
@@ -42,23 +45,22 @@ export default function PanelistDefenses() {
 
   const upcoming = defenses.filter((item) => item.status === "Scheduled");
   const done = defenses.filter((item) => item.status !== "Scheduled");
-  const toEvaluate = upcoming.filter((item) => !item.my_evaluation).length;
   const visible = tab === "upcoming" ? upcoming : done;
 
   return (
     <div className="space-y-6">
-      <DashboardHeader
-        eyebrow="Panelist Dashboard"
-        title="Your defenses"
-        text="The defenses you are on the panel of. Open one to read the group's documents and to submit your evaluation."
-        stats={[
-          { label: "Upcoming defenses", value: loading ? "–" : upcoming.length },
-          { label: "To evaluate", value: loading ? "–" : toEvaluate },
-          { label: "Done", value: loading ? "–" : done.length },
-        ]}
+      <PanelistHero
+        defenses={defenses}
+        loading={loading}
+        onOpen={(id) => {
+          setTab("upcoming");
+          setOpenId(id);
+          document.getElementById("defense-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
       />
 
       <DashboardCard className="p-5">
+      <div id="defense-list" className="-mt-2 scroll-mt-6" />
       <div className="flex gap-5 border-b border-[#edf2ec] text-xs font-semibold">
         {(
           [
@@ -207,18 +209,37 @@ function PanelistRow({
 
           {defense.status === "Cancelled" && <p className="text-xs text-[#7b877f]">This defense was cancelled.</p>}
 
-          {defense.status !== "Cancelled" && mine && !canEvaluate && (
+          {/* The Proposal Defense is scored on the paper rubric, which has its own page. */}
+          {hasRubric(defense.defense_type) && defense.status !== "Cancelled" && (
+            <div className="border-t border-[#edf2ec] pt-4">
+              <p className="text-xs font-semibold text-[#203028]">Proposal Defense Rubric</p>
+              <p className="mt-1 text-xs leading-5 text-[#59645d]">
+                {mine?.rubric
+                  ? `Your rubric: ${mine.rubric.total} / ${mine.rubric.max} · ${mine.recommendation}`
+                  : canEvaluate
+                    ? "Score this group on the department's rubric."
+                    : "The rubric opens on the day of the defense."}
+              </p>
+              {(canEvaluate || mine?.rubric) && (
+                <Link href={`/panelist/rubric/${defense.defense_id}`} className="mt-2 inline-block rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]">
+                  {mine?.rubric ? (canEvaluate ? "Open my rubric" : "View my rubric") : "Fill in the rubric"}
+                </Link>
+              )}
+            </div>
+          )}
+
+          {defense.status !== "Cancelled" && mine && !canEvaluate && !hasRubric(defense.defense_type) && (
             <p className="text-xs text-[#59645d]">
               Your evaluation: {mine.score} · {mine.recommendation}
               {mine.remarks ? ` · ${mine.remarks}` : ""}
             </p>
           )}
 
-          {defense.status === "Scheduled" && !opensToday && (
+          {defense.status === "Scheduled" && !opensToday && !hasRubric(defense.defense_type) && (
             <p className="text-xs text-[#7b877f]">The evaluation opens on the day of the defense.</p>
           )}
 
-          {canEvaluate && (
+          {canEvaluate && !hasRubric(defense.defense_type) && (
             <form onSubmit={submit} className="space-y-3 border-t border-[#edf2ec] pt-4">
               <p className="text-xs font-semibold text-[#203028]">{mine ? "Update your evaluation" : "Your evaluation"}</p>
 

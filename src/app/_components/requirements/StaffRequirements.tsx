@@ -212,7 +212,7 @@ export default function StaffRequirements({ role }: { role: StaffRole }) {
 
                 <div className="flex shrink-0 items-center gap-5">
                   {flag && (
-                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                    <span className="text-[11px] font-semibold text-amber-700">
                       {flag}
                     </span>
                   )}

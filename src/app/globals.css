@@ -78,3 +78,18 @@ body {
 /* Page boundaries drawn by pagination.ts: the rest of the page, a grey gap, then the next page's top margin. */
 .manuscript-sheet .pg-break { display: block; position: relative; margin: 0 -96px; text-indent: 0; user-select: none; pointer-events: none; }
 .manuscript-sheet .pg-break .pg-gap { position: absolute; left: -1px; right: -1px; height: 24px; background: #eef2ee; border-top: 1px solid #dfe8df; border-bottom: 1px solid #dfe8df; box-sizing: border-box; }
+
+/* A small pop for the "all caught up" check mark on the panelist dashboard. */
+@keyframes pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

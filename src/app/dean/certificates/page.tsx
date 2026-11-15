@@ -190,7 +190,7 @@ export default function DeanCertificatesPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-[#203028]">
                         {r.group_name} <span className="font-normal text-[#59645d]">&middot; version {r.version_no}</span>
-                        <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${style}`}>{text}</span>
+                        <span className={`ml-2 text-[10px] font-bold uppercase tracking-wide ${style}`}>{text}</span>
                       </p>
                       <p className="mt-0.5 text-xs text-[#59645d]">
                         {r.course} {r.section} &middot; Sent {formatDateTime(r.sent_at)}

@@ -44,7 +44,32 @@ export const submitManuscriptVersion = (baseRevision: number, note: string) =>
     body: JSON.stringify({ base_revision: baseRevision, note: note.trim() || undefined }),
   });
 
-export const fetchManuscriptVersions = (projectId: number) => apiFetch<ManuscriptVersion[]>(`/projects/${projectId}/manuscript/versions`);
+// A similarity report: the PDF the Dean got from Turnitin (outside this system) and uploaded for a group.
+export type SimilarityReport = {
+  report_id: number;
+  project_id: number;
+  version_no: number | null;
+  note: string | null;
+  file_name: string;
+  file_size: number;
+  uploaded_by: string | null;
+  created_at: string | null;
+};
+
+export const fetchSimilarityReports = (projectId: number) => apiFetch<SimilarityReport[]>(`/projects/${projectId}/similarity-reports`);
+
+export function uploadSimilarityReport(projectId: number, file: File, versionNo: number | null, note: string) {
+  const body = new FormData();
+  body.append("file", file);
+  if (versionNo !== null) body.append("version_no", String(versionNo));
+  if (note.trim()) body.append("note", note.trim());
+
+  return apiFetch<SimilarityReport>(`/projects/${projectId}/similarity-reports`, { method: "POST", body });
+}
+
+export const deleteSimilarityReport = (reportId: number) => apiFetch<{ message: string }>(`/similarity-reports/${reportId}`, { method: "DELETE" });
+
+export const fetchManuscriptVersions =(projectId: number) => apiFetch<ManuscriptVersion[]>(`/projects/${projectId}/manuscript/versions`);
 
 export const fetchManuscriptVersion = (projectId: number, versionNo: number) =>
   apiFetch<ManuscriptVersion & { content: JSONContent }>(`/projects/${projectId}/manuscript/versions/${versionNo}`);

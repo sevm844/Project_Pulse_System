@@ -267,7 +267,7 @@ export default function GrammarianCertificatesPage() {
                     <li key={row.referral_id} className="rounded-2xl border border-[#dfe8df] bg-white p-4">
                       <p className="text-sm font-semibold text-[#203028]">
                         {row.group_name} <span className="font-normal text-[#59645d]">&middot; version {row.version_no}</span>
-                        <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">Did not pass</span>
+                        <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-red-700">Did not pass</span>
                       </p>
                       <p className="mt-0.5 text-xs text-[#59645d]">Returned {formatDateTime(row.decided_at)}</p>
                       {row.remarks && <p className="mt-1 break-words text-xs italic text-[#59645d]">&ldquo;{row.remarks}&rdquo;</p>}

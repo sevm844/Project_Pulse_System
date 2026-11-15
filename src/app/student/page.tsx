@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import RoleCalendar from "../_components/RoleCalendar";
 import Card from "./_components/Card";
+import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
+import { getStoredUserName } from "../_utils/authStorage";
 import { ProgressTracker } from "../_components/progress/ProgressViews";
 import { useProgress } from "../_components/progress/useProgress";
 import { apiFetch } from "../_lib/api";
@@ -168,49 +170,37 @@ export default function StudentDashboardPage() {
     <StudentShell title="Student Overview" subtitle="Student Management">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-6">
-          <Card className="overflow-hidden border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-            <div className="border-b border-[#edf2ec] bg-[#fbfdfb] p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
-                Student Dashboard
+          <HeroCard tone="green">
+            <div className="p-6 sm:p-7">
+              <p className={heroEyebrowClass("green")}>
+                {greetingFor()}, {getStoredUserName() ?? "student"}
               </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <h1
                   className={`text-3xl font-semibold tracking-tight ${
-                    approvedTitle ? "text-[#203028]" : "text-[#7b877f]"
+                    approvedTitle ? "text-white" : "text-white/60"
                   }`}
                 >
                   {approvedTitle || NO_TITLE_YET}
                 </h1>
 
-                <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1 text-xs font-semibold text-[#59645d]">
-                  {group.group_name}
-                </span>
+                <span className="text-sm font-semibold text-white/80">{group.group_name}</span>
               </div>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59645d]">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/75">
                 {approvedTitle
                   ? "Track your project status and group details here."
                   : "Submit your title proposals to your adviser. Approved titles go to the Dean, and you choose the one to defend after the client consultation."}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700">
-                  Group Code: {group.group_code}
-                </span>
-                <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
-                  {group.course} {group.section}
-                </span>
-                {group.school_year && (
-                  <span className="rounded-full border border-[#dfe8df] bg-[#f6fbf4] px-3 py-1.5 font-semibold text-[#59645d]">
-                    {group.school_year}
-                    {group.semester ? ` / ${group.semester}` : ""}
-                  </span>
-                )}
-              </div>
+              <p className="mt-4 text-xs font-semibold text-white/70">
+                Group Code: {group.group_code} · {group.course} {group.section}
+                {group.school_year ? ` · ${group.school_year}${group.semester ? ` / ${group.semester}` : ""}` : ""}
+              </p>
             </div>
 
-            <div className="grid divide-y divide-[#edf2ec] bg-white md:grid-cols-4 md:divide-x md:divide-y-0">
+            <div className="mx-4 mb-4 grid divide-y divide-[#edf2ec] overflow-hidden rounded-xl border border-white/70 bg-white shadow-[0_8px_24px_rgba(31,42,36,0.08)] md:grid-cols-4 md:divide-x md:divide-y-0">
               <div className="p-5">
                 <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
                 <p className="mt-2 text-sm font-semibold text-[#203028]">
@@ -240,7 +230,7 @@ export default function StudentDashboardPage() {
                 </p>
               </div>
             </div>
-          </Card>
+          </HeroCard>
 
           {progress && (
             <Card className={emptyCardClass}>

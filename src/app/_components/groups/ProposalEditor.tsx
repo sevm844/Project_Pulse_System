@@ -72,13 +72,26 @@ function Toolbar({ editor }: { editor: Editor }) {
 
 // An ordinary text editor for a title proposal, like a page in Google Docs: the student writes everything in it (the title
 // is typed above). What is written is reported as the editor's own JSON, or null while the page is empty.
-export default function ProposalEditor({ onChange, hint }: { onChange: (content: JSONContent | null) => void; hint?: string }) {
+// `initial` starts the page with a saved document (the letter for interview); `keepEmpty` reports an empty page as an empty document instead of null.
+export default function ProposalEditor({
+  onChange,
+  hint,
+  initial,
+  keepEmpty = false,
+  label = "Proposal",
+}: {
+  onChange: (content: JSONContent | null) => void;
+  hint?: string;
+  initial?: JSONContent;
+  keepEmpty?: boolean;
+  label?: string;
+}) {
   const editor = useEditor({
     extensions: proposalExtensions,
-    content: "",
+    content: initial ?? "",
     immediatelyRender: false,
-    editorProps: { attributes: { class: `${proposalBodyClass} min-h-[320px] px-6 py-5`, "aria-label": "Proposal", role: "textbox", "aria-multiline": "true" } },
-    onUpdate: ({ editor: e }) => onChange(e.isEmpty ? null : e.getJSON()),
+    editorProps: { attributes: { class: `${proposalBodyClass} min-h-[320px] px-6 py-5`, "aria-label": label, role: "textbox", "aria-multiline": "true" } },
+    onUpdate: ({ editor: e }) => onChange(e.isEmpty && !keepEmpty ? null : e.getJSON()),
   });
 
   const empty = useEditorState({ editor, selector: ({ editor: e }) => e?.isEmpty ?? true });

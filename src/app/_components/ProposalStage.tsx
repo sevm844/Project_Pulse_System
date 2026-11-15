@@ -49,10 +49,10 @@ export function StageSteps({ stage }: { stage: ProposalStage }) {
 }
 
 export const titleStatusClass: Record<"Pending" | "Approved" | "Needs Revision" | "Rejected", string> = {
-  Pending: "bg-amber-50 text-amber-700",
-  Approved: "bg-emerald-50 text-emerald-700",
-  "Needs Revision": "bg-sky-50 text-sky-700",
-  Rejected: "bg-rose-50 text-rose-700",
+  Pending: "text-amber-700",
+  Approved: "text-emerald-700",
+  "Needs Revision": "text-sky-700",
+  Rejected: "text-rose-700",
 };
 
 // Shown next to the stage when a group is no longer a normal active one.
@@ -60,7 +60,7 @@ export function GroupStatusNote({ status }: { status: GroupStatus }) {
   if (status === "Active") return null;
 
   return (
-    <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+    <span className="ml-2 text-[10px] font-semibold text-amber-700">
       {status}
     </span>
   );

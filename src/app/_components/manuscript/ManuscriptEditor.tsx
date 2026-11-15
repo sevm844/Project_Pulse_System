@@ -4,6 +4,7 @@ import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptHistory from "./ManuscriptHistory";
+import SimilarityReports from "./SimilarityReports";
 import PagedScroll from "./PagedScroll";
 import Toolbar from "./Toolbar";
 import { createManuscriptExtensions } from "./extensions";
@@ -315,7 +316,8 @@ export default function ManuscriptEditor() {
           </div>
         </div>
 
-        <aside className="rounded-2xl border border-[#dfe8df] bg-white p-4">
+        <aside className="space-y-4 rounded-2xl border border-[#dfe8df] bg-white p-4">
+          {projectId !== null && <SimilarityReports projectId={projectId} reloadKey={reloadKey} />}
           <h3 className="text-base font-semibold text-[#203028]">Versions</h3>
           <p className="mb-3 mt-1 text-xs text-[#7b877f]">
             Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.

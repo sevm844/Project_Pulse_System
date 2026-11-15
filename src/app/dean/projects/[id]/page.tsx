@@ -11,6 +11,7 @@ import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_compone
 import GroupTimeline from "../../../_components/health/GroupTimeline";
 import CertificateList from "../../../_components/certificates/CertificateList";
 import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
+import SimilarityReports from "../../../_components/manuscript/SimilarityReports";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
 import { useProgress } from "../../../_components/progress/useProgress";
 import { apiFetch } from "../../../_lib/api";
@@ -31,6 +32,7 @@ import {
   type RemovalReason,
 } from "../../../_lib/groups";
 import { formatDate } from "../../../_lib/requirements";
+import LetterViewer from "../../../_components/groups/LetterViewer";
 import ProposalView from "../../../_components/groups/ProposalView";
 
 export default function DeanProjectProfilePage() {
@@ -217,8 +219,9 @@ export default function DeanProjectProfilePage() {
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Manuscript</h3>
             <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
-            <div className="mt-4">
-              <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
+            <div className="mt-4 space-y-4">
+              <SimilarityReports projectId={group.project.project_id} canUpload />
+              <ManuscriptHistory projectId={group.project.project_id} canReview plainDownload group={group} />
             </div>
           </Card>
         )}
@@ -263,6 +266,16 @@ export default function DeanProjectProfilePage() {
                 </li>
               ))}
             </ul>
+
+            <div className="mt-4 rounded-lg border border-[#edf2ec] bg-white p-3">
+              <p className="text-xs font-semibold text-[#203028]">Letter for interview</p>
+              <p className="mt-1 text-xs text-[#59645d]">
+                The group prints this letter and brings it to your office. The real sign-off is on the paper; read the same letter here to check it.
+              </p>
+              <div className="mt-2">
+                <LetterViewer groupId={group.group_id} groupName={group.group_name} />
+              </div>
+            </div>
 
             <label className="mt-4 block text-xs font-semibold text-[#203028]">
               Notes from your discussion with the group (optional)
@@ -356,7 +369,7 @@ export default function DeanProjectProfilePage() {
                 <li key={item.title_id}>
                   • {item.proposed_title}
                   {project.chosen_title_id === item.title_id && (
-                    <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                    <span className="ml-2 text-[10px] font-semibold text-emerald-700">
                       Chosen
                     </span>
                   )}
@@ -420,7 +433,7 @@ export default function DeanProjectProfilePage() {
                       </p>
                     </div>
 
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${titleStatusClass[item.title_status]}`}>
+                    <span className={`text-xs font-semibold ${titleStatusClass[item.title_status]}`}>
                       {item.title_status}
                     </span>
                   </div>

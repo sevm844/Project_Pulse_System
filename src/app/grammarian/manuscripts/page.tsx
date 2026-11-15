@@ -89,12 +89,12 @@ export default function GrammarianManuscriptsPage() {
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {group.open_comments > 0 && (
-                        <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                        <span className="text-[11px] font-semibold text-amber-700">
                           {group.open_comments} open {group.open_comments === 1 ? "comment" : "comments"}
                         </span>
                       )}
                       {group.my_open_comments > 0 && (
-                        <span className="rounded-full bg-[#eef2ee] px-2.5 py-0.5 text-[11px] font-semibold text-[#59645d]">{group.my_open_comments} of them yours</span>
+                        <span className="text-[11px] font-semibold text-[#59645d]">{group.my_open_comments} of them yours</span>
                       )}
                     </div>
                   </div>
@@ -111,7 +111,7 @@ export default function GrammarianManuscriptsPage() {
 
                 {open && (
                   <div className="mt-4 border-t border-[#edf2ec] pt-4">
-                    <ManuscriptHistory projectId={group.project_id} canReview reloadKey={reloadKey} />
+                    <ManuscriptHistory projectId={group.project_id} canReview plainDownload reloadKey={reloadKey} />
                   </div>
                 )}
               </li>

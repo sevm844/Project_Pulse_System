@@ -97,7 +97,7 @@ function TodayMarker() {
   return (
     <li className="relative -ml-px flex items-center gap-3 py-2 pl-5" aria-label="Today">
       <span className="absolute -left-[5px] h-2.5 w-2.5 rotate-45 bg-[#123f2b]" />
-      <span className="rounded-full bg-[#123f2b] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Today</span>
+      <span className="text-[11px] font-bold uppercase tracking-wide text-[#123f2b]">Today</span>
       <span className="h-px flex-1 bg-[#123f2b]/20" />
     </li>
   );

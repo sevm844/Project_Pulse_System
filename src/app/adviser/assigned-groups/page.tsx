@@ -11,6 +11,7 @@ import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
 import CertificateList from "../../_components/certificates/CertificateList";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import ManuscriptHistory from "../../_components/manuscript/ManuscriptHistory";
+import SimilarityReports from "../../_components/manuscript/SimilarityReports";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
@@ -477,7 +478,7 @@ export default function AssignedGroupsPage() {
               return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><h3 className="font-semibold text-[#203028]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${confirmed ? "bg-[#e7f5e9] text-[#123f2b]" : "bg-amber-50 text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
+                  <span className={`text-xs font-semibold ${confirmed ?"text-[#123f2b]" : " text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
                 <button
@@ -505,7 +506,8 @@ export default function AssignedGroupsPage() {
                       {manuscriptOpen === group.group_id ? "Hide manuscript versions" : "Show manuscript versions"}
                     </button>
                     {manuscriptOpen === group.group_id && (
-                      <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
+                      <div className="mt-3 space-y-4 rounded-xl bg-[#fbfdfb] p-4">
+                        <SimilarityReports projectId={group.project.project_id} />
                         <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
                       </div>
                     )}

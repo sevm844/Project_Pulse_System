@@ -26,7 +26,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 5 | (Student 1) Upload a PDF for Chapter 1 draft. See the status change to "Under review". | | |
 | 6 | Open **Documents**. Preview your PDF, then download it. | | |
 | 7 | (Student 7) Open **System architecture diagram**. Read your adviser's remarks and send a new link. | | |
-| 8 | (Student 6) Open **Defense**. Find the date, time, room and panel of your proposal defense. | | |
+| 8 | (Student 6) Open **Defense**. Find the date, time, room and panel of your proposal defense. Then scroll to **Defense schedule**: can you read the schedule of every group of your adviser? Is your own group easy to spot? Download it as a PDF. | | |
 | 9 | Open **Chat** and send a message to your group or your adviser. | | |
 | 10 | Open **Notifications**. Can you tell what each one is about, and open it? | | |
 | 11 | Open **My Project** and find your team members (the **Team** tab). Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
@@ -34,8 +34,10 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 13 | (Student 1) Look at the **Versions** list. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
 | 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
 | 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
-| 16 | (Student 7) After the Grammarian has issued the certificate, open **My Project → Overview**: find the **Certificate of Editing/Originality**, press **View**, then download it as **PDF**. (Student 1 has none yet: the card should not appear.) | | |
-| 17 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 16 | (Student 1) After your adviser gives the **Letter for interview** (under **Requirements, Title Proposal**): replace the [square brackets] with your own details, press **Save letter**, then **Download PDF** and open it. Does it look like a letter you could print and sign? | | |
+| 17 | (Student 7) After the Grammarian has issued the certificate, open **My Project → Overview**: find the **Certificate of Editing/Originality**, press **View**, then download it as **PDF**. (Student 1 has none yet: the card should not appear.) | | |
+| 18 | (Student 1) After the Dean uploads a similarity report for UAT Alpha, open **Manuscript**. Find the report at the top of the right-hand column, view it and download it. Is it clear what to do next? | | |
+| 19 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -47,20 +49,21 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 |---|---|---|---|
 | 1 | Log in. On the dashboard, see where each of your groups is. | | |
 | 2 | Open **Requirements → Title Proposal**. (Adviser 1) Approve one title, ask for changes on another, reject a third. | | |
-| 3 | (Adviser 1) Send **UAT Beta** to the Dean once it is ready. If it is already with the Dean, see where that shows. | | |
+| 3 | (Adviser 1) In **Title Proposal**, approve the title of **UAT Alpha**, then press **Give letter to group** (the **Send to Dean** button stays off until you do). Press **View letter** to read it. UAT Beta is already with the Dean: see where that shows. | | |
 | 4 | Edit the Title Proposal: write your own instructions and choose which sections it is for. | | |
 | 5 | Create a **new requirement**: give it a title, instructions, a due date and one section only. | | |
 | 6 | In the same form, limit the file types to PDF only, set a size limit and attach a template file. | | |
 | 7 | (Adviser 2) Open **System architecture diagram** and **Final manuscript**. Review a submission: approve or ask for revision. | | |
 | 8 | Open **Documents**. Find a student's file and preview it. | | |
 | 9 | Open **Assigned Groups**. See each group's members and phase. Try the "Make leader" action on a group (this changes the demo group's leader). | | |
-| 10 | (Adviser 2) Open **Defense** and look at how you would schedule the next defense for UAT Delta. | | |
+| 10 | (Adviser 1) Open **Defense → Schedule defense**. Pick the defense, press **Fill the schedule** with a first day, a venue and a panel, and watch the groups get their times. Open the Start list of the second group: is it only offered the time the first group did not use? Pick your own Start and End for a group: does the length appear by itself? Fix it, press **Schedule all**, then change a room in the **Scheduled** tab and **Save changes**. Press **Print / Save as PDF**. (Adviser 2: look at the same page and see why UAT Delta is greyed out.) | | |
 | 11 | On the dashboard, find **Groups that need attention**. Which of your groups is behind, and why? | | |
 | 12 | In **Assigned Groups**, press **Show timeline** on a group and read its deadlines. | | |
 | 13 | (Adviser 1) In **Assigned Groups**, open **UAT Alpha** and press **Show manuscript versions**. Press **Review** on Version 1: select some words and leave a comment on them. | | |
 | 14 | Press **Compare versions** and see what UAT Alpha changed after your comments. Is it clear which of your comments were acted on? Mark one comment **resolved**. | | |
 | 15 | (Adviser 2) In **Assigned Groups**, once the certificate for UAT Delta is issued, find it under that group and open it. Does UAT Alpha (Adviser 1) show none? | | |
 | 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 17 | (Adviser who has UAT Gamma) Open **Defenses**. After the panelists evaluate UAT Gamma, record the Proposal Defense result yourself. | | |
 
 ---
 
@@ -71,20 +74,21 @@ Email: `uat-dean@uat.test`
 | # | Task | Result | Notes |
 |---|---|---|---|
 | 1 | Log in. On **Projects**, find what needs your attention. | | |
-| 2 | Open **UAT Beta**. Read the approved titles. Either sign off with notes, or **return it to the adviser** with a note. | | |
+| 2 | Open **UAT Beta**. Read the approved titles and press **View letter** to read its letter for interview (the real sign-off is on the printed paper). Then sign off with notes, or **return it to the adviser** with a note. | | |
 | 3 | On a project's page, find the overall progress through all phases. | | |
-| 4 | Open **Defenses**. After the panelists evaluate UAT Gamma, record the result. | | |
+| 4 | Open **Defenses** and open **UAT Gamma**. It is a Proposal Defense, so its adviser records the result (the group stays with the adviser until then); you should see a note saying so, not a form. | | |
 | 5 | Open **Requirements** and **Documents** and look through what groups submitted. | | |
 | 6 | Open **Administration → Users**. Find a demo account. | | |
 | 7 | Open **Administration → Audit Logs**. Find what happened today. | | |
 | 8 | Open **Reports**. Can you find a list of all groups and their stage? On the dashboard, find **Groups at Risk** and open one to see its timeline. | | |
 | 9 | Open **Feedback**. Read what testers sent and mark one as Resolved. | | |
-| 10 | Open **Projects → UAT Alpha → Manuscript**. Press **Compare versions** (Version 1 and 2): can you see what was added (green) and removed (red), who edited and when? Use **Show only changes** and **Next**. | | |
-| 11 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
-| 12 | Open **Certificates**. The list offers only groups that passed their Final Defense; the demo groups have not, so tick **Show other groups too**, choose **UAT Delta** (a warning says it is an exception), press **View manuscript** to read it, then send it to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
-| 13 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
-| 14 | Open **Defenses → Schedule defense** and read the note about the order. Try to schedule an **Alpha Defense** for UAT Gamma before its Proposal Defense is passed: it should be refused with a clear message. | | |
-| 15 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 10 | Open **Projects → UAT Alpha → Manuscript**. Press **Upload report**, choose any PDF (as if it came from Turnitin), add a note and press **Send to the group**. Then press **Review** on a version: is the whole screen easy to read page by page? | | |
+| 11 | Open **Projects → UAT Alpha → Manuscript**. Press **Compare versions** (Version 1 and 2): can you see what was added (green) and removed (red), who edited and when? Use **Show only changes** and **Next**. | | |
+| 12 | Press **Review** on Version 1: read the adviser's comments, add one of your own on some words, and mark one resolved. Then press **Download** and save the version as a Word file. | | |
+| 13 | Open **Certificates**. The list offers only groups that passed their Final Defense; the demo groups have not, so tick **Show other groups too**, choose **UAT Delta** (a warning says it is an exception), press **View manuscript** to read it, then send it to the Grammarian (choose the version and write a note). See it as "Waiting for the Grammarian". | | |
+| 14 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
+| 15 | Open **Defenses → Schedule defense** and read the note about the order. Try to schedule an **Alpha Defense** for UAT Gamma before its Proposal Defense is passed: it should be refused with a clear message. | | |
+| 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -96,8 +100,8 @@ Emails: `uat-panelist1@uat.test` (chair), `uat-panelist2@uat.test`, `uat-panelis
 |---|---|---|---|
 | 1 | Log in. Find the defense you are assigned to (UAT Gamma, today). | | |
 | 2 | Click the defense to open it. Read one of the group's approved documents. | | |
-| 3 | Fill in and submit your evaluation. | | |
-| 4 | Change your evaluation and save it again. | | |
+| 3 | Press **Fill in the rubric**. Is the **Proposal Defense Rubric** like the paper form (the course in the title, group name, date and members filled in)? Click one box for each criterion: does the total add up by itself? Write your comments, upload your signature, choose your recommendation and **Submit my rubric**. | | |
+| 4 | Open your rubric again and change a rating, then **Update my rubric**. Press **Print / Save as PDF** and compare it with the paper form. | | |
 | 5 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
