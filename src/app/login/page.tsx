@@ -95,11 +95,16 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
 
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/60 bg-white/72 p-8 shadow-[0_24px_70px_rgba(31,42,36,0.12)] backdrop-blur-2xl">
-        <div className="mb-6 flex items-center justify-center gap-3">
-          <Image src="/Logo-icon.png" alt="Logo" width={34} height={34} />
-          <span className="text-lg font-semibold">
-            Project <span className="text-green-600">Pulse</span>
-          </span>
+        <div className="mb-6 flex flex-col items-center">
+          <div className="flex items-center justify-center gap-3">
+            <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={34} height={34} priority />
+            <div className="flex items-center gap-2">
+              <Image src="/Logo-icon.png" alt="" width={34} height={34} />
+              <span className="text-lg font-semibold">
+                Project <span className="text-green-600">Pulse</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <h2 className="text-center text-2xl font-semibold">Log in</h2>
@@ -152,6 +157,16 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-green-600 hover:underline">
             Create Account
+          </Link>
+        </p>
+
+        <p className="mt-3 text-center text-xs text-gray-400">
+          <Link href="/terms" className="hover:underline">
+            Terms and Conditions
+          </Link>
+          {" · "}
+          <Link href="/privacy" className="hover:underline">
+            Privacy Policy
           </Link>
         </p>
       </div>

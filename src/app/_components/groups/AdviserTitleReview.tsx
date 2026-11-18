@@ -14,10 +14,21 @@ import {
 } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import { fetchInterviewLetter, giveInterviewLetter, type InterviewLetterState } from "../../_lib/interviewLetter";
+import GroupFilterBar, { NO_GROUP_FILTER, matchesGroupFilter, type GroupFacts, type GroupFilter } from "../requirements/GroupFilterBar";
 import LetterViewer from "./LetterViewer";
 import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
+// What the adviser has to do with a group's titles, for the Status filter.
+function titleStatus(titles: ApiTitleSubmission[]) {
+  if (titles.length === 0) return "Not submitted";
+  return titles.some((item) => item.title_status === "Pending") ? "Waiting for my review" : "Reviewed";
+}
+
+function titleFacts({ group, titles }: GroupTitles): GroupFacts {
+  return { name: group.group_name, course: group.course, section: group.section, status: titleStatus(titles) };
+}
+
 type Decision = "Approved" | "Needs Revision" | "Rejected";
 
 const buttonClass = "rounded-lg border border-[#dfe8df] px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]";
@@ -27,9 +38,12 @@ const buttonClass = "rounded-lg border border-[#dfe8df] px-3 py-1.5 text-xs font
 export default function AdviserTitleReview({
   sections,
   onChanged,
+  compact = false,
 }: {
   sections: string[] | null;
   onChanged: () => void;
+  // True when the course and section are already chosen higher up the page.
+  compact?: boolean;
 }) {
   const [items, setItems] = useState<GroupTitles[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +56,13 @@ export default function AdviserTitleReview({
   const [chosen, setChosen] = useState<Record<number, number>>({});
   // Each group's letter for interview (given or not). The Send to Dean button waits for it.
   const [letters, setLetters] = useState<Record<number, InterviewLetterState>>({});
+
+  const [filter, setFilter] = useState<GroupFilter>(NO_GROUP_FILTER);
+  const visibleItems = items.filter((item) => matchesGroupFilter(titleFacts(item), filter));
+
+  // Every group starts closed: the adviser opens only the team she is working on.
+  const [openGroups, setOpenGroups] = useState<number[]>([]);
+  const toggleGroup = (id: number) => setOpenGroups((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
 
   const sectionKey = sections ? sections.join("|") : "";
 
@@ -158,7 +179,15 @@ export default function AdviserTitleReview({
         <p className="text-xs text-[#9aa59e]">No groups for this assignment yet. Create a group in Assigned Groups.</p>
       )}
 
-      {items.map(({ group, titles }) => {
+      {!loading && items.length > 1 && (
+        <div className="-mx-4 border-t border-[#edf2ec]">
+          <GroupFilterBar groups={items.map(titleFacts)} filter={filter} onChange={setFilter} shown={visibleItems.length} compact={compact} />
+        </div>
+      )}
+
+      {!loading && items.length > 0 && visibleItems.length === 0 && <p className="text-xs text-[#9aa59e]">No group matches these filters.</p>}
+
+      {visibleItems.map(({ group, titles }) => {
         const stage = group.project?.proposal_stage;
         const open = stage === "Title Proposal" && group.group_status === "Active";
         const approved = titles.filter((item) => item.title_status === "Approved");
@@ -168,6 +197,8 @@ export default function AdviserTitleReview({
         const endorsed = group.project?.endorsement?.titles ?? [];
         const pick = chosen[group.group_id];
         const letter = letters[group.group_id];
+        const expanded = openGroups.includes(group.group_id);
+        const status = titleStatus(titles);
 
         const blocker = !approved.length
           ? "Approve at least one title first."
@@ -181,235 +212,249 @@ export default function AdviserTitleReview({
 
         return (
           <section key={group.group_id} className="rounded-xl border border-[#edf2ec] bg-white p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => toggleGroup(group.group_id)}
+              aria-expanded={expanded}
+              className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
+            >
               <div>
                 <h3 className="text-sm font-semibold text-[#203028]">
                   {group.group_name}
                   <GroupStatusNote status={group.group_status} />
                 </h3>
                 <p className="mt-0.5 text-xs text-[#7b877f]">
-                  {group.course} {group.section}
+                  {group.course} {group.section} · <span className={status === "Waiting for my review" ? "font-semibold text-amber-700" : ""}>{status}</span>
+                  {titles.length > 0 && ` · ${titles.length} title${titles.length === 1 ? "" : "s"}`}
                 </p>
               </div>
 
-              <p className="text-xs font-semibold text-[#59645d]">
-                Chosen title: {group.project?.project_title || NO_TITLE_YET}
-              </p>
-            </div>
-
-            {stage && (
-              <div className="mt-4">
-                <StageSteps stage={stage} />
+              <div className="flex items-center gap-4">
+                <p className="text-xs font-semibold text-[#59645d]">
+                  Chosen title: {group.project?.project_title || NO_TITLE_YET}
+                </p>
+                <span className="text-xs font-semibold text-[#4f8f58]">{expanded ? "Hide ▲" : "Open ▼"}</span>
               </div>
-            )}
+            </button>
 
-            {open && group.project?.dean_return && (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <p className="text-xs font-semibold text-amber-800">
-                  The Dean returned this group{group.project.dean_return.returned_by ? ` (${group.project.dean_return.returned_by})` : ""}
-                </p>
-                <p className="mt-1 whitespace-pre-line text-sm text-[#203028]">{group.project.dean_return.note}</p>
-                <p className="mt-1 text-xs text-[#7b877f]">
-                  Change an approved title if needed, ask for a new one, then send the group to the Dean again.
-                </p>
-              </div>
-            )}
+            {expanded && (
+              <div>
 
-            {open && (
-              <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
-                <p className="text-sm text-[#203028]">
-                  <span className="font-semibold">{approved.length}</span> approved title
-                  {approved.length === 1 ? "" : "s"} (up to 3 is ideal).
-                </p>
-                <div className="mt-3 border-t border-[#e6eee6] pt-3">
-                  <p className="text-sm font-semibold text-[#203028]">Letter for interview</p>
-                  {letter?.given ? (
-                    <>
-                      <p className="mt-1 text-xs text-[#59645d]">
-                        Given to the group on {formatDate(letter.given_at)}.{" "}
-                        {letter.edited_at ? `The group saved its changes on ${formatDate(letter.edited_at)}.` : "The group has not edited it yet."}
-                      </p>
-                      <div className="mt-2">
-                        <LetterViewer groupId={group.group_id} groupName={group.group_name} />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mt-1 text-xs text-[#59645d]">
-                        Give the group the school&apos;s sample letter. The students rewrite it for their project and print it before you send them to the Dean.
-                      </p>
-                      <button
-                        type="button"
-                        disabled={busy || approved.length === 0}
-                        onClick={() => void stageAction(group, () => giveInterviewLetter(group.group_id), `${group.group_name} was given its letter for interview.`)}
-                        className="mt-2 rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-40"
-                      >
-                        Give letter to group
-                      </button>
-                    </>
-                  )}
+              {stage && (
+                <div className="mt-4">
+                  <StageSteps stage={stage} />
                 </div>
+              )}
 
-                {blocker && <p className="mt-3 text-xs text-[#7b877f]">{blocker}</p>}
-                <button
-                  type="button"
-                  disabled={busy || Boolean(blocker)}
-                  onClick={() =>
-                    void stageAction(group, () => sendGroupToDean(group.group_id), `${group.group_name} was sent to the Dean for endorsement.`)
-                  }
-                  className="mt-3 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
-                >
-                  {busy ? "Sending..." : "Send to Dean for endorsement"}
-                </button>
-              </div>
-            )}
-
-            {stage === "Dean's Endorsement" && (
-              <p className="mt-4 rounded-lg bg-[#f8faf7] p-3 text-sm text-[#59645d]">
-                Waiting for the Dean to review the approved titles, talk with the group and sign off.
-              </p>
-            )}
-
-            {stage === "Client Consultation" && group.group_status === "Active" && (
-              <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
-                <p className="text-sm font-semibold text-[#203028]">The Dean signed off. Pick the title to defend.</p>
-                <p className="mt-1 text-xs text-[#7b877f]">
-                  After the client consultations, confirm with the group which single endorsed title they will defend.
-                </p>
-                {group.project?.endorsement?.notes && (
-                  <p className="mt-2 rounded-lg bg-white p-3 text-xs text-[#59645d]">
-                    Dean&apos;s notes: {group.project.endorsement.notes}
+              {open && group.project?.dean_return && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-xs font-semibold text-amber-800">
+                    The Dean returned this group{group.project.dean_return.returned_by ? ` (${group.project.dean_return.returned_by})` : ""}
                   </p>
-                )}
-
-                <div className="mt-3 space-y-2">
-                  {endorsed.map((item) => (
-                    <label key={item.title_id} className="flex items-center gap-2 text-sm text-[#203028]">
-                      <input
-                        type="radio"
-                        name={`chosen-${group.group_id}`}
-                        checked={pick === item.title_id}
-                        onChange={() => setChosen((current) => ({ ...current, [group.group_id]: item.title_id }))}
-                      />
-                      {item.proposed_title}
-                    </label>
-                  ))}
+                  <p className="mt-1 whitespace-pre-line text-sm text-[#203028]">{group.project.dean_return.note}</p>
+                  <p className="mt-1 text-xs text-[#7b877f]">
+                    Change an approved title if needed, ask for a new one, then send the group to the Dean again.
+                  </p>
                 </div>
+              )}
 
-                <button
-                  type="button"
-                  disabled={busy || !pick}
-                  onClick={() =>
-                    void stageAction(group, () => chooseGroupTitle(group.group_id, pick), `${group.group_name} is ready for the Proposal Defense.`)
-                  }
-                  className="mt-3 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
-                >
-                  {busy ? "Saving..." : "Confirm title - ready for Proposal Defense"}
-                </button>
-              </div>
-            )}
-
-            {stage === "Ready for Proposal Defense" && (
-              <p className="mt-4 rounded-lg bg-[#f2fbef] p-3 text-sm text-[#2f6b3c]">
-                This group is ready. Schedule its Proposal Defense from the Defense page.
-              </p>
-            )}
-
-            <ul className="mt-4 divide-y divide-[#edf2ec]">
-              {titles.length === 0 && <li className="py-2 text-xs text-[#9aa59e]">No proposals submitted yet.</li>}
-
-              {titles.map((item) => (
-                <li key={item.title_id} className="py-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
-                      <p className="mt-0.5 text-[11px] text-[#9aa59e]">
-                        Submitted {formatDate(item.submitted_at)}
-                      </p>
-                    </div>
-
-                    <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
-                      {item.title_status}
-                    </span>
+              {open && (
+                <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
+                  <p className="text-sm text-[#203028]">
+                    <span className="font-semibold">{approved.length}</span> approved title
+                    {approved.length === 1 ? "" : "s"} (up to 3 is ideal).
+                  </p>
+                  <div className="mt-3 border-t border-[#e6eee6] pt-3">
+                    <p className="text-sm font-semibold text-[#203028]">Letter for interview</p>
+                    {letter?.given ? (
+                      <>
+                        <p className="mt-1 text-xs text-[#59645d]">
+                          Given to the group on {formatDate(letter.given_at)}.{" "}
+                          {letter.edited_at ? `The group saved its changes on ${formatDate(letter.edited_at)}.` : "The group has not edited it yet."}
+                        </p>
+                        <div className="mt-2">
+                          <LetterViewer groupId={group.group_id} groupName={group.group_name} />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-xs text-[#59645d]">
+                          Give the group the school&apos;s sample letter. The students rewrite it for their project and print it before you send them to the Dean.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={busy || approved.length === 0}
+                          onClick={() => void stageAction(group, () => giveInterviewLetter(group.group_id), `${group.group_name} was given its letter for interview.`)}
+                          className="mt-2 rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-40"
+                        >
+                          Give letter to group
+                        </button>
+                      </>
+                    )}
                   </div>
 
-                  <ProposalView item={item} />
+                  {blocker && <p className="mt-3 text-xs text-[#7b877f]">{blocker}</p>}
+                  <button
+                    type="button"
+                    disabled={busy || Boolean(blocker)}
+                    onClick={() =>
+                      void stageAction(group, () => sendGroupToDean(group.group_id), `${group.group_name} was sent to the Dean for endorsement.`)
+                    }
+                    className="mt-3 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
+                  >
+                    {busy ? "Sending..." : "Send to Dean for endorsement"}
+                  </button>
+                </div>
+              )}
 
-                  {item.review_remarks && (
-                    <p className="mt-2 text-xs leading-5 text-[#59645d]">
-                      <span className="font-semibold text-[#203028]">Remarks:</span> {item.review_remarks}
+              {stage === "Dean's Endorsement" && (
+                <p className="mt-4 rounded-lg bg-[#f8faf7] p-3 text-sm text-[#59645d]">
+                  Waiting for the Dean to review the approved titles, talk with the group and sign off.
+                </p>
+              )}
+
+              {stage === "Client Consultation" && group.group_status === "Active" && (
+                <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
+                  <p className="text-sm font-semibold text-[#203028]">The Dean signed off. Pick the title to defend.</p>
+                  <p className="mt-1 text-xs text-[#7b877f]">
+                    After the client consultations, confirm with the group which single endorsed title they will defend.
+                  </p>
+                  {group.project?.endorsement?.notes && (
+                    <p className="mt-2 rounded-lg bg-white p-3 text-xs text-[#59645d]">
+                      Dean&apos;s notes: {group.project.endorsement.notes}
                     </p>
                   )}
 
-                  {open && (item.title_status === "Pending" || item.title_status === "Approved") && (
-                    <div className="mt-3">
-                      {deciding?.id === item.title_id ? (
-                        <div className="space-y-2">
-                          <textarea
-                            value={remarks}
-                            onChange={(event) => setRemarks(event.target.value)}
-                            placeholder={
-                              deciding.status === "Rejected"
-                                ? "Why is this title rejected? (required)"
-                                : "What should the students change? (required)"
-                            }
-                            rows={3}
-                            maxLength={2000}
-                            className="w-full resize-none rounded-lg border border-[#dfe8df] px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                          />
-                          <div className="flex gap-2">
-                            <button
+                  <div className="mt-3 space-y-2">
+                    {endorsed.map((item) => (
+                      <label key={item.title_id} className="flex items-center gap-2 text-sm text-[#203028]">
+                        <input
+                          type="radio"
+                          name={`chosen-${group.group_id}`}
+                          checked={pick === item.title_id}
+                          onChange={() => setChosen((current) => ({ ...current, [group.group_id]: item.title_id }))}
+                        />
+                        {item.proposed_title}
+                      </label>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={busy || !pick}
+                    onClick={() =>
+                      void stageAction(group, () => chooseGroupTitle(group.group_id, pick), `${group.group_name} is ready for the Proposal Defense.`)
+                    }
+                    className="mt-3 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
+                  >
+                    {busy ? "Saving..." : "Confirm title - ready for Proposal Defense"}
+                  </button>
+                </div>
+              )}
+
+              {stage === "Ready for Proposal Defense" && (
+                <p className="mt-4 rounded-lg bg-[#f2fbef] p-3 text-sm text-[#2f6b3c]">
+                  This group is ready. Schedule its Proposal Defense from the Defense page.
+                </p>
+              )}
+
+              <ul className="mt-4 divide-y divide-[#edf2ec]">
+                {titles.length === 0 && <li className="py-2 text-xs text-[#9aa59e]">No proposals submitted yet.</li>}
+
+                {titles.map((item) => (
+                  <li key={item.title_id} className="py-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
+                        <p className="mt-0.5 text-[11px] text-[#9aa59e]">
+                          Submitted {formatDate(item.submitted_at)}
+                        </p>
+                      </div>
+
+                      <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
+                        {item.title_status}
+                      </span>
+                    </div>
+
+                    <ProposalView item={item} />
+
+                    {item.review_remarks && (
+                      <p className="mt-2 text-xs leading-5 text-[#59645d]">
+                        <span className="font-semibold text-[#203028]">Remarks:</span> {item.review_remarks}
+                      </p>
+                    )}
+
+                    {open && (item.title_status === "Pending" || item.title_status === "Approved") && (
+                      <div className="mt-3">
+                        {deciding?.id === item.title_id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={remarks}
+                              onChange={(event) => setRemarks(event.target.value)}
+                              placeholder={
+                                deciding.status === "Rejected"
+                                  ? "Why is this title rejected? (required)"
+                                  : "What should the students change? (required)"
+                              }
+                              rows={3}
+                              maxLength={2000}
+                              className="w-full resize-none rounded-lg border border-[#dfe8df] px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={savingId === item.title_id}
+                                onClick={() => void review(item, deciding.status)}
+                                className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                              >
+                                {deciding.status === "Rejected" ? "Send rejection" : "Send revision request"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeciding(null);
+                                  setRemarks("");
+                                }}
+                                className={buttonClass}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {item.title_status === "Approved" && <span className="self-center text-[11px] text-[#7b877f]">Change your decision:</span>}
+                            {item.title_status === "Pending" && <button
                               type="button"
                               disabled={savingId === item.title_id}
-                              onClick={() => void review(item, deciding.status)}
-                              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                              onClick={() => void review(item, "Approved")}
+                              className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
                             >
-                              {deciding.status === "Rejected" ? "Send rejection" : "Send revision request"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDeciding(null);
-                                setRemarks("");
-                              }}
-                              className={buttonClass}
-                            >
-                              Cancel
-                            </button>
+                              Approve
+                            </button>}
+                            {(["Needs Revision", "Rejected"] as const).map((status) => (
+                              <button
+                                key={status}
+                                type="button"
+                                onClick={() => {
+                                  setDeciding({ id: item.title_id, status });
+                                  setRemarks("");
+                                  setError("");
+                                }}
+                                className={buttonClass}
+                              >
+                                {status === "Rejected" ? "Reject" : "Request revision"}
+                              </button>
+                            ))}
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {item.title_status === "Approved" && <span className="self-center text-[11px] text-[#7b877f]">Change your decision:</span>}
-                          {item.title_status === "Pending" && <button
-                            type="button"
-                            disabled={savingId === item.title_id}
-                            onClick={() => void review(item, "Approved")}
-                            className="rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
-                          >
-                            Approve
-                          </button>}
-                          {(["Needs Revision", "Rejected"] as const).map((status) => (
-                            <button
-                              key={status}
-                              type="button"
-                              onClick={() => {
-                                setDeciding({ id: item.title_id, status });
-                                setRemarks("");
-                                setError("");
-                              }}
-                              className={buttonClass}
-                            >
-                              {status === "Rejected" ? "Reject" : "Request revision"}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              </div>
+            )}
           </section>
         );
       })}

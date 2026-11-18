@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
 import CertificateList from "../../_components/certificates/CertificateList";
+import DescriptionText from "../../_components/groups/DescriptionText";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { StageSteps } from "../../_components/ProposalStage";
 import {
@@ -147,12 +148,15 @@ export default function ProjectPage() {
               <StageSteps stage={stage} />
             </div>
 
-            <p className="mt-4 text-sm leading-7 text-[#59645d]">
-              {group.project?.project_description ||
-                (approvedTitle
+            {group.project?.project_description ? (
+              <DescriptionText text={group.project.project_description} className="mt-4 text-sm leading-7 text-[#59645d]" />
+            ) : (
+              <p className="mt-4 text-sm leading-7 text-[#59645d]">
+                {approvedTitle
                   ? "No description was added to the chosen title."
-                  : "Your project description will appear here once you choose the title you will defend.")}
-            </p>
+                  : "Your project description will appear here once you choose the title you will defend."}
+              </p>
+            )}
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {[

@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { ChangeEvent } from "react";
 import type { UserRole } from "../_lib/types";
 import { getStoredUserEmail, getStoredUserName } from "../_utils/authStorage";
+import ChangePassword from "./ChangePassword";
 import { useProfilePhoto } from "./useProfilePhoto";
 
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -106,11 +107,12 @@ export default function RoleProfileContent({
           </dl>
 
           <p className="mt-5 text-xs text-[#7b877f]">
-            To change your name or e-mail, or to reset your password, ask the
-            Dean&apos;s office.
+            To change your name or e-mail, ask the Dean&apos;s office. Your password is yours alone: change it below.
           </p>
         </article>
       </div>
+
+      <ChangePassword />
     </section>
   );
 }

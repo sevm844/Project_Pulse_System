@@ -22,7 +22,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - Firebase is fully removed (no `firebase` package, no `_lib/firebase.ts`); the legacy `/records`
   portal is deleted
 - Audit Logs (Dean, read-only, written by the backend via `App\Support\Audit`): DONE. Passwords
-  are reset by the Dean (Users page); `/forgot-password` only explains that
+  belong to their owner alone: **nobody (not the Dean) ever sets, sees or knows a password** (see Passwords and security below)
 - Removed as fake/unused: Dean Academic Terms, Adviser Assignments, Courses & Sections, Roles &
   Permissions, and student Resources pages (roles are fixed by design; advisers are assigned on
   the Groups page)
@@ -111,6 +111,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Instructions:** every assignment has "Instructions for students" (`requirements.description`), shown to students as "From <adviser>".
 - **Sections:** an assignment can be limited to chosen sections (`requirements.sections`, labels like "BSIT 4A", NULL = all of the
   adviser's groups). The dropdown lists the sections the adviser actually advises. `Requirement::appliesTo` enforces it.
+- **The Requirements page for Adviser and Dean is a drill-down, one clean screen at a time** (`RequirementsExplorer`, path shown across the top: Courses › BSIT › 4A › Chapter 1): all five courses (`COURSE_OPTIONS`: BSCS, BSIS, BSIT, BLIS, ACT) -> that course's sections -> the assignments of the section (Title Proposal first for the adviser) -> the groups of one assignment. Structure comes from `GET /groups` and each assignment's `/requirements/{id}/submissions` rows (so an assignment limited to "BSIT 4A" only appears under that section). Groups are closed rows (name, status, "Open ▼"); a group's submission, version history and review buttons show only after clicking it (`SubmissionRow`; Title Proposal: `AdviserTitleReview` with `compact`). Inside an assignment the filter row (`GroupFilterBar`, `compact` = Status + name search only) shows with 2+ groups. The Coordinator and Grammarian keep the flat queue (`FlatRequirements`). New assignment screens must follow this and never show every submission already open.
 - There is no `/adviser/title-proposals` page any more (the old address redirects to Requirements).
 - **File rules per assignment** (`allowed_types`, `max_file_mb` 1-10, `allow_resubmission`): enforced by `Requirement::fileRules()` on
   upload. With resubmission off, a new version is only accepted after the adviser asked for changes.
@@ -217,6 +218,20 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   records the page) and the 10-question System Usability Scale survey (`survey_responses`, one per person, score 0-100).
   Everyone sends; only the Dean reads them, on `/dean/feedback`, where two "Export CSV" buttons save the feedback list and the survey
   sheets (`GET /survey/responses`, role only, no names) before `uat:reset` removes them.
+
+## Passwords and security
+- **Self-service:** `/forgot-password` asks for the email and `POST /forgot-password` always answers the same (no way to learn which emails exist); an active account gets an email with a one-time link (60 minutes, token hashed in
+  `password_reset_tokens`) to `/reset-password?token=&email=` on the web app (`FRONTEND_URL` in the backend `.env` decides the address). The person chooses the password there (`AuthSplit`, `PasswordStrength`); every sign-in of theirs ends.
+  Signed-in people change it on their profile (`ChangePassword`, `PUT /me/password`, needs the current one, other devices are signed out).
+- **The Dean never types or sees a password:** `POST /users` takes no password (random unknown one + an invitation email, `AccountInvitation`); the old `reset-password` route is gone; the Users page only has "Email link"
+  (`POST /users/{id}/password-link`, audit Warning). Changing a person's email signs them out. `php artisan dean:create` (the installer's own command line) still sets the first Dean's password.
+- **One rule everywhere** (`AppSupportPasswordRules`, `_lib/password.ts`): 8+ characters, upper and lower case, a number, a special character.
+- **Mail:** `MAIL_MAILER=log` writes emails to `storage/logs/laravel.log` (fine on a laptop). A live server needs real SMTP settings in the backend `.env` (`MAIL_*`, `MAIL_FROM_ADDRESS`), otherwise nobody receives a link.
+- **Email copies of notifications** (`App\Support\Notifier::email`, `App\Mail\NotificationMail`, view `resources/views/mail/notification.blade.php`): every in-app notice is also emailed to the active person (title, the same words, a button to the page it opens, built from `FRONTEND_URLS`). Chat messages are not emailed, nor the person who caused the notice. A mail failure is logged and never breaks the action. It runs inline (`QUEUE_CONNECTION=sync`); on a live server set a real mailer and, ideally, a queue worker. UAT accounts use `@uat.test`, which cannot receive mail.
+- **Terms and Privacy** (`/terms`, `/privacy`, `LegalPage`, public pages; text drafted by us, to be checked by the school): students tick "I agree" on registration (`accept_terms` required by `POST /register`); everyone else agrees by choosing a password from the emailed link. `users.terms_accepted_at` records when. The faculty invitation email says "Confirm my account" and opens `/reset-password?...&welcome=1` ("Confirm your account", then goes to login).
+- **Other safeguards:** sign-in locks for 15 minutes after 10 wrong passwords for one email from any computer (on top of 5 a minute per email + computer); password emails are limited (5 an hour per email + computer);
+  tokens expire after 8 hours and are ended on disable, password change and email change; API answers carry security headers (`SecurityHeaders`: nosniff, frame deny, no-store, CSP none) and the web app too (`next.config.ts`: frame deny, nosniff,
+  referrer, permissions, HSTS). Not added on purpose: a page-wide Content-Security-Policy (needs careful testing with the editor, PDF previews and exports).
 
 ## API conventions
 - All API calls go through `apiFetch<T>(path, options)` in `src/app/_lib/api.ts`

@@ -3,14 +3,10 @@
 import type { JSONContent } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
+import { COURSE_NAMES, errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
 import { exportManuscript, safeFileName, type ExportFormat, type TitlePage } from "../../_lib/manuscriptExport";
 
-const DEGREES: Record<string, string> = {
-  BSIT: "Bachelor of Science in Information Technology",
-  BSCS: "Bachelor of Science in Computer Science",
-  BSIS: "Bachelor of Science in Information Systems",
-};
+const DEGREES = COURSE_NAMES;
 
 // The title page, filled in from what the system already knows about the group. Everything stays editable.
 function defaultTitlePage(group: ApiGroup | null): TitlePage {

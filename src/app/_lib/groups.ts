@@ -85,7 +85,17 @@ export type ApiDeanProject = {
 
 export const NO_TITLE_YET = "No title chosen yet";
 export const NO_ADVISER_YET = "Not assigned";
-export const COURSE_OPTIONS = ["BSIT", "BSCS", "BSIS"];
+// Every course of the department (the same list is checked on the server in GroupController::COURSES).
+export const COURSE_OPTIONS = ["BSCS", "BSIS", "BSIT", "BLIS", "ACT"];
+
+// What each course leads to (the same names the server prints on the title page, letter and certificate).
+export const COURSE_NAMES: Record<string, string> = {
+  BSCS: "Bachelor of Science in Computer Science",
+  BSIS: "Bachelor of Science in Information Systems",
+  BSIT: "Bachelor of Science in Information Technology",
+  BLIS: "Bachelor of Library and Information Science",
+  ACT: "Associate in Computer Technology",
+};
 export const SECTION_OPTIONS = ["4A", "4B", "4C"];
 
 // A group is confirmed once every member has accepted the invitation.

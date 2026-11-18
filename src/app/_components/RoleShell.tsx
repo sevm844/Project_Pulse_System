@@ -127,6 +127,14 @@ export default function RoleShell({
                 sidebarCollapsed ? "justify-center" : "gap-2 px-2"
               }`}
             >
+              {!sidebarCollapsed && (
+                <Image
+                  src="/cict-logo.png"
+                  alt="College of Information and Communications Technology"
+                  width={34}
+                  height={34}
+                />
+              )}
               <Image
                 src="/logotop.png"
                 alt="Project Pulse"

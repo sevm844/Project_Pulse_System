@@ -8,7 +8,7 @@ export type UserRole =
   | "Grammarian";
 
 export type UserStatus = "Pending" | "Active" | "Rejected" | "Disabled";
-export type CourseCode = "BSIT" | "BSCS" | "BSIS";
+export type CourseCode = "BSCS" | "BSIS" | "BSIT" | "BLIS" | "ACT";
 
 export type UserProfile = {
   uid: string;

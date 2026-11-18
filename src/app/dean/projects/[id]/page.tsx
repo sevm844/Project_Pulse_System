@@ -34,6 +34,7 @@ import {
 import { formatDate } from "../../../_lib/requirements";
 import LetterViewer from "../../../_components/groups/LetterViewer";
 import ProposalView from "../../../_components/groups/ProposalView";
+import DescriptionText from "../../../_components/groups/DescriptionText";
 
 export default function DeanProjectProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -400,9 +401,7 @@ export default function DeanProjectProfilePage() {
         {project?.project_description && (
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Description</h3>
-            <p className="mt-3 text-sm leading-7 text-[#59645d]">
-              {project.project_description}
-            </p>
+            <DescriptionText text={project.project_description} className="mt-3 text-sm leading-7 text-[#59645d]" />
           </Card>
         )}
 

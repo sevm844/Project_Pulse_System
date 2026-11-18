@@ -31,6 +31,9 @@ import {
 } from "../../_lib/groups";
 import { getStoredUserEmail } from "../../_utils/authStorage";
 import { GROUP_SEMESTERS, MAX_GROUP_SIZE, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
+
+// The search list shows this many students at a time, however many accounts exist.
+const PICKER_LIMIT = 6;
 import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
 
 const groupCreationCourses = COURSE_OPTIONS as CourseCode[];
@@ -56,6 +59,8 @@ export default function AssignedGroupsPage() {
   const [semester, setSemester] = useState("1st Semester");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [leaderUid, setLeaderUid] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [createMessage, setCreateMessage] = useState("");
   const [createMessageType, setCreateMessageType] = useState<
     "success" | "error" | ""
@@ -80,7 +85,31 @@ export default function AssignedGroupsPage() {
   const detailsReady = Boolean(groupName.trim() && createCourse && createSection && isSchoolYear(schoolYear) && semester);
   const readySteps = Number(detailsReady) + Number(validMembers);
 
-  function resetMembers() { setSelectedIds([]); setLeaderUid(""); }
+  function resetMembers() { setSelectedIds([]); setLeaderUid(""); setStudentSearch(""); }
+
+  // Everyone chosen: the leader first, then the members in the order they were added.
+  const chosenIds = leaderUid ? [leaderUid, ...selectedIds.filter((uid) => uid !== leaderUid)] : [];
+  const chosenStudents = chosenIds.map((uid) => availableStudents.find((student) => student.uid === uid)).filter((student): student is UserProfile => Boolean(student));
+  const searchWords = studentSearch.trim().toLowerCase();
+  const pickable = availableStudents.filter((student) => !chosenIds.includes(student.uid) && (!searchWords || `${student.fullName} ${student.email}`.toLowerCase().includes(searchWords)));
+
+  // The old leader stays in the group as a member.
+  function makeLeader(uid: string) {
+    setSelectedIds(chosenIds.filter((id) => id !== uid));
+    setLeaderUid(uid);
+  }
+
+  // Adding the first student makes them the leader; removing the leader hands the role to the next one.
+  function toggleStudent(uid: string) {
+    if (chosenIds.includes(uid)) {
+      const rest = chosenIds.filter((id) => id !== uid);
+      setLeaderUid(rest[0] ?? "");
+      setSelectedIds(rest.slice(1));
+    } else if (chosenIds.length < MAX_GROUP_SIZE) {
+      if (!leaderUid) setLeaderUid(uid);
+      else setSelectedIds([...selectedIds.filter((id) => id !== leaderUid), uid]);
+    }
+  }
 
   // Leader change / closure, then refresh the list. Errors from the server are shown as they are.
   async function groupAction(action: () => Promise<ApiGroup>, message: string) {
@@ -227,6 +256,58 @@ export default function AssignedGroupsPage() {
   return (
     <AdviserShell title="Assigned Groups">
       <div className="space-y-5">
+        {/* Filters */}
+        <Card className="p-5">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="text-xs font-semibold text-[#7b877f]">
+                Course
+              </label>
+              <select
+                value={course}
+                onChange={(e) => setCourse(e.target.value as "All" | CourseCode)}
+                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+              >
+                <option>All</option>
+                {COURSE_OPTIONS.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#7b877f]">
+                Section
+              </label>
+              <select
+                value={section}
+                onChange={(e) => setSection(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+              >
+                <option>All</option>
+                {SECTION_OPTIONS.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-[#7b877f]">
+                Stage
+              </label>
+              <select
+                value={stage}
+                onChange={(e) => setStage(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
+              >
+                <option>All</option>
+                {PROPOSAL_STAGES.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Card>
         <Card className="border-[#dfe8df] bg-white/88 p-5 shadow-[0_18px_48px_rgba(32,48,40,0.06)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -298,7 +379,7 @@ export default function AssignedGroupsPage() {
                       Create Capstone Group
                     </h2>
                     <p className="mt-1 text-xs text-[#7b877f]">
-                      Choose a leader and members to send group invitations.
+                      Add the students and choose the leader to send group invitations.
                     </p>
                   </div>
                   <button
@@ -370,42 +451,54 @@ export default function AssignedGroupsPage() {
                     <p role="status" className="h-4 text-xs text-[#7b877f]">{studentsLoading ? "Loading registered students..." : ""}</p>
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
                     {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. Students must be approved by the Research Coordinator first; students already in a group for this school year and semester are excluded.</p>}
-                    <label className="block text-xs font-semibold text-[#59645d]">Group Leader
-                      <select value={availableStudents.some((student) => student.uid === leaderUid) ? leaderUid : ""} disabled={studentsLoading || Boolean(studentsError)} onChange={(event) => { setLeaderUid(event.target.value); setSelectedIds((current) => current.filter((uid) => uid !== event.target.value)); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs disabled:bg-gray-50">
-                        <option value="">Select the group leader</option>
-                        {availableStudents.map((student) => <option key={student.uid} value={student.uid}>{student.fullName} / {student.email}</option>)}
-                      </select>
-                    </label>
-                    <label className="block text-xs font-semibold text-[#59645d]">Student Members
-                      <select value="" disabled={!availableStudents.some((student) => student.uid === leaderUid) || selectedIds.length >= MAX_GROUP_SIZE - 1 || studentsLoading || Boolean(studentsError)} onChange={(event) => { const uid = event.target.value; if (uid) setSelectedIds((current) => current.includes(uid) ? current : [...current, uid]); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs disabled:bg-gray-50">
-                        <option value="">{selectedIds.length >= MAX_GROUP_SIZE - 1 ? "The group is full (3 students)" : "Select a student to add as a member (optional)"}</option>
-                        {availableStudents.filter((student) => student.uid !== leaderUid && !selectedIds.includes(student.uid)).map((student) => <option key={student.uid} value={student.uid}>{student.fullName} / {student.email}</option>)}
-                      </select>
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {availableStudents
-                        .filter((student) => selectedIds.includes(student.uid) && student.uid !== leaderUid)
-                        .map((student) => (
-                          <span
-                            key={student.uid}
-                            className="inline-flex max-w-full items-center gap-1 rounded-full border border-[#dce9df] bg-[#f2f8f3] py-0.5 pl-2.5 pr-0.5 text-xs font-medium text-[#244b35]"
-                          >
-                            <span title={student.fullName} className="min-w-0 truncate">{student.fullName}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedIds((current) => current.filter((uid) => uid !== student.uid))}
-                              aria-label={`Remove ${student.fullName}`}
-                              title={`Remove ${student.fullName}`}
-                              className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#688271] transition-colors hover:bg-[#dce9df] hover:text-[#123f2b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4f8f58] focus-visible:ring-offset-2"
-                            >
-                              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                                <path d="m6 6 12 12M18 6 6 18" />
-                              </svg>
-                            </button>
-                          </span>
-                        ))}
+                    <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
+                      Add students to the group (1 to {MAX_GROUP_SIZE})
+                      <input
+                        type="search"
+                        value={studentSearch}
+                        onChange={(event) => { setStudentSearch(event.target.value); setPickerOpen(true); }}
+                        onFocus={() => setPickerOpen(true)}
+                        onKeyDown={(event) => { if (event.key === "Escape") setPickerOpen(false); }}
+                        disabled={studentsLoading || Boolean(studentsError) || chosenIds.length >= MAX_GROUP_SIZE}
+                        placeholder={chosenIds.length >= MAX_GROUP_SIZE ? "The group is full (3 students)" : "Type a name or email to find a student"}
+                        className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs font-normal disabled:bg-gray-50"
+                      />
+                      {pickerOpen && chosenIds.length < MAX_GROUP_SIZE && (
+                        <ul className="mt-1 max-h-48 overflow-y-auto rounded-md border border-[#dfe8df] bg-white">
+                          {pickable.length === 0 && <li className="px-3 py-2 font-normal text-[#7b877f]">No student matches.</li>}
+                          {pickable.slice(0, PICKER_LIMIT).map((student) => (
+                            <li key={student.uid}>
+                              <button type="button" onClick={() => { toggleStudent(student.uid); setStudentSearch(""); setPickerOpen(false); }} className="block w-full px-3 py-2 text-left font-normal text-[#203028] hover:bg-[#f2f8f3]">
+                                {student.fullName} <span className="text-[#7b877f]">/ {student.email}</span>
+                              </button>
+                            </li>
+                          ))}
+                          {pickable.length > PICKER_LIMIT && <li className="px-3 py-2 font-normal text-[#7b877f]">{pickable.length - PICKER_LIMIT} more. Type more letters to narrow the list.</li>}
+                        </ul>
+                      )}
                     </div>
-                    <p className="text-xs text-[#7b877f]">Choose the leader first, then add up to 2 members (a group of 1, 2 or 3 is fine). Enter the school year to hide students who already have a group.</p>
+                    {chosenStudents.length > 0 && (
+                      <table className="w-full text-left text-xs">
+                        <thead className="text-[#7b877f]">
+                          <tr><th className="py-1 font-semibold">Name</th><th className="py-1 font-semibold">Role</th><th className="py-1" /></tr>
+                        </thead>
+                        <tbody>
+                          {chosenStudents.map((student) => (
+                            <tr key={student.uid} className="border-t border-[#edf2ec]">
+                              <td className="py-1.5 pr-2 text-[#203028]">{student.fullName}</td>
+                              <td className={`py-1.5 pr-2 ${student.uid === leaderUid ? "font-semibold text-[#123f2b]" : "text-[#59645d]"}`}>{student.uid === leaderUid ? "Leader" : "Member"}</td>
+                              <td className="py-1.5 text-right">
+                                {student.uid !== leaderUid && (
+                                  <button type="button" onClick={() => makeLeader(student.uid)} className="mr-3 font-semibold text-[#2f6b3c] underline">Make leader</button>
+                                )}
+                                <button type="button" onClick={() => toggleStudent(student.uid)} aria-label={`Remove ${student.fullName}`} className="font-semibold text-[#9b3b3b] underline">Remove</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                    <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use Make leader to change it. A group of 1, 2 or 3 is fine. Enter the school year to hide students who already have a group.</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
@@ -528,58 +621,6 @@ export default function AssignedGroupsPage() {
           </div>
         </Card>
 
-        {/* Filters */}
-        <Card className="p-5">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Course
-              </label>
-              <select
-                value={course}
-                onChange={(e) => setCourse(e.target.value as "All" | CourseCode)}
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {COURSE_OPTIONS.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Section
-              </label>
-              <select
-                value={section}
-                onChange={(e) => setSection(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {SECTION_OPTIONS.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#7b877f]">
-                Stage
-              </label>
-              <select
-                value={stage}
-                onChange={(e) => setStage(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-              >
-                <option>All</option>
-                {PROPOSAL_STAGES.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </Card>
 
         {/* Groups table */}
         <Card className="overflow-hidden">

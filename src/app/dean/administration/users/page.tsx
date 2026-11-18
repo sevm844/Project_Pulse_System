@@ -17,7 +17,6 @@ const emptyForm = {
   fname: "",
   lname: "",
   email: "",
-  password: "",
   role_id: "",
 };
 
@@ -87,14 +86,18 @@ export default function DeanUsersPage() {
     setSaving(true);
 
     try {
-      const created = await apiFetch<ApiUser>("/users", {
+      const created = await apiFetch<ApiUser & { email_sent?: boolean }>("/users", {
         method: "POST",
         body: JSON.stringify({ ...form, role_id: Number(form.role_id) }),
       });
 
       setUsers((current) => [...current, created]);
       setForm(emptyForm);
-      setNotice(`Account created for ${created.email}.`);
+      setNotice(
+        created.email_sent
+          ? `Account created. ${created.email} was emailed a link to choose their own password.`
+          : `Account created, but the email to ${created.email} could not be sent. Use "Email link" on their row once the mail settings work.`,
+      );
     } catch (err) {
       showError(err);
     }
@@ -102,23 +105,17 @@ export default function DeanUsersPage() {
     setSaving(false);
   }
 
-  async function resetPassword(user: ApiUser) {
-    const password = window.prompt(
-      `New password for ${user.email} (at least 8 characters):`,
-    );
-
-    if (!password) return;
+  // The Dean never types or sees a password: the person is emailed a link and chooses their own.
+  async function sendPasswordLink(user: ApiUser) {
+    if (!window.confirm(`Email ${user.email} a link to choose a new password?`)) return;
 
     setError("");
     setNotice("");
 
     try {
-      await apiFetch(`/users/${user.user_id}/reset-password`, {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
+      const result = await apiFetch<{ message: string }>(`/users/${user.user_id}/password-link`, { method: "POST" });
 
-      setNotice(`Password updated for ${user.email}.`);
+      setNotice(result.message);
     } catch (err) {
       showError(err);
     }
@@ -145,7 +142,7 @@ export default function DeanUsersPage() {
       <Card className="mb-5 p-5">
         <h2 className="text-lg font-semibold text-[#203028]">Add User</h2>
         <p className="mt-1 text-sm text-[#7b877f]">
-          Create an account directly. It is active right away.
+          Create an account directly. It is active right away, and the person gets an email to choose their own password. You never set or see a password.
         </p>
 
         <form
@@ -173,15 +170,6 @@ export default function DeanUsersPage() {
             className={inputClass}
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <input
-            required
-            type="password"
-            minLength={8}
-            placeholder="Temporary password (min. 8)"
-            className={inputClass}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
           <select
             required
@@ -212,7 +200,7 @@ export default function DeanUsersPage() {
             User Accounts
           </h2>
           <p className="mt-1 text-sm text-[#7b877f]">
-            Assign roles, approve or disable accounts, and reset passwords.
+            Assign roles and approve or disable accounts. People choose and change their own passwords; you can only email them a link.
           </p>
         </div>
 
@@ -224,7 +212,7 @@ export default function DeanUsersPage() {
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Role</th>
                 <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Password</th>
+                <th className="px-5 py-3 font-medium">Password link</th>
                 <th className="px-5 py-3 font-medium">ID</th>
               </tr>
             </thead>
@@ -270,10 +258,10 @@ export default function DeanUsersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <button
-                      onClick={() => resetPassword(user)}
+                      onClick={() => sendPasswordLink(user)}
                       className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs text-[#203028] hover:bg-[#f4f8f4]"
                     >
-                      Reset
+                      Email link
                     </button>
                   </td>
                   <td className="px-5 py-4 text-xs text-[#7b877f]">
