@@ -200,6 +200,12 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Telling the person:** the invitation email names the roles ("as Adviser and Grammarian") and mentions the profile menu; when the Dean later adds or removes a role, `UserController::update` sends a notice (type `account`, in-app and by email) saying what was added or taken off. `RoleShell` asks `GET /me` on every load and updates the stored roles, so a new profile shows up without signing in again, and if the profile in use was taken away the person is moved to their main role's dashboard.
 - **Looking people up by role must use `User::holdingRole('Adviser')`** (main OR extra role), never `whereHas('role', ...)` or `where('role_id', ...)`; `Notifier::withRole`, the panelist lists and the adviser checks do. Not decided yet (ask the Dean): whether an Adviser may act as Grammarian for the manuscript of a group she advises (no block today).
 
+## Deployment plan (decided with the technical adviser)
+- **Web app on Vercel, API + PostgreSQL + file storage on Laravel Cloud**, e-mail through Brevo (or Resend). Steps and settings: backend `docs/DEPLOYMENT.md` section 7.
+- Uploaded files (assignment attachments, submissions, similarity reports) all go through the default disk, so `FILESYSTEM_DISK=s3` + the bucket's `AWS_*` values is the only switch (`league/flysystem-aws-s3-v3` is installed, the s3 disk throws on a failed save). Never hard-code `Storage::disk('local')`; `tests/smoke/cloud_disk_smoke.php` guards this.
+- The first `php artisan migrate` on an empty database needs the `psql` program, which Laravel Cloud may not have: run `php artisan pulse:load-schema` first (plain PHP, `LoadSchema` command), then `migrate --force`.
+- `NEXT_PUBLIC_API_URL` (Vercel) and `FRONTEND_URLS` (API) must name each other's real public addresses, or requests are blocked by CORS and e-mail buttons point to localhost.
+
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
   Final Output (archived). `GET /progress` (`ProgressController`, `App\Support\ProjectProgress`) works it out from the modules that own
