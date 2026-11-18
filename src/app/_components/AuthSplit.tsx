@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// The layout of the password pages: the same soft background and centred card as the login page.
+// The layout of the password pages: the same full-screen look as the login page (soft green side with the words, white side with the form).
 export default function AuthSplit({
   title,
   subtitle,
@@ -15,28 +15,51 @@ export default function AuthSplit({
   children: ReactNode;
 }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f9f9ff] px-6 py-10">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_26%,rgba(207,247,236,0.32),rgba(249,249,255,0)_58%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
-
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/60 bg-white/72 p-8 shadow-[0_24px_70px_rgba(31,42,36,0.12)] backdrop-blur-2xl">
-        <Link href={backHref} aria-label="Back to login" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f3f1] text-lg text-[#203028] hover:bg-[#e5eae5]">
-          ←
-        </Link>
-
-        <div className="mb-6 mt-2 flex items-center justify-center gap-3">
-          <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={34} height={34} />
-          <Image src="/Logo-icon.png" alt="" width={34} height={34} />
-          <span className="text-lg font-semibold">
+    <main className="min-h-screen bg-white text-gray-900 lg:grid lg:h-screen lg:grid-cols-2">
+      <aside className="relative hidden overflow-hidden bg-gradient-to-b from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9] p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <div className="flex items-center gap-4">
+          <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={72} height={72} priority />
+          <Image src="/logo-icon-clear.png" alt="" width={72} height={72} priority />
+          <span className="text-3xl font-semibold text-[#123f2b]">
             Project <span className="text-green-600">Pulse</span>
           </span>
         </div>
 
-        <h1 className="text-center text-2xl font-semibold text-[#111]">{title}</h1>
-        <p className="mt-1 text-center text-sm text-gray-500">{subtitle}</p>
-        <div className="mt-6">{children}</div>
-      </div>
+        <Image src="/cict-logo.png" alt="" width={420} height={420} aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-24 opacity-[0.13] saturate-50" />
+
+        <div className="relative">
+          <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] xl:text-5xl">
+            Only you
+            <br />
+            know your
+            <br />
+            password.
+          </h2>
+          <p className="mt-3 max-w-sm bg-gradient-to-r from-[#2f8f4e] to-[#0f7a6b] bg-clip-text text-base font-medium text-transparent">
+            It is never shown to the Dean, your adviser or anyone else.
+          </p>
+        </div>
+      </aside>
+
+      <section className="relative flex min-h-screen flex-col justify-center overflow-y-auto px-8 py-6 sm:px-14 lg:min-h-0 xl:px-24">
+        <div className="mx-auto w-full max-w-md lg:mx-0">
+          <Link href={backHref} className="mb-3 inline-block text-sm text-gray-500 hover:text-gray-900">
+            ← Back to login
+          </Link>
+
+          <div className="mb-5 flex items-center gap-3 lg:hidden">
+            <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={36} height={36} />
+            <Image src="/logo-icon-clear.png" alt="" width={36} height={36} />
+            <span className="text-lg font-semibold">
+              Project <span className="text-green-600">Pulse</span>
+            </span>
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          <p className="mt-2 text-base text-gray-400">{subtitle}</p>
+          <div className="mt-5">{children}</div>
+        </div>
+      </section>
     </main>
   );
 }

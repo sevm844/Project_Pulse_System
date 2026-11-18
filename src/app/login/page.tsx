@@ -41,6 +41,7 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -88,87 +89,92 @@ export default function LoginPage() {
     }
   }
 
+  const input =
+    "w-full rounded-xl border border-[#e3e8e3] bg-[#f7f9f7] px-4 py-3 text-sm outline-none focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-100";
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f9f9ff] px-6">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[720px] bg-[radial-gradient(circle_at_50%_100%,rgba(210,255,158,0.65),rgba(207,247,236,0.55)_46%,rgba(255,255,255,0)_82%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_26%,rgba(207,247,236,0.32),rgba(249,249,255,0)_58%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white">
+      <div className="relative z-10 grid min-h-screen w-full overflow-hidden bg-white lg:h-screen lg:min-h-0 lg:grid-cols-2">
+        {/* Left: soft green, our two logos, a faint CICT mark and the words. */}
+        <aside className="relative hidden overflow-hidden bg-gradient-to-b from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9] p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
+          <div className="flex items-center gap-4">
+            <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={72} height={72} priority />
+            <Image src="/logo-icon-clear.png" alt="" width={72} height={72} priority />
+            <span className="text-3xl font-semibold text-[#123f2b]">
+              Project <span className="text-green-600">Pulse</span>
+            </span>
+          </div>
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/60 bg-white/72 p-8 shadow-[0_24px_70px_rgba(31,42,36,0.12)] backdrop-blur-2xl">
-        <div className="mb-6 flex flex-col items-center">
-          <div className="flex items-center justify-center gap-3">
-            <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={34} height={34} priority />
-            <div className="flex items-center gap-2">
-              <Image src="/Logo-icon.png" alt="" width={34} height={34} />
-              <span className="text-lg font-semibold">
-                Project <span className="text-green-600">Pulse</span>
-              </span>
+          <Image src="/cict-logo.png" alt="" width={420} height={420} aria-hidden="true" className="pointer-events-none absolute -bottom-16 -right-24 opacity-[0.13] saturate-50" />
+
+          <div className="relative">
+            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] xl:text-5xl">
+              Your capstone,
+              <br />
+              from first title
+              <br />
+              to final defense.
+            </h2>
+            <p className="mt-3 bg-gradient-to-r from-[#2f8f4e] to-[#0f7a6b] bg-clip-text text-base font-medium text-transparent">Know where your group stands.</p>
+          </div>
+        </aside>
+
+        {/* Right: the form. */}
+        <section className="flex flex-col justify-center overflow-y-auto px-8 py-10 sm:px-14 xl:px-24">
+          <div className="mb-6 flex items-center gap-3 lg:hidden">
+            <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={36} height={36} />
+            <Image src="/logo-icon-clear.png" alt="" width={36} height={36} />
+            <span className="text-lg font-semibold">
+              Project <span className="text-green-600">Pulse</span>
+            </span>
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight">Log in</h1>
+          <p className="mt-2 text-base text-gray-400">Sign in using your approved UB account.</p>
+
+          {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+            <div>
+              <label className="mb-2 block text-sm font-semibold">Email</label>
+              <input type="email" placeholder="1234567@ub.edu.ph" className={input} value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-          </div>
-        </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold">Password</label>
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} placeholder="Your password" className={`${input} pr-16`} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 hover:text-gray-900">
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <Link href="/forgot-password" className="text-sm font-medium text-green-600 hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
+            </div>
 
-        <h2 className="text-center text-2xl font-semibold">Log in</h2>
-        <p className="mt-1 text-center text-sm text-gray-500">
-          Sign in using your approved UB account
-        </p>
+            <button type="submit" disabled={loading} className="w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-base font-semibold text-white shadow-[0_12px_28px_rgba(47,143,78,0.35)] transition hover:brightness-110 disabled:opacity-60">
+              {loading ? "Logging in..." : "Log in"}
+            </button>
+          </form>
 
-        {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <input
-            type="email"
-            placeholder="Email address"
-            className="w-full rounded-md border px-4 py-3 outline-none focus:ring-2 focus:ring-green-200"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full rounded-md border px-4 py-3 outline-none focus:ring-2 focus:ring-green-200"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-green-600 hover:underline"
-            >
-              Forgot Password?
+          <p className="mt-6 text-center text-sm text-gray-500">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-semibold text-green-600 hover:underline">
+              Create Account
             </Link>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-[#123f2b] py-3 text-white hover:bg-[#0f3324] disabled:opacity-60"
-          >
-            {loading ? "Logging in..." : "Log in"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-green-600 hover:underline">
-            Create Account
-          </Link>
-        </p>
-
-        <p className="mt-3 text-center text-xs text-gray-400">
-          <Link href="/terms" className="hover:underline">
-            Terms and Conditions
-          </Link>
-          {" · "}
-          <Link href="/privacy" className="hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
+          </p>
+          <p className="mt-2 text-center text-xs text-gray-400">
+            <Link href="/terms" className="hover:underline">
+              Terms and Conditions
+            </Link>
+            {" · "}
+            <Link href="/privacy" className="hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
+        </section>
       </div>
     </main>
   );

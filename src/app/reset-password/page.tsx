@@ -49,7 +49,7 @@ function ResetForm() {
     return (
       <div className="space-y-5">
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">This link is incomplete. Open the link from your email again, or ask for a new one.</p>
-        <Link href="/forgot-password" className="block w-full rounded-xl bg-[#123f2b] py-3.5 text-center text-sm font-semibold text-white hover:bg-[#0f3324]">
+        <Link href="/forgot-password" className="block w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-center text-sm font-semibold text-white hover:brightness-110">
           Ask for a new link
         </Link>
       </div>
@@ -60,7 +60,7 @@ function ResetForm() {
     return (
       <div className="space-y-5">
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800">{done}</p>
-        <Link href="/login" className="block w-full rounded-xl bg-[#123f2b] py-3.5 text-center text-sm font-semibold text-white hover:bg-[#0f3324]">
+        <Link href="/login" className="block w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-center text-sm font-semibold text-white hover:brightness-110">
           Go to login
         </Link>
       </div>
@@ -70,7 +70,7 @@ function ResetForm() {
   const field = "w-full rounded-xl border border-[#dfe3e0] px-4 py-3 pr-16 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
 
   return (
-    <form onSubmit={submit} className="space-y-5">
+    <form onSubmit={submit} className="space-y-4">
       {error && (
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}{" "}
@@ -90,7 +90,7 @@ function ResetForm() {
 
       <label className="block text-sm font-semibold text-[#111]">
         New Password
-        <span className="relative mt-2 block">
+        <span className="relative mt-1.5 block">
           <input
             type={show.password ? "text" : "password"}
             autoComplete="new-password"
@@ -109,7 +109,7 @@ function ResetForm() {
 
       <label className="block text-sm font-semibold text-[#111]">
         Confirm New Password
-        <span className="relative mt-2 block">
+        <span className="relative mt-1.5 block">
           <input
             type={show.confirm ? "text" : "password"}
             autoComplete="new-password"
@@ -124,7 +124,7 @@ function ResetForm() {
         </span>
       </label>
 
-      <button type="submit" disabled={busy} className="w-full rounded-xl bg-[#123f2b] py-3.5 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">
+      <button type="submit" disabled={busy} className="w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
         {busy ? "Saving..." : welcome ? "Confirm Account" : "Create New Password"}
       </button>
 

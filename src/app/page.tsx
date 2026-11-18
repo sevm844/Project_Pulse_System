@@ -173,13 +173,6 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-4 lg:px-8">
           <a href="#" className="flex items-center gap-3">
             <Image
-              src="/cict-logo.png"
-              alt="College of Information and Communications Technology"
-              width={36}
-              height={36}
-              priority
-            />
-            <Image
               src="/logotop.png"
               alt="Project Pulse"
               width={36}

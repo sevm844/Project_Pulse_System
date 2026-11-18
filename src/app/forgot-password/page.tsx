@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         <div className="space-y-5">
           <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800">{sent}</p>
           <p className="text-xs leading-5 text-[#7b877f]">Nothing in your inbox? Check the spam folder, wait a minute, or try again with the email you registered with.</p>
-          <Link href="/login" className="block w-full rounded-xl bg-[#123f2b] py-3.5 text-center text-sm font-semibold text-white hover:bg-[#0f3324]">
+          <Link href="/login" className="block w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-center text-sm font-semibold text-white hover:brightness-110">
             Back to login
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
             />
           </label>
 
-          <button type="submit" disabled={busy} className="w-full rounded-xl bg-[#123f2b] py-3.5 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">
+          <button type="submit" disabled={busy} className="w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
             {busy ? "Sending..." : "Email me a link"}
           </button>
 

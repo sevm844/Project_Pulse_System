@@ -26,7 +26,7 @@ export default function LegalPage({
       <div className="relative z-10 w-full max-w-5xl rounded-2xl border border-white/60 bg-white/72 p-7 shadow-[0_24px_70px_rgba(31,42,36,0.12)] backdrop-blur-2xl">
         <div className="flex items-center justify-center gap-3">
           <Image src="/cict-logo.png" alt="College of Information and Communications Technology" width={34} height={34} />
-          <Image src="/Logo-icon.png" alt="" width={34} height={34} />
+          <Image src="/logo-icon-clear.png" alt="" width={34} height={34} />
           <span className="text-lg font-semibold">
             Project <span className="text-green-600">Pulse</span>
           </span>
