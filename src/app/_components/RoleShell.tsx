@@ -9,17 +9,22 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { logoutFromApi } from "../_lib/api";
+import { apiFetch, logoutFromApi, toAppRole } from "../_lib/api";
+import { roleHomePath } from "../_lib/roleHome";
 import type { UserRole } from "../_lib/types";
 import {
   getStoredUserEmail,
   getStoredUserName,
   getStoredUserRole,
+  getStoredUserRoles,
+  saveStoredUserSession,
+  getStoredUserUid,
   initialsOf,
 } from "../_utils/authStorage";
 import DashboardSearchIcon from "./DashboardSearchIcon";
 import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
+import ProfileSwitcher from "./ProfileSwitcher";
 import SidebarToggle from "./SidebarToggle";
 import { useProfilePhoto } from "./useProfilePhoto";
 
@@ -62,6 +67,7 @@ export default function RoleShell({
   const home = `/${slug}`;
 
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [heldRoles, setHeldRoles] = useState<UserRole[]>(() => getStoredUserRoles());
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { photo: profileImage, change: changePhoto } = useProfilePhoto(slug);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -77,6 +83,28 @@ export default function RoleShell({
     }
 
     queueMicrotask(() => setCheckingAccess(false));
+
+    // The Dean may have added or taken away one of this person's roles since they signed in: ask the server what they hold now.
+    void apiFetch<{ role: string; roles?: string[] }>("/me")
+      .then((me) => {
+        const current = toAppRole(me.role);
+        const roles = (me.roles ?? [me.role]).map(toAppRole);
+
+        saveStoredUserSession({
+          uid: getStoredUserUid() ?? "",
+          email: getStoredUserEmail() ?? "",
+          name: getStoredUserName() ?? undefined,
+          role: current,
+          roles,
+        });
+        setHeldRoles(roles);
+
+        // The profile in use was taken away: continue as the main role.
+        if (current !== role) window.location.assign(roleHomePath(current));
+      })
+      .catch(() => {
+        // Offline or signed out: the normal API handling deals with it; keep what is stored.
+      });
   }, [role, router]);
 
   function toggleSidebar() {
@@ -217,10 +245,7 @@ export default function RoleShell({
                 <NotificationBell href={`${home}/notifications`} />
 
                 <div className="flex items-center gap-2 pl-1">
-                  <div className="text-right">
-                    <p className="text-xs font-semibold">{displayName}</p>
-                    <p className="text-[10px] text-[#7b877f]">{displayEmail}</p>
-                  </div>
+                  <ProfileSwitcher name={displayName} email={displayEmail} image={profileImage} roles={heldRoles} />
 
                   <label className="group relative cursor-pointer">
                     <div

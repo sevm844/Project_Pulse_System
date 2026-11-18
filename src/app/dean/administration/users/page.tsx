@@ -18,7 +18,49 @@ const emptyForm = {
   lname: "",
   email: "",
   role_id: "",
+  extra_role_ids: [] as number[],
 };
+
+// Only these roles can be held together (the server checks it too): an Adviser who is also a Grammarian, and so on.
+const COMBINABLE = ["Adviser", "Panelist", "Grammarian"];
+
+// "Also acts as": tick the other roles this person holds besides the main one.
+function ExtraRoles({
+  roles,
+  mainRoleId,
+  value,
+  onChange,
+}: {
+  roles: ApiRole[];
+  mainRoleId: number;
+  value: number[];
+  onChange: (next: number[]) => void;
+}) {
+  const main = roles.find((role) => role.role_id === mainRoleId);
+
+  if (!main || !COMBINABLE.includes(main.role_name)) return null;
+
+  const others = roles.filter((role) => COMBINABLE.includes(role.role_name) && role.role_id !== mainRoleId);
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#59645d]">
+      <span>Also acts as:</span>
+      {others.map((role) => (
+        <label key={role.role_id} className="flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            checked={value.includes(role.role_id)}
+            onChange={(event) =>
+              onChange(event.target.checked ? [...value, role.role_id] : value.filter((id) => id !== role.role_id))
+            }
+            className="accent-[#123f2b]"
+          />
+          {role.role_name}
+        </label>
+      ))}
+    </div>
+  );
+}
 
 const inputClass =
   "rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-200";
@@ -58,7 +100,7 @@ export default function DeanUsersPage() {
 
   async function updateUser(
     user: ApiUser,
-    changes: { role_id?: number; account_status?: UserStatus },
+    changes: { role_id?: number; extra_role_ids?: number[]; account_status?: UserStatus },
   ) {
     setError("");
     setNotice("");
@@ -88,7 +130,11 @@ export default function DeanUsersPage() {
     try {
       const created = await apiFetch<ApiUser & { email_sent?: boolean }>("/users", {
         method: "POST",
-        body: JSON.stringify({ ...form, role_id: Number(form.role_id) }),
+        body: JSON.stringify({
+          ...form,
+          role_id: Number(form.role_id),
+          extra_role_ids: COMBINABLE.includes(roles.find((r) => r.role_id === Number(form.role_id))?.role_name ?? "") ? form.extra_role_ids : [],
+        }),
       });
 
       setUsers((current) => [...current, created]);
@@ -175,7 +221,7 @@ export default function DeanUsersPage() {
             required
             className={inputClass}
             value={form.role_id}
-            onChange={(e) => setForm({ ...form, role_id: e.target.value })}
+            onChange={(e) => setForm({ ...form, role_id: e.target.value, extra_role_ids: [] })}
           >
             <option value="">Select role</option>
             {roles.map((role) => (
@@ -184,6 +230,14 @@ export default function DeanUsersPage() {
               </option>
             ))}
           </select>
+          <div className="md:col-span-3">
+            <ExtraRoles
+              roles={roles}
+              mainRoleId={Number(form.role_id)}
+              value={form.extra_role_ids}
+              onChange={(next) => setForm({ ...form, extra_role_ids: next })}
+            />
+          </div>
           <button
             type="submit"
             disabled={saving}
@@ -227,11 +281,13 @@ export default function DeanUsersPage() {
                   <td className="px-5 py-4">
                     <select
                       value={user.role_id}
-                      onChange={(event) =>
-                        updateUser(user, {
-                          role_id: Number(event.target.value),
-                        })
-                      }
+                      onChange={(event) => {
+                        const nextId = Number(event.target.value);
+                        const nextName = roles.find((role) => role.role_id === nextId)?.role_name ?? "";
+
+                        // Moving someone to a role that cannot be shared drops their extra roles.
+                        updateUser(user, COMBINABLE.includes(nextName) ? { role_id: nextId } : { role_id: nextId, extra_role_ids: [] });
+                      }}
                       className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none"
                     >
                       {roles.map((role) => (
@@ -240,6 +296,12 @@ export default function DeanUsersPage() {
                         </option>
                       ))}
                     </select>
+                    <ExtraRoles
+                      roles={roles}
+                      mainRoleId={user.role_id}
+                      value={user.extra_role_ids ?? []}
+                      onChange={(next) => updateUser(user, { extra_role_ids: next })}
+                    />
                   </td>
                   <td className="px-5 py-4">
                     <select

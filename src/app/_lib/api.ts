@@ -20,6 +20,8 @@ export type ApiUser = {
   user_id: number;
   role_id: number;
   role: string;
+  roles: string[];
+  extra_role_ids: number[];
   fname: string;
   lname: string;
   email: string;
@@ -185,6 +187,11 @@ export function toAppRole(roleName: string): UserRole {
   return (roleName === "Research Coordinator"
     ? "Coordinator"
     : roleName) as UserRole;
+}
+
+// The other way round: the name the server uses for a role.
+export function toServerRole(role: UserRole): string {
+  return role === "Coordinator" ? "Research Coordinator" : role;
 }
 
 // Revokes the token on the server, then clears the saved session in the browser.

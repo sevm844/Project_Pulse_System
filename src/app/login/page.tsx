@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type { UserRole } from "../_lib/types";
+import { roleHomePath } from "../_lib/roleHome";
 import { ApiError, apiFetch, toAppRole } from "../_lib/api";
 import { saveStoredToken, saveStoredUserSession } from "../_utils/authStorage";
 
@@ -16,22 +16,9 @@ type LoginResponse = {
     lname: string;
     email: string;
     role: string;
+    roles?: string[];
   };
 };
-
-function getRedirectByRole(role: UserRole) {
-  // The student dashboard checks the group on the server and sends the
-  // student to /student/setup when there is no accepted group yet.
-  if (role === "Student") return "/student";
-
-  if (role === "Adviser") return "/adviser";
-  if (role === "Dean") return "/dean";
-  if (role === "Coordinator") return "/coordinator";
-  if (role === "Panelist") return "/panelist";
-  if (role === "Grammarian") return "/grammarian";
-
-  return "/login";
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -75,10 +62,11 @@ export default function LoginPage() {
         uid,
         email: result.user.email,
         role,
+        roles: (result.user.roles ?? [result.user.role]).map(toAppRole),
         name: `${result.user.fname} ${result.user.lname}`.trim(),
       });
 
-      router.push(getRedirectByRole(role));
+      router.push(roleHomePath(role));
     } catch (err) {
       setError(
         err instanceof ApiError

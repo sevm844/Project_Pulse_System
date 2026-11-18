@@ -191,6 +191,15 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **The certificate is required to archive, not to defend** (`FinalOutputController::archive` refuses with 422 unless `Project::hasCertificate`; `GET /final-outputs` returns `has_certificate`, and Group Folders disables "Archive this project" without it). A group can take any defense without it.
 - Not built yet: ideas for later are roman page numbers on the front pages, a version of the export that tracks the school's exact title-page template, and Grammarian comments tied to a specific grammar-check submission.
 
+## People with more than one role (role selector)
+- One account, one email, one password; a person has a main role (`users.role_id`) and may hold extra ones (`user_roles`). **Only Adviser, Panelist and Grammarian can be held together** (`User::COMBINABLE_ROLES`,
+  checked in `UserController::roleProblem`; Student, Dean and Research Coordinator always have exactly one). The Dean ticks "Also acts as" on the Users page (`extra_role_ids` on `POST|PUT /users`).
+- A person acts as ONE role at a time: the chosen view is kept on the sign-in token as the ability `role:<name>` (`ApplyActiveRole` middleware sets `$user->actingAs`, and `User::getRelationValue('role')` returns it), so every
+  `$user->role->role_name` check, `role:` route middleware and query works unchanged. A token with no chosen role, or for a role no longer held, acts as the main role. Login opens on the last view used (`users.last_role_id`),
+  `PUT /me/role {role}` switches (audit entry), login and `/me` return `roles`. The web app keeps `roles` in localStorage (`getStoredUserRoles`) and `ProfileSwitcher` makes each role its own **profile**: the name beside the picture in the top bar shows "<Role> profile ▾" for a person with 2+ roles and opens a "Switch profile" list (one row per role, the current one marked); choosing one does a full page load into that role's dashboard.
+- **Telling the person:** the invitation email names the roles ("as Adviser and Grammarian") and mentions the profile menu; when the Dean later adds or removes a role, `UserController::update` sends a notice (type `account`, in-app and by email) saying what was added or taken off. `RoleShell` asks `GET /me` on every load and updates the stored roles, so a new profile shows up without signing in again, and if the profile in use was taken away the person is moved to their main role's dashboard.
+- **Looking people up by role must use `User::holdingRole('Adviser')`** (main OR extra role), never `whereHas('role', ...)` or `where('role_id', ...)`; `Notifier::withRole`, the panelist lists and the adviser checks do. Not decided yet (ask the Dean): whether an Adviser may act as Grammarian for the manuscript of a group she advises (no block today).
+
 ## Overall progress tracker
 - One computed view of where a group stands in the whole capstone: Title Proposal -> Proposal, Alpha, Beta, Omega, Final defense ->
   Final Output (archived). `GET /progress` (`ProgressController`, `App\Support\ProjectProgress`) works it out from the modules that own
