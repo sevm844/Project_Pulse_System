@@ -213,8 +213,8 @@ export default function RoleShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`mt-auto flex rounded-lg text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
-              sidebarCollapsed ? "justify-center px-0 py-2.5" : "px-3 py-2.5"
+            className={`mt-auto flex w-full items-center justify-center rounded-lg text-center text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
+              sidebarCollapsed ? "px-0 py-2.5" : "px-3 py-2.5"
             }`}
           >
             {sidebarCollapsed ? "Out" : "Log out"}
