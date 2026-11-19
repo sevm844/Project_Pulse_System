@@ -213,11 +213,25 @@ export default function RoleShell({
             type="button"
             onClick={handleLogout}
             title="Log out"
-            className={`mt-auto flex w-full items-center justify-center rounded-lg text-center text-xs font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
+            className={`mt-auto flex w-full items-center justify-center gap-3 rounded-lg text-center text-sm font-medium text-[#59645d] transition hover:bg-[#edf9e9] ${
               sidebarCollapsed ? "px-0 py-2.5" : "px-3 py-2.5"
             }`}
           >
-            {sidebarCollapsed ? "Out" : "Log out"}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-5 w-5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </aside>
 
