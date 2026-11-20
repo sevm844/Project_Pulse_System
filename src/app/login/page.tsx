@@ -81,46 +81,49 @@ export default function LoginPage() {
     "w-full rounded-xl border border-[#e3e8e3] bg-[#f7f9f7] px-4 py-3 text-sm outline-none focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-100";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9]">
-      <div className="relative z-10 grid min-h-screen w-full lg:h-screen lg:min-h-0 lg:grid-cols-2">
-        {/* Left: our two logos, a faint CICT mark in the middle and the words. The green gradient is the page's own background, so there is no split. */}
-        <aside className="relative hidden flex-col items-center justify-center overflow-hidden p-12 text-center lg:flex xl:p-16">
-          {/* The small brand, top left. */}
-          <div className="absolute left-12 top-10 flex items-center gap-3 xl:left-16">
-            <Image src="/logo-icon-clear.png" alt="" width={40} height={40} priority />
-            <span className="text-xl font-semibold text-[#123f2b]">
-              Project <span className="text-green-600">Pulse</span>
-            </span>
-          </div>
-
-          {/* The CICT logo is the hero: big, in colour, inside soft orbit rings and a glow. */}
-          <div className="relative flex h-[440px] w-[440px] items-center justify-center xl:h-[500px] xl:w-[500px]">
-            <div aria-hidden="true" className="absolute inset-0 rounded-full border border-[#164832]/10" />
-            <div aria-hidden="true" className="absolute inset-[11%] rounded-full border border-[#164832]/10" />
-            <div aria-hidden="true" className="absolute inset-[22%] rounded-full bg-white/60 shadow-[0_0_90px_rgba(47,143,78,0.28)]" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9] p-4 sm:p-6">
+      {/* One balanced card: the CICT panel on the left and the form on the right, both centred at the same height. */}
+      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-[0_30px_90px_rgba(31,60,40,0.18)] lg:grid-cols-2">
+        <aside className="hidden flex-col items-center justify-center bg-gradient-to-b from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9] px-10 py-12 text-center lg:flex">
+          <div className="relative flex h-[290px] w-[290px] items-center justify-center">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full border border-[#164832]/10"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-[9%] rounded-full bg-white/70 shadow-[0_0_70px_rgba(47,143,78,0.25)]"
+            />
             <Image
               src="/cict-logo.png"
               alt="College of Information and Communications Technology, University of Batangas"
-              width={300}
-              height={300}
+              width={230}
+              height={230}
               priority
-              className="relative z-10 h-[270px] w-[270px] drop-shadow-[0_14px_30px_rgba(22,72,50,0.25)] xl:h-[310px] xl:w-[310px]"
+              className="relative z-10 h-[230px] w-[230px] drop-shadow-[0_12px_24px_rgba(22,72,50,0.25)]"
             />
           </div>
 
-          <h2 className="mt-8 text-3xl font-bold leading-tight tracking-tight text-[#123f2b] xl:text-4xl">
-            Your capstone,
-            <br />
-            from first title to final defense.
-          </h2>
-          <p className="mt-3 bg-gradient-to-r from-[#2f8f4e] to-[#0f7a6b] bg-clip-text text-base font-medium text-transparent">
-            Know where your group stands.
+          <div className="mt-7 flex items-center gap-3">
+            <Image
+              src="/logo-icon-clear.png"
+              alt=""
+              width={34}
+              height={34}
+              priority
+            />
+            <span className="text-2xl font-semibold text-[#123f2b]">
+              Project <span className="text-green-600">Pulse</span>
+            </span>
+          </div>
+          <p className="mt-2 max-w-[18rem] text-balance text-sm leading-6 text-[#123f2b]/70">
+            Your capstone, from first title to final defense.
           </p>
         </aside>
 
         {/* Right: the form in a centred white card. */}
-        <section className="flex items-center justify-center overflow-y-auto px-6 py-8">
-          <div className="w-full max-w-md rounded-3xl bg-white px-8 py-9 shadow-[0_24px_70px_rgba(31,60,40,0.16)] sm:px-10">
+        <section className="flex items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
+          <div className="w-full max-w-sm">
             <div className="mb-6 flex items-center gap-3 lg:hidden">
               <Image
                 src="/cict-logo.png"
