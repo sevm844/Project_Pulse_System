@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
+/* Project Pulse is designed on white cards, so it always uses its light look. A dark-mode phone or browser must not turn the page text
+   near-white (it vanished on the white login card) or draw dark form controls. */
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -10,13 +13,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plus-jakarta-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
