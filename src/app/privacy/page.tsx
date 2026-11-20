@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <p>To run the capstone process: forming groups, reviewing work, scheduling defenses, issuing certificates and keeping the final records, and to send you notices about your work.</p>
       </Point>
       <Point n={3} heading="Who can see it">
-        <p>Only people who need it, limited by role: your group, adviser, panelists, the grammarian, the Research Coordinator and the Dean. Private drafts are seen only by your group. Nothing is sold or shared for advertising.</p>
+        <p>Only people who need it, limited by role: your group, adviser, panelists, the grammarian, the Dean&apos;s Secretary and the Dean. Private drafts are seen only by your group. Nothing is sold or shared for advertising.</p>
       </Point>
       <Point n={4} heading="Emails">
         <p>We email account links (confirm account, set or reset a password) and a copy of important notices such as submissions, decisions and defense schedules. Chat messages are not emailed.</p>
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <p>Capstone records stay in the university&apos;s archive; unused accounts are disabled. Access needs your sign-in, each role sees only its own pages, and sign-ins are limited after wrong passwords.</p>
       </Point>
       <Point n={6} heading="Your rights">
-        <p>You may ask to see, correct or object to the use of your information. Ask the Research Coordinator or the Dean. You can correct your name and photo on your profile.</p>
+        <p>You may ask to see, correct or object to the use of your information. Ask the Dean&apos;s Secretary or the Dean. You can correct your name and photo on your profile.</p>
       </Point>
     </LegalPage>
   );

@@ -6,7 +6,7 @@
 - Database: PostgreSQL (owned by the backend, not this repo)
 
 ## Roles
-Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI as "Coordinator")
+Dean, Student, Adviser, Panelist, Grammarian, Dean's Secretary (the database role name; the website's internal key is "Secretary" and its pages are under `/secretary`). It was called "Research Coordinator" until 2026-11-30, when the school's adviser said that is not the real title: **never write "Research Coordinator" or "Coordinator" again, write "Dean's Secretary"** (migration `rename_research_coordinator_to_deans_secretary`)
 
 ## Migration status (Firebase/localStorage → Laravel/PostgreSQL)
 - Module 1 (Authentication, Roles, User Management): DONE — login, register, Dean's user
@@ -14,7 +14,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - Module 2 (Groups, Projects, Title proposals): DONE on the Laravel API
 - Module 3 (Requirements: submissions, adviser review, grammar check, version history): DONE
 - Module 5 (Defenses: scheduling, panels, evaluations, results): DONE
-- Module 7 (Coordinator records: Group Folders, Collection Tracker, Archive Records): DONE
+- Module 7 (Dean's Secretary records: Group Folders, Collection Tracker, Archive Records): DONE
 - Notifications (shared in-app feed for all roles, created by backend events via
   `App\Support\Notifier`): DONE
 - Messaging (direct chats + one group chat per project, student sending window set by the
@@ -32,6 +32,11 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - Housekeeping: `npm test` runs the unit tests in `tests/`; `npm audit --omit=dev` is clean
   (Next 16.4.x). Unused packages (fortune-sheet, tiptap) were removed. `.env.local` only needs
   `NEXT_PUBLIC_API_URL` if the API is not at http://127.0.0.1:8000/api.
+
+## How a student gets in (no approval step)
+- **A student registers and is Active at once** (`POST /register`; UB email `7 digits@ub.edu.ph`, the Terms box is required). The Dean's Secretary no longer approves students: `StudentApprovalController`, the `/student-approvals` routes, the "Student Approvals" page and the "waiting for approval" notice are gone. The migration `students_active_without_approval` let in anyone still Pending. The Dean can still disable (or re-enable) any account on the Users page.
+- After logging in a student with no accepted group lands on **`/student/setup`** ("Pending Group Assignment"): it checks by itself every 30 seconds, has a Refresh button and a Log out button. When an adviser adds the student to a group (the adviser's student list takes any Active student not in an open group), the page shows the invitation; accepting opens the dashboard.
+- **Known risk:** the email is not verified (nobody proves the student owns that UB address), so someone could register with another person's number. The adviser is the only gate, because they choose whom to add; a student with no group sees nothing. Email verification of the UB address is the proper fix if it becomes a problem.
 
 ## Module 2 rules (Groups, Projects, Title proposals) — set by the school's actual process
 - **Group size:** 1 to 3 students (the leader plus up to 2 members). Enforced in `GroupController::MAX_MEMBERS` and
@@ -111,7 +116,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - **Instructions:** every assignment has "Instructions for students" (`requirements.description`), shown to students as "From <adviser>".
 - **Sections:** an assignment can be limited to chosen sections (`requirements.sections`, labels like "BSIT 4A", NULL = all of the
   adviser's groups). The dropdown lists the sections the adviser actually advises. `Requirement::appliesTo` enforces it.
-- **The Requirements page for Adviser and Dean is a drill-down, one clean screen at a time** (`RequirementsExplorer`, path shown across the top: Courses › BSIT › 4A › Chapter 1): all five courses (`COURSE_OPTIONS`: BSCS, BSIS, BSIT, BLIS, ACT) -> that course's sections -> the assignments of the section (Title Proposal first for the adviser) -> the groups of one assignment. Structure comes from `GET /groups` and each assignment's `/requirements/{id}/submissions` rows (so an assignment limited to "BSIT 4A" only appears under that section). Groups are closed rows (name, status, "Open ▼"); a group's submission, version history and review buttons show only after clicking it (`SubmissionRow`; Title Proposal: `AdviserTitleReview` with `compact`). Inside an assignment the filter row (`GroupFilterBar`, `compact` = Status + name search only) shows with 2+ groups. The Coordinator and Grammarian keep the flat queue (`FlatRequirements`). New assignment screens must follow this and never show every submission already open.
+- **The Requirements page for Adviser and Dean is a drill-down, one clean screen at a time** (`RequirementsExplorer`, path shown across the top: Courses › BSIT › 4A › Chapter 1): all five courses (`COURSE_OPTIONS`: BSCS, BSIS, BSIT, BLIS, ACT) -> that course's sections -> the assignments of the section (Title Proposal first for the adviser) -> the groups of one assignment. Structure comes from `GET /groups` and each assignment's `/requirements/{id}/submissions` rows (so an assignment limited to "BSIT 4A" only appears under that section). Groups are closed rows (name, status, "Open ▼"); a group's submission, version history and review buttons show only after clicking it (`SubmissionRow`; Title Proposal: `AdviserTitleReview` with `compact`). Inside an assignment the filter row (`GroupFilterBar`, `compact` = Status + name search only) shows with 2+ groups. The Dean's Secretary and Grammarian keep the flat queue (`FlatRequirements`). New assignment screens must follow this and never show every submission already open.
 - There is no `/adviser/title-proposals` page any more (the old address redirects to Requirements).
 - **File rules per assignment** (`allowed_types`, `max_file_mb` 1-10, `allow_resubmission`): enforced by `Requirement::fileRules()` on
   upload. With resubmission off, a new version is only accepted after the adviser asked for changes.
@@ -185,7 +190,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
   **The form is the Grammarian's own**: fixed wording with five fill-in fields (`{{title}} {{authors}} {{degree}} {{done_date}} {{signed_date}}`), versions in `certificate_templates` (v1 seeded by the migration); only the Grammarian saves a new
   version (the wording must keep the first four fields). The Dean has no form editor. She fills the bold fields on the page (prefilled: title, "Surname, First" authors leader first, degree from the course, today's dates), prints her own uploaded
   signature (`user_signatures`), and issues it. A certificate (`certificates`, number `GC-YYYY-NNNN`) keeps a snapshot of the form version, her name and signature, so it never changes when the form is revised; issuing again replaces the earlier one
-  (kept, marked replaced). **Who reads certificates: the Dean (who receives it), the Grammarian, the group's own students, its adviser and the Research Coordinator; panelists cannot** (`Project::scopeCertificateVisibleTo`). The group, adviser and Coordinator see only the certificate in force (never a replaced one), shown by `CertificateList` (`hideWhenEmpty`) on the student's My Project overview, the adviser's group card and the Coordinator's Group Folders / Archive Records; they are also notified when it is issued. The Grammarian can read the manuscript versions of every
+  (kept, marked replaced). **Who reads certificates: the Dean (who receives it), the Grammarian, the group's own students, its adviser and the Dean's Secretary; panelists cannot** (`Project::scopeCertificateVisibleTo`). The group, adviser and Dean's Secretary see only the certificate in force (never a replaced one), shown by `CertificateList` (`hideWhenEmpty`) on the student's My Project overview, the adviser's group card and the Dean's Secretary's Group Folders / Archive Records; they are also notified when it is issued. The Grammarian can read the manuscript versions of every
   group sent to her (`scopeManuscriptVisibleTo`). Logo: `public/certificate/ub-rpo-logo.png`. The editable fields compare text with spaces normalised: a typed trailing space becomes a non-breaking space, and resetting it would throw the cursor to
   the start. `uat:reset` does not touch form versions (they are the Grammarian's, not demo data).
 - **The certificate is required to archive, not to defend** (`FinalOutputController::archive` refuses with 422 unless `Project::hasCertificate`; `GET /final-outputs` returns `has_certificate`, and Group Folders disables "Archive this project" without it). A group can take any defense without it.
@@ -197,7 +202,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 
 ## People with more than one role (role selector)
 - One account, one email, one password; a person has a main role (`users.role_id`) and may hold extra ones (`user_roles`). **Only Adviser, Panelist and Grammarian can be held together** (`User::COMBINABLE_ROLES`,
-  checked in `UserController::roleProblem`; Student, Dean and Research Coordinator always have exactly one). The Dean ticks "Also acts as" on the Users page (`extra_role_ids` on `POST|PUT /users`).
+  checked in `UserController::roleProblem`; Student, Dean and Dean's Secretary always have exactly one). The Dean ticks "Also acts as" on the Users page (`extra_role_ids` on `POST|PUT /users`).
 - A person acts as ONE role at a time: the chosen view is kept on the sign-in token as the ability `role:<name>` (`ApplyActiveRole` middleware sets `$user->actingAs`, and `User::getRelationValue('role')` returns it), so every
   `$user->role->role_name` check, `role:` route middleware and query works unchanged. A token with no chosen role, or for a role no longer held, acts as the main role. Login opens on the last view used (`users.last_role_id`),
   `PUT /me/role {role}` switches (audit entry), login and `/me` return `roles`. The web app keeps `roles` in localStorage (`getStoredUserRoles`) and `ProfileSwitcher` makes each role its own **profile**: the name beside the picture in the top bar shows "<Role> profile ▾" for a person with 2+ roles and opens a "Switch profile" list (one row per role, the current one marked); choosing one does a full page load into that role's dashboard.
@@ -277,13 +282,13 @@ Dean, Student, Adviser, Panelist, Grammarian, Research Coordinator (shown in UI 
 - Every role portal wraps its pages in `<Role>Shell`, a thin wrapper (nav items only) around the shared
   `src/app/_components/RoleShell.tsx`. Change the sidebar/header layout there once, not per role.
 - Sidebar pictures live in `public/nav/` (96 px square, transparent, one per meaning: dashboard, projects, defense, requirements, documents, manuscript,
-  review-queue, certificates, administration, reports, feedback, student-approvals, collection-tracker, archive-records, messages, notifications, profile).
+  review-queue, certificates, administration, reports, feedback, collection-tracker, archive-records, messages, notifications, profile).
   Each `<Role>Shell` points its items at them; reuse a picture only for the same meaning in another role. If a picture is replaced under the same name, clear
   `.next/dev/cache/images` or the dev server keeps serving the old one.
 - **Every dashboard looks the same:** the content on the left in solid white shadowed cards (`_components/DashboardCard.tsx`: `DashboardCard`, and `DashboardHeader` = eyebrow, title, text and a row of numbers), and `RoleCalendar` at the right edge in a 280 px column
-  (`grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]`, no centred max-width box). The student, adviser (`StaffHome`), grammarian, coordinator, Dean and panelist dashboards all follow it; build new dashboards the same way. The panelist dashboard keeps that layout but is livelier on purpose (`PanelistHero`: a greeting, the next defense counting down in the Manila time zone, progress rings, a timeline of today, an "all caught up" note; keep it playful but plain to read, no jargon in the sentences).
+  (`grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]`, no centred max-width box). The student, adviser (`StaffHome`), grammarian, Dean's Secretary, Dean and panelist dashboards all follow it; build new dashboards the same way. The panelist dashboard keeps that layout but is livelier on purpose (`PanelistHero`: a greeting, the next defense counting down in the Manila time zone, progress rings, a timeline of today, an "all caught up" note; keep it playful but plain to read, no jargon in the sentences).
 - `formatDate` lives in `src/app/_lib/requirements.ts`; do not copy it into pages.
 - `src/app/dean/administration/...` — Dean-only pages (users, groups, etc.)
 - `src/app/student/...`, `src/app/adviser/...`, `src/app/panelist/...`,
-  `src/app/grammarian/...`, `src/app/coordinator/...` — other role portals,
+  `src/app/grammarian/...`, `src/app/secretary/...` — other role portals,
   all use the Laravel API (see migration status above)

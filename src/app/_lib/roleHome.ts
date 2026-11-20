@@ -6,7 +6,7 @@ export function roleHomePath(role: UserRole): string {
   if (role === "Student") return "/student";
   if (role === "Adviser") return "/adviser";
   if (role === "Dean") return "/dean";
-  if (role === "Coordinator") return "/coordinator";
+  if (role === "Secretary") return "/secretary";
   if (role === "Panelist") return "/panelist";
   if (role === "Grammarian") return "/grammarian";
 

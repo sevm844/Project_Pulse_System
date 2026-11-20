@@ -28,8 +28,8 @@ const copy: Record<HomeRole, { href: string; verb: string; idle: string; title: 
     title: "Your groups and reviews",
     text: "See what is waiting for your review and how each of your groups is doing.",
   },
-  Coordinator: {
-    href: "/coordinator/requirements",
+  Secretary: {
+    href: "/secretary/requirements",
     verb: "to receive",
     idle: "No approved final outputs are waiting to be received.",
     title: "Final outputs and records",

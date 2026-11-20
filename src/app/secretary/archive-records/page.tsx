@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import CoordinatorShell from "../_components/CoordinatorShell";
+import SecretaryShell from "../_components/SecretaryShell";
 import CertificateList from "../../_components/certificates/CertificateList";
 import OutputList from "../../_components/records/OutputList";
 import { apiFetch } from "../../_lib/api";
@@ -66,7 +66,7 @@ export default function ArchiveRecordsPage() {
   const visible = records.filter((record) => matchesSearch(record, query));
 
   return (
-    <CoordinatorShell title="Archive Records">
+    <SecretaryShell title="Archive Records">
       <div className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
@@ -148,7 +148,7 @@ export default function ArchiveRecordsPage() {
                   <div className="space-y-4 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4">
                     <p className="text-xs text-[#7b877f]">
                       {record.adviser ? `Adviser ${record.adviser} · ` : ""}
-                      Archived by {record.archived_by ?? "the Coordinator"}
+                      Archived by {record.archived_by ?? "the Dean's Secretary"}
                       {record.archive_remarks ? ` · “${record.archive_remarks}”` : ""}
                     </p>
 
@@ -172,6 +172,6 @@ export default function ArchiveRecordsPage() {
           })}
         </ul>
       </div>
-    </CoordinatorShell>
+    </SecretaryShell>
   );
 }

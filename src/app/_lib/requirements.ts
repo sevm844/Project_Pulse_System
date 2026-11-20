@@ -208,7 +208,7 @@ export type ApiSubmissionVersion = {
   remarks: string | null;
 };
 
-export type StaffRole = "Adviser" | "Dean" | "Coordinator" | "Grammarian";
+export type StaffRole = "Adviser" | "Dean" | "Secretary" | "Grammarian";
 
 // How many groups are waiting on this role for one requirement.
 export function attentionCount(role: StaffRole, requirement: ApiRequirement) {
@@ -217,7 +217,7 @@ export function attentionCount(role: StaffRole, requirement: ApiRequirement) {
 
   if (role === "Grammarian") return stats.awaiting_grammar;
 
-  if (role === "Coordinator") {
+  if (role === "Secretary") {
     return Math.max(stats.approved - stats.received - stats.awaiting_grammar, 0);
   }
 
@@ -227,6 +227,6 @@ export function attentionCount(role: StaffRole, requirement: ApiRequirement) {
 export function attentionLabel(role: StaffRole, count: number) {
   if (count <= 0) return null;
   if (role === "Grammarian") return `${count} to check`;
-  if (role === "Coordinator") return `${count} to receive`;
+  if (role === "Secretary") return `${count} to receive`;
   return `${count} to review`;
 }

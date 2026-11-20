@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import CoordinatorShell from "../_components/CoordinatorShell";
+import SecretaryShell from "../_components/SecretaryShell";
 import {
   downloadCsv,
   fetchFinalRecords,
@@ -70,7 +70,7 @@ export default function CollectionTrackerPage() {
   }
 
   return (
-    <CoordinatorShell title="Collection Tracker">
+    <SecretaryShell title="Collection Tracker">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap gap-x-10 gap-y-4">
           <div>
@@ -194,6 +194,6 @@ export default function CollectionTrackerPage() {
           </ul>
         )}
       </div>
-    </CoordinatorShell>
+    </SecretaryShell>
   );
 }

@@ -19,9 +19,9 @@ export async function downloadCertificateFile(certificate: Certificate, format: 
 }
 
 // The Certification of Editing/Originality issued to a group: open it, or download it as PDF or Word. Shown to the group,
-// its adviser, the Coordinator and the Dean; nothing is shown until the Grammarian has issued one.
+// its adviser, the Dean's Secretary and the Dean; nothing is shown until the Grammarian has issued one.
 // `heading` is printed above the list; with `hideWhenEmpty` nothing at all is drawn until a certificate exists (for the group,
-// its adviser and the Coordinator, who only see the one in force).
+// its adviser and the Dean's Secretary, who only see the one in force).
 export default function CertificateList({ projectId, emptyText, heading, hideWhenEmpty = false }: { projectId: number; emptyText?: string; heading?: string; hideWhenEmpty?: boolean }) {
   const [items, setItems] = useState<Certificate[] | null>(null);
   const [error, setError] = useState("");

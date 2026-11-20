@@ -315,7 +315,7 @@ export default function DeanUsersPage() {
             User Accounts
           </h2>
           <p className="mt-1 text-sm text-[#7b877f]">
-            Assign roles and approve or disable accounts. People choose and change their own passwords; you can only email them a link.
+            Assign roles and disable or re-enable accounts. People choose and change their own passwords; you can only email them a link.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">

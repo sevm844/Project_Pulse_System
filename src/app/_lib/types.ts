@@ -4,7 +4,7 @@ export type UserRole =
   | "Adviser"
   | "Panelist"
   | "Dean"
-  | "Coordinator"
+  | "Secretary"
   | "Grammarian";
 
 export type UserStatus = "Pending" | "Active" | "Rejected" | "Disabled";

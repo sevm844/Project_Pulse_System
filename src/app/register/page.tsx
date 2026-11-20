@@ -83,7 +83,7 @@ export default function RegisterPage() {
       );
 
       setSuccess(
-        "Account created. It is now waiting for approval by the Research Coordinator. You can log in once it is approved. Redirecting to login...",
+        "Account created. You can log in now. Your adviser will add you to a group. Redirecting to login...",
       );
 
       setTimeout(() => {
@@ -217,7 +217,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="mt-4 text-xs text-gray-400">New student accounts are approved by the Research Coordinator first.</p>
+          <p className="mt-4 text-xs text-gray-400">After you log in, wait for your adviser to add you to a group.</p>
         </div>
       </section>
     </main>

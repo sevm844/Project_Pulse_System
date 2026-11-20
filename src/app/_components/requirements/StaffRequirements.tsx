@@ -35,7 +35,7 @@ const copy: Record<StaffRole, { blurb: string; empty: string }> = {
     empty:
       "No requirements yet. Create one and students will see it right away.",
   },
-  Coordinator: {
+  Secretary: {
     blurb:
       "Final outputs from every group. Mark each one as received once it is approved.",
     empty:
@@ -410,7 +410,7 @@ function FlatRequirements({ role }: { role: StaffRole }) {
   );
 }
 
-// Adviser and Dean browse course > section > assignment > group. The Coordinator and Grammarian keep their flat queue.
+// Adviser and Dean browse course > section > assignment > group. The Dean's Secretary and Grammarian keep their flat queue.
 export default function StaffRequirements({ role }: { role: StaffRole }) {
   if (role === "Adviser" || role === "Dean") return <RequirementsExplorer role={role} />;
   return <FlatRequirements role={role} />;

@@ -24,9 +24,9 @@ const settings: Record<CalendarRole, { title: string; storageKey: string; catego
     storageKey: "project-pulse-panelist-calendar-notes",
     categories: ["Defense", "Evaluation", "Review", "Messages"],
   },
-  Coordinator: {
-    title: "Coordinator Calendar",
-    storageKey: "project-pulse-coordinator-calendar-notes",
+  Secretary: {
+    title: "Dean's Secretary Calendar",
+    storageKey: "project-pulse-secretary-calendar-notes",
     categories: ["Collection", "Records", "Archive", "Messages"],
   },
   Grammarian: {

@@ -148,7 +148,7 @@ export default function SubmissionRow({
         submission.grammar_status === null)),
   );
   const canReceive =
-    role === "Coordinator" &&
+    role === "Secretary" &&
     submission?.status === "Approved" &&
     !submission.received_at &&
     (!requirement.needs_grammar_check ||
@@ -334,7 +334,7 @@ export default function SubmissionRow({
             </button>
           )}
 
-          {role === "Coordinator" && submission?.received_at && (
+          {role === "Secretary" && submission?.received_at && (
             <p className="mt-1.5 text-[11px] text-[#2f6f3a]">
               Received {formatDate(submission.received_at)}
             </p>

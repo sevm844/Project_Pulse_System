@@ -318,7 +318,7 @@ export default function AssignedGroupsPage() {
                 Adviser-managed group creation
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-[#7b877f]">
-                A group has 1 to 3 students: the leader plus up to 2 members, chosen from approved student accounts.
+                A group has 1 to 3 students: the leader plus up to 2 members, chosen from registered student accounts.
               </p>
             </div>
 
@@ -450,7 +450,7 @@ export default function AssignedGroupsPage() {
                   <div className="space-y-2.5">
                     <p role="status" className="h-4 text-xs text-[#7b877f]">{studentsLoading ? "Loading registered students..." : ""}</p>
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
-                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. Students must be approved by the Research Coordinator first; students already in a group for this school year and semester are excluded.</p>}
+                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this school year and semester are excluded.</p>}
                     <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
                       Add students to the group (1 to {MAX_GROUP_SIZE})
                       <input

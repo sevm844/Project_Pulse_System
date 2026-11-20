@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "../../_lib/api";
+import { apiFetch, logoutFromApi } from "../../_lib/api";
 import {
   errorMessage,
   fetchMyGroup,
@@ -52,6 +52,18 @@ export default function StudentSetupPage() {
       void loadGroup();
     });
   }, [loadGroup]);
+
+  // While the student waits, look again every 30 seconds, so the invitation shows up without pressing anything.
+  useEffect(() => {
+    const timer = window.setInterval(() => void loadGroup(), 30000);
+
+    return () => window.clearInterval(timer);
+  }, [loadGroup]);
+
+  async function handleLogout() {
+    await logoutFromApi();
+    router.push("/login");
+  }
 
   async function handleAcceptInvitation() {
     if (!group) return;
@@ -137,9 +149,10 @@ export default function StudentSetupPage() {
                   You have not been added to a capstone group yet.
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-[#4d5751]">
-                  Your account is active, but your student dashboard will become
-                  available after your adviser creates your group and adds your
-                  registered email.
+                  Your account is ready. Your dashboard opens after your adviser
+                  adds you to a group. This page checks by itself every 30
+                  seconds, or you can press the button below. You can also log
+                  out and come back later.
                 </p>
 
                 <div className="mt-6 rounded-lg border border-[#dfe3eb] bg-[#f9f9ff] p-4">
@@ -163,6 +176,13 @@ export default function StudentSetupPage() {
                   className={buttonClass}
                 >
                   Refresh Assignment Status
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleLogout()}
+                  className="mt-3 w-full rounded-lg border border-[#dfe3eb] py-3 text-sm font-semibold text-[#4d5751] transition hover:bg-[#f3f7f1]"
+                >
+                  Log out
                 </button>
               </Card>
             )}

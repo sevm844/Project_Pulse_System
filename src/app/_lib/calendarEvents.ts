@@ -8,7 +8,7 @@ export type CalendarRole =
   | "Adviser"
   | "Dean"
   | "Panelist"
-  | "Coordinator"
+  | "Secretary"
   | "Grammarian";
 
 export type CalendarEvent = {
@@ -25,14 +25,14 @@ export type CalendarEvent = {
 
 // The backend only lets some roles read each list (see routes/api.php).
 const READS_DEFENSES: CalendarRole[] = ["Student", "Adviser", "Dean", "Panelist"];
-const READS_REQUIREMENTS: CalendarRole[] = ["Student", "Adviser", "Dean", "Coordinator", "Grammarian"];
+const READS_REQUIREMENTS: CalendarRole[] = ["Student", "Adviser", "Dean", "Secretary", "Grammarian"];
 
 const portal: Record<CalendarRole, string> = {
   Student: "/student",
   Adviser: "/adviser",
   Dean: "/dean",
   Panelist: "/panelist",
-  Coordinator: "/coordinator",
+  Secretary: "/secretary",
   Grammarian: "/grammarian",
 };
 

@@ -135,7 +135,7 @@ export default function LoginPage() {
 
             <h1 className="text-3xl font-bold tracking-tight">Log in</h1>
             <p className="mt-2 text-base text-gray-400">
-              Sign in using your approved UB account.
+              Sign in using your UB account.
             </p>
 
             {error && (

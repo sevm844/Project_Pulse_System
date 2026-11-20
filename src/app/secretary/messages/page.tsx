@@ -1,17 +1,17 @@
 "use client";
 
-import CoordinatorShell from "../_components/CoordinatorShell";
+import SecretaryShell from "../_components/SecretaryShell";
 import RoleMessagesPage from "../../_components/RoleMessagesPage";
 
-export default function CoordinatorMessagesPage() {
+export default function SecretaryMessagesPage() {
   return (
     <RoleMessagesPage
       fitViewport
       subtitle="Final requirement collection communication"
       shell={(children) => (
-        <CoordinatorShell title="Messages" hideContentTitle fitViewport>
+        <SecretaryShell title="Messages" hideContentTitle fitViewport>
           {children}
-        </CoordinatorShell>
+        </SecretaryShell>
       )}
     />
   );

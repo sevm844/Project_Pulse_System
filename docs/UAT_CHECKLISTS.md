@@ -119,23 +119,23 @@ Email: `uat-grammarian@uat.test`
 | 5 | Press **Review** on Version 1. Read the two grammar comments, then select other words and leave your own comment. Mark one of your comments resolved. Can you resolve the adviser's comment, if there is one? (You should not be able to.) | | |
 | 6 | Open **Certificates**. After the Dean sends you UAT Delta's final manuscript (see the Dean's task), it appears under **Waiting for you**. Press **Download manuscript**: do you get the group's paper as a Word document you could check elsewhere? | | |
 | 7 | Upload your signature. Press **Prepare certificate** and look at the form: is it like the university's F-RPO-09? Click a bold highlighted part (the title, authors, degree or a date) and correct it. Can you change the fixed wording here? (You should not.) | | |
-| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? It goes to the Dean, and the group, its adviser and the Coordinator can read it too. | | |
+| 8 | Press **Issue certificate**, then download it as **PDF** and **Word**. Open both: are the logo, wording, your signature and the group's details right? It goes to the Dean, and the group, its adviser and the Dean's Secretary can read it too. | | |
 | 9 | Press **Edit the certificate form**: it is your form. Change the revision number and save it as a new version. Try to remove a bold field from the wording: it should refuse. | | |
 | 10 | Ask the Dean to send the manuscript again, then press **Did not pass**, write your remarks and return it. | | |
 | 11 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
-## Research Coordinator
+## Dean's Secretary
 
-Email: `uat-coordinator@uat.test`
+Email: `uat-secretary@uat.test`
 
 | # | Task | Result | Notes |
 |---|---|---|---|
 | 1 | Log in. Find the **Final poster** waiting to be received. | | |
 | 2 | Mark it as received. | | |
 | 3 | Open **Group Folders** and find UAT Delta's record. | | |
-| 4 | Open **Student Approvals** and **Archive Records**. Can you tell what each is for? | | |
+| 4 | Open **Archive Records**. Can you tell what it is for? | | |
 | 5 | In **Group Folders**, open UAT Delta: after the Grammarian issues the certificate, can you see and open it? Open UAT Alpha: does it say the certificate is missing? A group cannot be archived until its certificate exists (the **Archive this project** button stays off). | | |
 | 6 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 

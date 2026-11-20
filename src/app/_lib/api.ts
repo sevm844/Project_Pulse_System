@@ -41,15 +41,6 @@ export type ApiUserPage = {
   inactive_total: number;
 };
 
-export type ApiStudentApproval = {
-  user_id: number;
-  fname: string;
-  lname: string;
-  email: string;
-  account_status: "Pending" | "Rejected" | "Active";
-  created_at: string | null;
-};
-
 export type ApiRole = {
   role_id: number;
   role_name: string;
@@ -194,16 +185,16 @@ export async function previewSimilarityReport(reportId: number): Promise<string>
   return URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
 }
 
-// The database says "Research Coordinator"; the existing pages say "Coordinator".
+// The database says "Dean's Secretary"; the website's own key for that role is "Secretary" (it also names its folder and addresses).
 export function toAppRole(roleName: string): UserRole {
-  return (roleName === "Research Coordinator"
-    ? "Coordinator"
+  return (roleName === "Dean's Secretary"
+    ? "Secretary"
     : roleName) as UserRole;
 }
 
 // The other way round: the name the server uses for a role.
 export function toServerRole(role: UserRole): string {
-  return role === "Coordinator" ? "Research Coordinator" : role;
+  return role === "Secretary" ? "Dean's Secretary" : role;
 }
 
 // Revokes the token on the server, then clears the saved session in the browser.

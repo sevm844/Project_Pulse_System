@@ -24,7 +24,7 @@ const mockupBoxes = [
   {
     title: "Multi-Role Dashboards",
     eyebrow: "Role-Based Access",
-    body: "Students, Advisers, Panelists, Coordinators, Grammarians, and Deans each get focused workflows.",
+    body: "Students, Advisers, Panelists, Grammarians, the Dean's Secretary, and Deans each get focused workflows.",
   },
   {
     title: "Defense Scheduling",
@@ -40,7 +40,7 @@ const featureSummaries = [
   },
   {
     title: "Departmental Integration",
-    body: "Connect students, advisers, panelists, grammarians, coordinators, records staff, and admins.",
+    body: "Connect students, advisers, panelists, grammarians, the Dean's Secretary, records staff, and admins.",
   },
   {
     title: "Support and Administration",
@@ -69,7 +69,7 @@ const faqItems = [
   {
     question: "Can admins adjust submission deadlines?",
     answer:
-      "Yes. Admins and authorized coordinators can configure deadlines by course, section, phase, and requirement so each group sees the correct schedule.",
+      "Yes. Admins and the Dean's Secretary can configure deadlines by course, section, phase, and requirement so each group sees the correct schedule.",
   },
   {
     question: "Who has access to the grade evaluation metrics?",
@@ -349,7 +349,7 @@ export default function Home() {
                 {[
                   ["Proposal Submitted", "Student Group", "Completed"],
                   ["Adviser Review", "Anna Cruz", "In progress"],
-                  ["Panel Confirmation", "Coordinator", "Queued"],
+                  ["Panel Confirmation", "Dean's Secretary", "Queued"],
                   ["Defense Schedule", "Dean Office", "Ready"],
                 ].map(([title, owner, status]) => (
                   <div

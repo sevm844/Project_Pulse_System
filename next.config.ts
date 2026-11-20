@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // The server does not announce what it runs on.
   poweredByHeader: false,
+  // The Dean's Secretary's pages used to live under /coordinator. An old saved address still lands in the right place (a temporary redirect, so
+  // a browser never remembers it as permanent).
+  async redirects() {
+    return [{ source: "/coordinator/:path*", destination: "/secretary/:path*", permanent: false }];
+  },
   // Headers on every page: it cannot be shown inside another site (clickjacking), files are not guessed to be something else, the address a
   // visitor came from is not sent to other sites, and powerful browser features the system never uses are switched off.
   async headers() {

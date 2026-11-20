@@ -384,7 +384,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
               <input type="checkbox" checked={finalOutput} onChange={(event) => setFinalOutput(event.target.checked)} className="mt-1" />
               <span>
                 Final output
-                <span className="block text-xs text-[#7b877f]">The Research Coordinator collects it once it is approved.</span>
+                <span className="block text-xs text-[#7b877f]">The Dean&apos;s Secretary collects it once it is approved.</span>
               </span>
             </label>
           </div>

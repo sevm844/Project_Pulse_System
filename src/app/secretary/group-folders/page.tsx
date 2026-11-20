@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import CoordinatorShell from "../_components/CoordinatorShell";
+import SecretaryShell from "../_components/SecretaryShell";
 import CertificateList from "../../_components/certificates/CertificateList";
 import OutputList from "../../_components/records/OutputList";
 import { apiFetch } from "../../_lib/api";
@@ -52,7 +52,7 @@ export default function GroupFoldersPage() {
   const visible = records.filter((record) => matchesSearch(record, query));
 
   return (
-    <CoordinatorShell title="Group Folders">
+    <SecretaryShell title="Group Folders">
       <div className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
@@ -157,6 +157,6 @@ export default function GroupFoldersPage() {
           })}
         </ul>
       </div>
-    </CoordinatorShell>
+    </SecretaryShell>
   );
 }

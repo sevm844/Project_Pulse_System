@@ -306,7 +306,7 @@ function RequirementRow({
               )}
 
               {submission.received_at && (
-                <p>Received by the Research Coordinator on {formatDate(submission.received_at)}.</p>
+                <p>Received by the Dean&apos;s Secretary on {formatDate(submission.received_at)}.</p>
               )}
 
               <div className="pt-1">

@@ -300,7 +300,7 @@ INSERT INTO roles (role_name, role_description) VALUES
     ('Adviser', 'Creates groups, reviews titles and documents, schedules defenses'),
     ('Panelist', 'Evaluates assigned defenses and gives scores and feedback'),
     ('Grammarian', 'Checks the manuscript and issues the grammar certification'),
-    ('Research Coordinator', 'Keeps the final digital records of completed projects'),
+    ('Dean''s Secretary', 'Receives final outputs, keeps the group folders and the archive'),
     ('Dean', 'System administrator; monitors progress and gives approvals');
 COMMIT;
 
