@@ -9,7 +9,11 @@ import {
   apiFetch,
   type ApiRole,
   type ApiUser,
+  type ApiUserPage,
 } from "../../../_lib/api";
+import { getStoredUserUid } from "../../../_utils/authStorage";
+
+const PAGE_SIZE = 25;
 
 const statuses: UserStatus[] = ["Pending", "Active", "Rejected", "Disabled"];
 
@@ -68,6 +72,18 @@ const inputClass =
 export default function DeanUsersPage() {
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [roles, setRoles] = useState<ApiRole[]>([]);
+  // The list is searched, filtered and read one page at a time, so it stays usable with hundreds of accounts.
+  const [search, setSearch] = useState("");
+  const [typed, setTyped] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+  const [inactiveTotal, setInactiveTotal] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
+  const myUid = getStoredUserUid();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -83,20 +99,33 @@ export default function DeanUsersPage() {
     setLoading(true);
     setError("");
 
+    // "Show disabled" only matters when no particular status is chosen.
+    const params = new URLSearchParams({ page: String(page), per_page: String(PAGE_SIZE) });
+    if (search.trim()) params.set("search", search.trim());
+    if (roleFilter) params.set("role_id", roleFilter);
+    if (statusFilter) params.set("status", statusFilter);
+    else if (!showInactive) params.set("hide_inactive", "1");
+
     try {
-      const [nextUsers, nextRoles] = await Promise.all([
-        apiFetch<ApiUser[]>("/users"),
+      const [result, nextRoles] = await Promise.all([
+        apiFetch<ApiUserPage>(`/users?${params.toString()}`),
         apiFetch<ApiRole[]>("/roles"),
       ]);
 
-      setUsers(nextUsers);
+      setUsers(result.items);
+      setTotal(result.total);
+      setLastPage(result.last_page);
+      setInactiveTotal(result.inactive_total);
       setRoles(nextRoles);
+
+      // A page that no longer exists (after a delete or a narrower search) goes back to the last real one.
+      if (result.page > result.last_page) setPage(result.last_page);
     } catch (err) {
       showError(err);
     }
 
     setLoading(false);
-  }, [showError]);
+  }, [page, search, roleFilter, statusFilter, showInactive, showError]);
 
   async function updateUser(
     user: ApiUser,
@@ -111,11 +140,30 @@ export default function DeanUsersPage() {
         body: JSON.stringify(changes),
       });
 
-      setUsers((current) =>
-        current.map((item) =>
-          item.user_id === updated.user_id ? updated : item,
-        ),
-      );
+      // A changed status can move the person out of (or into) the list being shown, so read it again; a role change just updates the row.
+      if (changes.account_status) setReloadKey((key) => key + 1);
+      else
+        setUsers((current) =>
+          current.map((item) =>
+            item.user_id === updated.user_id ? { ...updated, has_signed_in: item.has_signed_in } : item,
+          ),
+        );
+    } catch (err) {
+      showError(err);
+    }
+  }
+
+  // Only for an account that was never used (a mistyped email, a test). The server refuses anyone with history and says to disable them.
+  async function deleteUser(user: ApiUser) {
+    if (!window.confirm(`Delete the account of ${user.fname} ${user.lname} (${user.email})? This cannot be undone.`)) return;
+
+    setError("");
+    setNotice("");
+
+    try {
+      await apiFetch(`/users/${user.user_id}`, { method: "DELETE" });
+      setNotice(`The account of ${user.fname} ${user.lname} was deleted.`);
+      setReloadKey((key) => key + 1);
     } catch (err) {
       showError(err);
     }
@@ -137,7 +185,7 @@ export default function DeanUsersPage() {
         }),
       });
 
-      setUsers((current) => [...current, created]);
+      setReloadKey((key) => key + 1);
       setForm(emptyForm);
       setNotice(
         created.email_sent
@@ -169,7 +217,19 @@ export default function DeanUsersPage() {
 
   useEffect(() => {
     queueMicrotask(() => { void loadData(); });
-  }, [loadData]);
+  }, [loadData, reloadKey]);
+
+  // Search runs a moment after the last key, so the server is not asked for every letter.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (typed !== search) {
+        setSearch(typed);
+        setPage(1);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [typed, search]);
 
   return (
     <DeanShell title="User Management">
@@ -256,6 +316,76 @@ export default function DeanUsersPage() {
           <p className="mt-1 text-sm text-[#7b877f]">
             Assign roles and approve or disable accounts. People choose and change their own passwords; you can only email them a link.
           </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <input
+              type="search"
+              placeholder="Search by name or email"
+              aria-label="Search by name or email"
+              className={`${inputClass} w-full sm:w-72`}
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+            />
+            <select
+              aria-label="Filter by role"
+              className={inputClass}
+              value={roleFilter}
+              onChange={(event) => {
+                setRoleFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All roles</option>
+              {roles.map((role) => (
+                <option key={role.role_id} value={role.role_id}>
+                  {role.role_name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Filter by status"
+              className={inputClass}
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Any status</option>
+              {statuses.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+            {!statusFilter && (
+              <label className="flex items-center gap-2 text-xs text-[#59645d]">
+                <input
+                  type="checkbox"
+                  checked={showInactive}
+                  onChange={(event) => {
+                    setShowInactive(event.target.checked);
+                    setPage(1);
+                  }}
+                  className="accent-[#123f2b]"
+                />
+                Show disabled and rejected accounts ({inactiveTotal})
+              </label>
+            )}
+            {(search || roleFilter || statusFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTyped("");
+                  setSearch("");
+                  setRoleFilter("");
+                  setStatusFilter("");
+                  setPage(1);
+                }}
+                className="text-xs font-semibold text-[#4f8f58] hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -266,7 +396,7 @@ export default function DeanUsersPage() {
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Role</th>
                 <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Password link</th>
+                <th className="px-5 py-3 font-medium">Actions</th>
                 <th className="px-5 py-3 font-medium">ID</th>
               </tr>
             </thead>
@@ -319,12 +449,24 @@ export default function DeanUsersPage() {
                     </select>
                   </td>
                   <td className="px-5 py-4">
-                    <button
-                      onClick={() => sendPasswordLink(user)}
-                      className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs text-[#203028] hover:bg-[#f4f8f4]"
-                    >
-                      Email link
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => sendPasswordLink(user)}
+                        className="rounded-lg border border-[#dfe8df] px-3 py-2 text-xs text-[#203028] hover:bg-[#f4f8f4]"
+                      >
+                        Email link
+                      </button>
+                      {/* Only an account that never signed in can be deleted; the server also refuses anyone with records. */}
+                      {user.has_signed_in === false && String(user.user_id) !== myUid && (
+                        <button
+                          onClick={() => void deleteUser(user)}
+                          title="Delete this account (it was never used)"
+                          className="rounded-lg border border-red-200 px-3 py-2 text-xs text-red-600 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-4 text-xs text-[#7b877f]">
                     {user.user_id}
@@ -338,12 +480,43 @@ export default function DeanUsersPage() {
                     colSpan={6}
                     className="px-5 py-8 text-center text-[#7b877f]"
                   >
-                    No users found.
+                    {search || roleFilter || statusFilter ? "No accounts match these filters." : "No users found."}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf2ec] px-5 py-3 text-xs text-[#7b877f]">
+          <p>
+            {total === 0
+              ? "No accounts"
+              : `Showing ${(page - 1) * PAGE_SIZE + 1} to ${Math.min(page * PAGE_SIZE, total)} of ${total} account${total === 1 ? "" : "s"}`}
+          </p>
+          {lastPage > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage(page - 1)}
+                className="rounded-lg border border-[#dfe8df] px-3 py-1.5 font-semibold text-[#203028] hover:bg-[#f4f8f4] disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span>
+                Page {page} of {lastPage}
+              </span>
+              <button
+                type="button"
+                disabled={page >= lastPage || loading}
+                onClick={() => setPage(page + 1)}
+                className="rounded-lg border border-[#dfe8df] px-3 py-1.5 font-semibold text-[#203028] hover:bg-[#f4f8f4] disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </Card>
     </DeanShell>

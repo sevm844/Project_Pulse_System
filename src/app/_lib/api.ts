@@ -27,6 +27,18 @@ export type ApiUser = {
   email: string;
   account_status: string;
   created_at: string | null;
+  // Only in the paged list: has this person ever signed in? (An account that never did, and has no records, can be deleted.)
+  has_signed_in?: boolean;
+};
+
+// One page of the Dean's user list.
+export type ApiUserPage = {
+  items: ApiUser[];
+  total: number;
+  page: number;
+  last_page: number;
+  per_page: number;
+  inactive_total: number;
 };
 
 export type ApiStudentApproval = {
