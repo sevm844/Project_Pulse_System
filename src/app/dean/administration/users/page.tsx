@@ -145,7 +145,7 @@ export default function DeanUsersPage() {
       else
         setUsers((current) =>
           current.map((item) =>
-            item.user_id === updated.user_id ? { ...updated, has_signed_in: item.has_signed_in } : item,
+            item.user_id === updated.user_id ? { ...updated, has_activity: item.has_activity } : item,
           ),
         );
     } catch (err) {
@@ -233,14 +233,15 @@ export default function DeanUsersPage() {
 
   return (
     <DeanShell title="User Management">
+      {/* The result of an action stays in view while the list is scrolled (it used to sit above the form, out of sight). */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div role="alert" className="sticky top-0 z-30 mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-sm">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div role="status" className="sticky top-0 z-30 mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 shadow-sm">
           {notice}
         </div>
       )}
@@ -456,8 +457,8 @@ export default function DeanUsersPage() {
                       >
                         Email link
                       </button>
-                      {/* Only an account that never signed in can be deleted; the server also refuses anyone with records. */}
-                      {user.has_signed_in === false && String(user.user_id) !== myUid && (
+                      {/* Only an account with no recorded activity at all can be deleted; the server also refuses anyone with records. */}
+                      {user.has_activity === false && String(user.user_id) !== myUid && (
                         <button
                           onClick={() => void deleteUser(user)}
                           title="Delete this account (it was never used)"

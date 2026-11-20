@@ -28,7 +28,7 @@ export type ApiUser = {
   account_status: string;
   created_at: string | null;
   // Only in the paged list: has this person ever signed in? (An account that never did, and has no records, can be deleted.)
-  has_signed_in?: boolean;
+  has_activity?: boolean;
 };
 
 // One page of the Dean's user list.
