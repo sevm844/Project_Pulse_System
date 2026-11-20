@@ -84,48 +84,38 @@ export default function LoginPage() {
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9]">
       <div className="relative z-10 grid min-h-screen w-full lg:h-screen lg:min-h-0 lg:grid-cols-2">
         {/* Left: our two logos, a faint CICT mark in the middle and the words. The green gradient is the page's own background, so there is no split. */}
-        <aside className="relative hidden overflow-hidden p-12 lg:flex lg:flex-col lg:justify-between xl:p-16">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/cict-logo.png"
-              alt="College of Information and Communications Technology"
-              width={72}
-              height={72}
-              priority
-            />
-            <Image
-              src="/logo-icon-clear.png"
-              alt=""
-              width={72}
-              height={72}
-              priority
-            />
-            <span className="text-3xl font-semibold text-[#123f2b]">
+        <aside className="relative hidden flex-col items-center justify-center overflow-hidden p-12 text-center lg:flex xl:p-16">
+          {/* The small brand, top left. */}
+          <div className="absolute left-12 top-10 flex items-center gap-3 xl:left-16">
+            <Image src="/logo-icon-clear.png" alt="" width={40} height={40} priority />
+            <span className="text-xl font-semibold text-[#123f2b]">
               Project <span className="text-green-600">Pulse</span>
             </span>
           </div>
 
-          <Image
-            src="/cict-logo.png"
-            alt=""
-            width={300}
-            height={300}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-[40%] h-[260px] w-[260px] -translate-x-1/2 -translate-y-1/2 opacity-[0.13] saturate-50"
-          />
-
-          <div className="relative">
-            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] xl:text-5xl">
-              Your capstone,
-              <br />
-              from first title
-              <br />
-              to final defense.
-            </h2>
-            <p className="mt-3 bg-gradient-to-r from-[#2f8f4e] to-[#0f7a6b] bg-clip-text text-base font-medium text-transparent">
-              Know where your group stands.
-            </p>
+          {/* The CICT logo is the hero: big, in colour, inside soft orbit rings and a glow. */}
+          <div className="relative flex h-[440px] w-[440px] items-center justify-center xl:h-[500px] xl:w-[500px]">
+            <div aria-hidden="true" className="absolute inset-0 rounded-full border border-[#164832]/10" />
+            <div aria-hidden="true" className="absolute inset-[11%] rounded-full border border-[#164832]/10" />
+            <div aria-hidden="true" className="absolute inset-[22%] rounded-full bg-white/60 shadow-[0_0_90px_rgba(47,143,78,0.28)]" />
+            <Image
+              src="/cict-logo.png"
+              alt="College of Information and Communications Technology, University of Batangas"
+              width={300}
+              height={300}
+              priority
+              className="relative z-10 h-[270px] w-[270px] drop-shadow-[0_14px_30px_rgba(22,72,50,0.25)] xl:h-[310px] xl:w-[310px]"
+            />
           </div>
+
+          <h2 className="mt-8 text-3xl font-bold leading-tight tracking-tight text-[#123f2b] xl:text-4xl">
+            Your capstone,
+            <br />
+            from first title to final defense.
+          </h2>
+          <p className="mt-3 bg-gradient-to-r from-[#2f8f4e] to-[#0f7a6b] bg-clip-text text-base font-medium text-transparent">
+            Know where your group stands.
+          </p>
         </aside>
 
         {/* Right: the form in a centred white card. */}
