@@ -10,6 +10,7 @@ import Toolbar from "./Toolbar";
 import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
+import { importWordFile } from "../../_lib/manuscriptImport";
 import { fetchMyManuscript, saveManuscriptDraft, submitManuscriptVersion, type DroppedContent } from "../../_lib/manuscript";
 import { formatDateTime } from "../../_lib/requirements";
 
@@ -39,6 +40,10 @@ export default function ManuscriptEditor() {
   const [loadError, setLoadError] = useState("");
   const [pages, setPages] = useState(1);
   const [removed, setRemoved] = useState<DroppedContent | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importNote, setImportNote] = useState("");
+  const [latestVersion, setLatestVersion] = useState(0);
+  const wordFileRef = useRef<HTMLInputElement>(null);
   const extensions = useMemo(() => createManuscriptExtensions(setPages), []);
 
   const revision = useRef(0);
@@ -135,6 +140,7 @@ export default function ManuscriptEditor() {
         editor.setEditable(true, false);
         revision.current = loaded.draft_revision;
         setProjectId(loaded.project_id);
+        setLatestVersion(loaded.versions.reduce((highest, item) => Math.max(highest, item.version_no), 0));
         setInfo({ savedAt: loaded.saved_at, savedBy: loaded.saved_by, unsubmitted: loaded.has_unsubmitted_changes });
         setState("saved");
       })
@@ -185,7 +191,8 @@ export default function ManuscriptEditor() {
         return;
       }
 
-      await submitManuscriptVersion(revision.current, note);
+      const frozen = await submitManuscriptVersion(revision.current, note);
+      setLatestVersion((current) => Math.max(current, frozen.version_no ?? current + 1));
       setInfo((current) => ({ ...current, unsubmitted: false }));
       setReloadKey((key) => key + 1);
       setSubmitOpen(false);
@@ -214,6 +221,36 @@ export default function ManuscriptEditor() {
     }
   }
 
+  // A Word file is added at the end of the draft (nothing is replaced; Undo takes it back). It saves like any other typing.
+  async function addWordFile(file: File | undefined) {
+    if (wordFileRef.current) wordFileRef.current.value = "";
+    if (!file || !editor || conflict.current) return;
+
+    setImporting(true);
+    setImportNote("");
+    setToolbarError("");
+
+    try {
+      const imported = await importWordFile(file);
+
+      if (imported.empty) {
+        setToolbarError("That Word file has no text or pictures to add.");
+      } else {
+        editor.chain().focus("end").insertContent(imported.html).run();
+        setImportNote(
+          `Added "${file.name}" at the end of your draft. Check the headings, lists and tables, then adjust fonts and spacing if you need to.` +
+            (imported.skippedPictures > 0
+              ? ` ${imported.skippedPictures} ${imported.skippedPictures === 1 ? "picture" : "pictures"} could not be brought in; add ${imported.skippedPictures === 1 ? "it" : "them"} with the picture button.`
+              : ""),
+        );
+      }
+    } catch (err) {
+      setToolbarError(err instanceof Error ? err.message : "That Word file could not be added.");
+    }
+
+    setImporting(false);
+  }
+
   function useVersionAsDraft(content: JSONContent) {
     if (!editor || conflict.current) return;
     editor.commands.setContent(content, { emitUpdate: true });
@@ -222,6 +259,8 @@ export default function ManuscriptEditor() {
   if (loadError) {
     return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</p>;
   }
+
+  const hasNewerChanges = info.unsubmitted || state === "dirty" || state === "saving";
 
   const status =
     state === "loading" ? "Opening..." :
@@ -236,6 +275,15 @@ export default function ManuscriptEditor() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-[#203028]">Manuscript</h2>
+          {state !== "loading" && (
+            <p className={`mt-0.5 text-xs font-semibold ${latestVersion === 0 || hasNewerChanges ? "text-amber-700" : "text-[#1f7a4a]"}`}>
+              {latestVersion === 0
+                ? "Draft · nothing submitted to your adviser yet"
+                : hasNewerChanges
+                  ? `Version ${latestVersion} submitted · your draft has newer changes your adviser cannot see yet`
+                  : `Version ${latestVersion} submitted · your draft matches it`}
+            </p>
+          )}
           <p role="status" className={`mt-0.5 text-xs ${state === "error" || state === "conflict" ? "text-red-600" : "text-[#7b877f]"}`}>
             {status}
           </p>
@@ -295,6 +343,15 @@ export default function ManuscriptEditor() {
         </div>
       )}
 
+      {importNote && (
+        <div role="status" className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-3 text-xs text-[#123f2b]">
+          <p>{importNote}</p>
+          <button type="button" onClick={() => setImportNote("")} className="rounded-full border border-[#cfe0d3] px-3 py-1 font-semibold hover:bg-[#e8f1ea]">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {toolbarError && (
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
           {toolbarError}
@@ -309,9 +366,27 @@ export default function ManuscriptEditor() {
           </PagedScroll>
           <div className="flex items-center justify-between border-t border-[#dfe8df] bg-white px-4 py-2 text-xs text-[#59645d]">
             <span>{pages} {pages === 1 ? "page" : "pages"}</span>
-            <button type="button" disabled={!editor || projectId === null} onClick={() => setExportOpen(true)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50">
-              Export PDF / Word
-            </button>
+            <span className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={!editor || state === "loading" || state === "conflict" || importing}
+                onClick={() => wordFileRef.current?.click()}
+                className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50"
+              >
+                {importing ? "Reading the file..." : "Import from Word"}
+              </button>
+              <input
+                ref={wordFileRef}
+                type="file"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="sr-only"
+                aria-label="Choose a Word file"
+                onChange={(event) => void addWordFile(event.target.files?.[0])}
+              />
+              <button type="button" disabled={!editor || projectId === null} onClick={() => setExportOpen(true)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50">
+                Export PDF / Word
+              </button>
+            </span>
             <span>{editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words</span>
           </div>
         </div>

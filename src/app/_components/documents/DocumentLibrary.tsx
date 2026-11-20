@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import VersionHistory from "../requirements/VersionHistory";
 import { apiFetch, downloadSubmission, previewSubmission } from "../../_lib/api";
@@ -31,6 +32,57 @@ type ApiDocument = {
 
 type Role = "Student" | "Adviser" | "Dean";
 
+// A hit inside the text of a submitted manuscript (newest version of each group).
+type ManuscriptHit = {
+  project_id: number;
+  group_id: number;
+  group_name: string;
+  course: string;
+  section: string;
+  version_no: number;
+  submitted_at: string | null;
+  match_count: number;
+  snippets: string[];
+};
+
+const OPEN_MANUSCRIPT: Record<Role, (hit: ManuscriptHit) => string> = {
+  Student: () => "/student/manuscript",
+  Adviser: () => "/adviser/assigned-groups",
+  Dean: (hit) => `/dean/projects/${hit.group_id}`,
+};
+
+const MIN_WORDS_SEARCH = 3;
+
+// The searched words, shown in bold inside a snippet.
+function Highlighted({ text, words }: { text: string; words: string }) {
+  const needle = words.trim();
+  if (!needle) return <>{text}</>;
+  // Cut the text at each match without building a pattern from what the person typed.
+  const parts: string[] = [];
+  const lower = text.toLowerCase();
+  const find = needle.toLowerCase();
+  let from = 0;
+  for (let at = lower.indexOf(find); at !== -1; at = lower.indexOf(find, from)) {
+    parts.push(text.slice(from, at), text.slice(at, at + find.length));
+    from = at + find.length;
+  }
+  parts.push(text.slice(from));
+
+  return (
+    <>
+      {parts.map((part, index) =>
+        index % 2 === 1 ? (
+          <strong key={index} className="font-semibold text-[#203028]">
+            {part}
+          </strong>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 const statusLook: Record<ApiDocument["status"], { label: string; tone: StatusTone }> = {
   Submitted: { label: "Under review", tone: "waiting" },
   "Needs Revision": { label: "Needs revision", tone: "problem" },
@@ -50,6 +102,8 @@ export default function DocumentLibrary({ role }: { role: Role }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [assignment, setAssignment] = useState("All");
+  const [hits, setHits] = useState<ManuscriptHit[]>([]);
+  const [hitsLoading, setHitsLoading] = useState(false);
   const [viewing, setViewing] = useState<{ document: ApiDocument; url: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -66,6 +120,38 @@ export default function DocumentLibrary({ role }: { role: Role }) {
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  // Words typed in the search box are also looked for inside the submitted manuscripts (a moment after typing stops).
+  useEffect(() => {
+    const words = search.trim();
+    if (words.length < MIN_WORDS_SEARCH) {
+      queueMicrotask(() => {
+        setHits([]);
+        setHitsLoading(false);
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setHitsLoading(true);
+      apiFetch<ManuscriptHit[]>(`/manuscripts/search?q=${encodeURIComponent(words)}`)
+        .then((found) => {
+          if (!cancelled) setHits(found);
+        })
+        .catch(() => {
+          if (!cancelled) setHits([]);
+        })
+        .finally(() => {
+          if (!cancelled) setHitsLoading(false);
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [search]);
 
   // Release the temporary address of the open preview.
   useEffect(() => {
@@ -117,7 +203,7 @@ export default function DocumentLibrary({ role }: { role: Role }) {
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder={role === "Student" ? "Search by file or assignment" : "Search by file, assignment or group"}
+          placeholder={role === "Student" ? "Search files, assignments or words in your manuscript" : "Search files, groups or words inside manuscripts"}
           aria-label="Search documents"
           className="min-w-0 flex-1 rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8] sm:max-w-xs"
         />
@@ -150,9 +236,40 @@ export default function DocumentLibrary({ role }: { role: Role }) {
         </p>
       )}
 
+      {(hits.length > 0 || hitsLoading) && (
+        <section className="mt-4" aria-label="Found inside manuscripts">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[#7b877f]">
+            Found inside manuscripts{hitsLoading ? " · searching..." : ` · ${hits.length} group${hits.length === 1 ? "" : "s"}`}
+          </h3>
+          <ul className="mt-1 divide-y divide-[#edf2ec]">
+            {hits.map((hit) => (
+              <li key={hit.project_id} className="py-3">
+                <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1">
+                  <p className="text-sm font-semibold text-[#203028]">
+                    {role === "Student" ? "Your manuscript" : `${hit.group_name} (${hit.course} ${hit.section})`}
+                    <span className="ml-2 text-xs font-normal text-[#7b877f]">
+                      Version {hit.version_no} · {hit.match_count} {hit.match_count === 1 ? "match" : "matches"}
+                      {hit.submitted_at ? ` · ${formatDate(hit.submitted_at)}` : ""}
+                    </span>
+                  </p>
+                  <Link href={OPEN_MANUSCRIPT[role](hit)} className="text-xs font-semibold text-[#4f8f58] hover:underline">
+                    {role === "Student" ? "Open manuscript" : role === "Dean" ? "Open group" : "Open groups"}
+                  </Link>
+                </div>
+                {hit.snippets.map((snippet, index) => (
+                  <p key={index} className="mt-1 text-xs leading-5 text-[#59645d]">
+                    <Highlighted text={snippet} words={search} />
+                  </p>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {loading && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
 
-      {!loading && visible.length === 0 && !error && (
+      {!loading && visible.length === 0 && !error && hits.length === 0 && (
         <p className="mt-12 text-center text-sm text-[#9aa59e]">
           {documents.length === 0
             ? role === "Student"
