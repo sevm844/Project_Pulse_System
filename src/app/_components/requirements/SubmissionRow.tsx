@@ -61,6 +61,9 @@ export default function SubmissionRow({
   const [remarks, setRemarks] = useState("");
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Which file action is running ("open" or "save"), and why the last one failed: shown right under the buttons.
+  const [fileAction, setFileAction] = useState<"open" | "save" | null>(null);
+  const [fileError, setFileError] = useState("");
   // Every group starts closed, like the Title Proposal list: open only the team you are working on.
   const [expanded, setExpanded] = useState(false);
 
@@ -89,12 +92,16 @@ export default function SubmissionRow({
 
   // A PDF or picture opens in a new tab (its type is forced here, so a file can never be shown as a web page); any other kind is saved to the computer.
   async function openFile(current: ApiSubmission) {
+    if (fileAction) return;
+    setFileAction("open");
+    setFileError("");
     const extension = (current.file_name ?? "").split(".").pop()?.toLowerCase() ?? "";
     const type = PREVIEW_TYPES[extension];
 
     try {
       if (!type) {
         await downloadSubmission(current.submission_id, current.file_name);
+        setFileAction(null);
         return;
       }
 
@@ -110,16 +117,24 @@ export default function SubmissionRow({
         throw err;
       }
     } catch (err) {
-      onError(errorMessage(err, "Unable to open the file."));
+      setFileError(errorMessage(err, "Unable to open the file."));
     }
+
+    setFileAction(null);
   }
 
   async function saveFile(current: ApiSubmission) {
+    if (fileAction) return;
+    setFileAction("save");
+    setFileError("");
+
     try {
       await downloadSubmission(current.submission_id, current.file_name);
     } catch (err) {
-      onError(errorMessage(err, "Unable to download the file."));
+      setFileError(errorMessage(err, "Unable to download the file."));
     }
+
+    setFileAction(null);
   }
 
   // Which decision (if any) belongs to this role for this submission right now.
@@ -182,19 +197,21 @@ export default function SubmissionRow({
               {submission?.has_file && (
                 <button
                   type="button"
+                  disabled={fileAction !== null}
                   onClick={() => void openFile(submission)}
-                  className="text-xs font-semibold text-[#4f8f58] hover:underline"
+                  className="text-xs font-semibold text-[#4f8f58] hover:underline disabled:opacity-60"
                 >
-                  Open file
+                  {fileAction === "open" ? "Opening..." : "Open file"}
                 </button>
               )}
               {submission?.has_file && (
                 <button
                   type="button"
+                  disabled={fileAction !== null}
                   onClick={() => void saveFile(submission)}
-                  className="text-xs font-semibold text-[#4f8f58] hover:underline"
+                  className="text-xs font-semibold text-[#4f8f58] hover:underline disabled:opacity-60"
                 >
-                  Download
+                  {fileAction === "save" ? "Downloading..." : "Download"}
                 </button>
               )}
               {submission?.link_url && (
@@ -208,6 +225,12 @@ export default function SubmissionRow({
                 </a>
               )}
             </div>
+          )}
+          {fileAction && <p className="mt-1 text-[11px] text-[#7b877f]">A large file can take up to half a minute. Please wait.</p>}
+          {fileError && (
+            <p role="alert" className="mt-1 text-[11px] text-[#b42318]">
+              {fileError}
+            </p>
           )}
 
           {submission && (submission.submitted_by || submission.notes) && (
