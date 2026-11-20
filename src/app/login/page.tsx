@@ -88,10 +88,6 @@ export default function LoginPage() {
           <div className="relative flex h-[290px] w-[290px] items-center justify-center">
             <div
               aria-hidden="true"
-              className="absolute inset-0 rounded-full border border-[#164832]/10"
-            />
-            <div
-              aria-hidden="true"
               className="absolute inset-[4%] rounded-full bg-[radial-gradient(circle,rgba(47,143,78,0.16),transparent_68%)]"
             />
             <Image
