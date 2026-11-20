@@ -21,14 +21,14 @@ export default function AuthSplit({
         <aside className="hidden flex-col items-center justify-center bg-gradient-to-b from-[#f4fbf5] via-[#e8f6ea] to-[#d3eed9] px-10 py-12 text-center lg:flex">
           <div className="relative flex h-[250px] w-[250px] items-center justify-center">
             <div aria-hidden="true" className="absolute inset-0 rounded-full border border-[#164832]/10" />
-            <div aria-hidden="true" className="absolute inset-[9%] rounded-full bg-white/70 shadow-[0_0_70px_rgba(47,143,78,0.25)]" />
+            <div aria-hidden="true" className="absolute inset-[4%] rounded-full bg-[radial-gradient(circle,rgba(47,143,78,0.16),transparent_68%)]" />
             <Image
               src="/cict-logo.png"
               alt="College of Information and Communications Technology, University of Batangas"
               width={200}
               height={200}
               priority
-              className="relative z-10 h-[200px] w-[200px] drop-shadow-[0_12px_24px_rgba(22,72,50,0.25)]"
+              className="relative z-10 h-[200px] w-[200px]"
             />
           </div>
 

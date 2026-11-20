@@ -92,7 +92,7 @@ export default function LoginPage() {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-[9%] rounded-full bg-white/70 shadow-[0_0_70px_rgba(47,143,78,0.25)]"
+              className="absolute inset-[4%] rounded-full bg-[radial-gradient(circle,rgba(47,143,78,0.16),transparent_68%)]"
             />
             <Image
               src="/cict-logo.png"
@@ -100,7 +100,7 @@ export default function LoginPage() {
               width={230}
               height={230}
               priority
-              className="relative z-10 h-[230px] w-[230px] drop-shadow-[0_12px_24px_rgba(22,72,50,0.25)]"
+              className="relative z-10 h-[230px] w-[230px]"
             />
           </div>
 
