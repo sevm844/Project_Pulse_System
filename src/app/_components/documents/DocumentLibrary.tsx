@@ -47,8 +47,8 @@ type ManuscriptHit = {
 
 const OPEN_MANUSCRIPT: Record<Role, (hit: ManuscriptHit) => string> = {
   Student: () => "/student/manuscript",
-  Adviser: () => "/adviser/assigned-groups",
-  Dean: (hit) => `/dean/projects/${hit.group_id}`,
+  Adviser: () => "/adviser/manuscripts",
+  Dean: () => "/dean/manuscripts",
 };
 
 const MIN_WORDS_SEARCH = 3;
@@ -253,7 +253,7 @@ export default function DocumentLibrary({ role }: { role: Role }) {
                     </span>
                   </p>
                   <Link href={OPEN_MANUSCRIPT[role](hit)} className="text-xs font-semibold text-[#4f8f58] hover:underline">
-                    {role === "Student" ? "Open manuscript" : role === "Dean" ? "Open group" : "Open groups"}
+                    {role === "Student" ? "Open manuscript" : "Open manuscripts"}
                   </Link>
                 </div>
                 {hit.snippets.map((snippet, index) => (

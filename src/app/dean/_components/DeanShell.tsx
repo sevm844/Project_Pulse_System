@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { label: "Defenses", icon: "/nav/defense.png", href: "/dean/defense" },
   { label: "Requirements", icon: "/nav/requirements.png", href: "/dean/requirements" },
   { label: "Documents", icon: "/nav/documents.png", href: "/dean/documents" },
+  { label: "Manuscripts", icon: "/nav/manuscript.png", href: "/dean/manuscripts" },
   { label: "Certificates", icon: "/nav/certificates.png", href: "/dean/certificates" },
   { label: "Administration", icon: "/nav/administration.png", href: "/dean/administration" },
   { label: "Reports", icon: "/nav/reports.png", href: "/dean/reports" },
