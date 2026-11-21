@@ -7,7 +7,7 @@ import { createManuscriptExtensions } from "./extensions";
 
 // A frozen version, shown exactly as typed and divided into pages. It is rendered by the editor itself (read-only)
 // from the saved JSON, never as raw HTML.
-export default function ManuscriptView({ content }: { content: JSONContent | string }) {
+export default function ManuscriptView({ content, heightClass = "max-h-[62vh]" }: { content: JSONContent | string; heightClass?: string }) {
   const [pages, setPages] = useState(1);
   const extensions = useMemo(() => createManuscriptExtensions(setPages), []);
 
@@ -25,7 +25,7 @@ export default function ManuscriptView({ content }: { content: JSONContent | str
 
   return (
     <div>
-      <PagedScroll pages={pages} padding={16} className="max-h-[62vh] bg-[#eef2ee] p-4">
+      <PagedScroll pages={pages} padding={16} className={`${heightClass} bg-[#eef2ee] p-4`}>
         <EditorContent editor={editor} />
       </PagedScroll>
       <p className="border-t border-[#dfe8df] bg-white py-2 text-center text-xs text-[#7b877f]">

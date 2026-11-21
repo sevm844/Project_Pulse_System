@@ -3,7 +3,8 @@
 import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import ManuscriptActivity from "./ManuscriptActivity";
+import { ClockIcon } from "./ClockIcon";
+import ManuscriptTimeline from "./ManuscriptTimeline";
 import ManuscriptCompare from "./ManuscriptCompare";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptReview from "./ManuscriptReview";
@@ -51,6 +52,7 @@ export default function ManuscriptHistory({
   const [open, setOpen] = useState<(ManuscriptVersion & { content: JSONContent }) | null>(null);
   const [opening, setOpening] = useState<number | null>(null);
   const [confirmRestore, setConfirmRestore] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   // Comparing needs two versions; `to` is the one the comparison opens on (the one before it is the older side).
   const [compareTo, setCompareTo] = useState<number | null>(null);
   const [reviewNo, setReviewNo] = useState<number | null>(null);
@@ -118,7 +120,18 @@ export default function ManuscriptHistory({
 
   return (
     <div>
-      {showActivity && <ManuscriptActivity projectId={projectId} />}
+      {showActivity && (
+        <>
+          <button
+            type="button"
+            onClick={() => setTimelineOpen(true)}
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-2.5 text-sm font-semibold text-[#123f2b] hover:bg-[#e8f1ea]"
+          >
+            <ClockIcon /> Version history: every edit since the start, and who worked each day
+          </button>
+          {timelineOpen && <ManuscriptTimeline projectId={projectId} onClose={() => setTimelineOpen(false)} />}
+        </>
+      )}
 
       {error && (
         <p role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">

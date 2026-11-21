@@ -51,11 +51,31 @@ export const saveManuscriptDraft = (content: JSONContent, baseRevision: number) 
 
 // The readable copy of the live draft (what versions, the adviser and the Dean read). `seq` is the last change of the live document it includes;
 // the server ignores a copy that includes fewer changes than the one it already keeps (`stale`).
-export const saveManuscriptSnapshot = (content: JSONContent, seq: number) =>
+// `keep` makes the server keep this copy in the history at once (used just before an older copy replaces the draft).
+export const saveManuscriptSnapshot = (content: JSONContent, seq: number, keep = false) =>
   apiFetch<ManuscriptDraft & { dropped: DroppedContent; content?: JSONContent; stale: boolean }>("/my-manuscript/snapshot", {
     method: "PUT",
-    body: JSON.stringify({ content, seq }),
+    body: JSON.stringify(keep ? { content, seq, keep: true } : { content, seq }),
   });
+
+// The edit history (Google Docs style): the draft now, copies taken while the group typed, and the submitted versions, newest first.
+export type HistoryEntry = {
+  key: string; // "current", "edit-12" or "version-3"
+  kind: "current" | "edit" | "version";
+  at: string;
+  saved_by: string | null;
+  editors: string[];
+  words: number;
+  version_no: number | null;
+  note: string | null;
+};
+
+export const fetchManuscriptHistory = (projectId: number) => apiFetch<{ entries: HistoryEntry[] }>(`/projects/${projectId}/manuscript/history`).then((r) => r.entries);
+
+export const fetchHistoryContent = (projectId: number, entry: HistoryEntry) =>
+  entry.kind === "version"
+    ? apiFetch<{ content: JSONContent }>(`/projects/${projectId}/manuscript/versions/${entry.version_no}`)
+    : apiFetch<{ content: JSONContent }>(`/projects/${projectId}/manuscript/history/${entry.key}`);
 
 export const submitManuscriptVersion = (baseRevision: number, note: string) =>
   apiFetch<ManuscriptVersion>("/my-manuscript/versions", {

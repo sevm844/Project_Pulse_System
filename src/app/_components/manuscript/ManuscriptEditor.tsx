@@ -7,7 +7,9 @@ import { prosemirrorJSONToYDoc } from "@tiptap/y-tiptap";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
+import { ClockIcon } from "./ClockIcon";
 import ManuscriptHistory from "./ManuscriptHistory";
+import ManuscriptTimeline from "./ManuscriptTimeline";
 import SimilarityReports from "./SimilarityReports";
 import PagedScroll from "./PagedScroll";
 import Toolbar from "./Toolbar";
@@ -93,6 +95,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   const saveRef = useRef<() => Promise<void>>(async () => {});
   // True while the whole draft is being replaced by an older version: that is not typing and is not counted.
   const skipActivity = useRef(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const editor = useEditor({
     extensions,
@@ -321,6 +324,8 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   // The whole group's draft is replaced, for everyone editing.
   function useVersionAsDraft(content: JSONContent) {
     if (!editor) return;
+    // What is there now is kept in the history before it is replaced.
+    void saveManuscriptSnapshot(editor.getJSON(), provider.cursor, true).catch(() => {});
     skipActivity.current = true;
     editor.commands.setContent(content, { emitUpdate: true });
     skipActivity.current = false;
@@ -368,6 +373,16 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
             </p>
           )}
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={state === "loading" || projectId === null}
+          onClick={() => setHistoryOpen(true)}
+          title="See every edit since the start, who made it, and go back to an earlier copy"
+          className="flex items-center gap-2 rounded-full border border-[#cfe0d3] bg-white px-4 py-2.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-50"
+        >
+          <ClockIcon /> Version history
+        </button>
         <button
           type="button"
           disabled={state === "loading" || !(info.unsubmitted || state === "dirty" || state === "saving")}
@@ -379,7 +394,12 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
         >
           Submit version
         </button>
+        </div>
       </div>
+
+      {historyOpen && projectId !== null && (
+        <ManuscriptTimeline projectId={projectId} onClose={() => setHistoryOpen(false)} onRestore={useVersionAsDraft} />
+      )}
 
       {state === "error" && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
@@ -468,7 +488,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           <p className="mb-3 mt-1 text-xs text-[#7b877f]">
             Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.
           </p>
-          {projectId !== null && <ManuscriptHistory projectId={projectId} showActivity reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
+          {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
         </aside>
       </div>
 
