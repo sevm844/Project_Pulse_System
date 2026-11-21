@@ -127,7 +127,7 @@ export default function ManuscriptHistory({
             onClick={() => setTimelineOpen(true)}
             className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-2.5 text-sm font-semibold text-[#123f2b] hover:bg-[#e8f1ea]"
           >
-            <ClockIcon /> Version history: every edit since the start, and who worked each day
+            <ClockIcon /> Version history: every edit since the start, and what each one changed
           </button>
           {timelineOpen && <ManuscriptTimeline projectId={projectId} onClose={() => setTimelineOpen(false)} />}
         </>

@@ -335,7 +335,7 @@ const TAG = {
   changed: { text: "Edited", cls: "text-amber-700", bar: "border-amber-400 bg-amber-50/50" },
 } as const;
 
-function ChangeRow({ row, index, active }: { row: DiffRow; index: number; active: boolean }) {
+export function ChangeRow({ row, index, active }: { row: DiffRow; index: number; active: boolean }) {
   if (row.type === "same") return null;
   const tag = TAG[row.type];
 
@@ -356,7 +356,7 @@ const MARK = {
 
 // One paragraph, heading, list item, table row or picture, written the way it reads. `mark` colours all of it
 // (a whole added or removed paragraph); `parts` colours only the reworded pieces inside it.
-function BlockView({ block, mark, parts }: { block: Block; mark?: "add" | "del"; parts?: Part[] }) {
+export function BlockView({ block, mark, parts }: { block: Block; mark?: "add" | "del"; parts?: Part[] }) {
   const body = parts ? (
     parts.map((part, i) => (part.t === "same" ? <span key={i}>{part.text}</span> : <mark key={i} className={MARK[part.t]}>{part.text}</mark>))
   ) : mark ? (
