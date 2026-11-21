@@ -149,6 +149,8 @@ export type GrammarianManuscript = {
   my_open_comments: number;
   // The adviser's decision on the latest version; null if none yet.
   latest_decision?: ManuscriptDecision | null;
+  // Adviser and Dean only: each member and when they last typed in the manuscript (null = not since this was recorded).
+  members?: { user_id: number; name: string; last_active_at: string | null }[];
 };
 
 export const fetchGrammarianManuscripts = () => apiFetch<GrammarianManuscript[]>("/grammarian/manuscripts");

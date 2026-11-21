@@ -3,6 +3,7 @@
 import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import ManuscriptActivity from "./ManuscriptActivity";
 import ManuscriptCompare from "./ManuscriptCompare";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptReview from "./ManuscriptReview";
@@ -27,6 +28,7 @@ export default function ManuscriptHistory({
   onUseAsDraft,
   canReview = false,
   canDecide = false,
+  showActivity = false,
   plainDownload = false,
   group,
 }: {
@@ -37,6 +39,8 @@ export default function ManuscriptHistory({
   canReview?: boolean;
   // Only the group's own adviser approves a version or asks for changes (the Dean and the Grammarian read the result).
   canDecide?: boolean;
+  // The adviser and the Dean also see who in the group worked on it, day by day.
+  showActivity?: boolean;
   // Download as just the manuscript (no title page, contents or page numbers): for the Dean and the Grammarian, who check it elsewhere.
   plainDownload?: boolean;
   // Fills in the title page when a version is downloaded. Students do not pass it: their own group is loaded.
@@ -114,6 +118,8 @@ export default function ManuscriptHistory({
 
   return (
     <div>
+      {showActivity && <ManuscriptActivity projectId={projectId} />}
+
       {error && (
         <p role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
           {error}

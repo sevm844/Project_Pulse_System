@@ -51,6 +51,9 @@ export class CollabProvider {
   private awarenessDirty = true;
   private lastCompact = 0;
   private online = new Set<number>();
+  // What I typed since the last time it was sent (for the adviser's and the Dean's daily activity view).
+  private typed = { added: 0, removed: 0, minutes: 0 };
+  private lastTypedMinute = 0;
 
   constructor(
     private readonly handlers: {
@@ -83,6 +86,19 @@ export class CollabProvider {
     } catch (err) {
       this.fail(err);
       throw err;
+    }
+  }
+
+  /** My own typing: characters added and removed by one edit. Counts the minute too (one per minute I am typing). */
+  recordActivity(added: number, removed: number) {
+    if (added + removed === 0) return;
+    this.typed.added += added;
+    this.typed.removed += removed;
+    const minute = Math.floor(Date.now() / 60000);
+
+    if (minute > this.lastTypedMinute) {
+      this.lastTypedMinute = minute;
+      this.typed.minutes += 1;
     }
   }
 
@@ -172,10 +188,13 @@ export class CollabProvider {
 
     const sending = this.queue.length ? Y.mergeUpdates(this.queue) : null;
     this.queue = [];
+    // The typing is reported together with the changes it produced (the server ignores numbers that come alone).
+    const activity = sending && this.typed.added + this.typed.removed > 0 ? this.typed : null;
+    if (activity) this.typed = { added: 0, removed: 0, minutes: 0 };
     const awarenessDue = this.awarenessDirty || Date.now() - this.lastAwarenessSent > AWARENESS_REFRESH_MS;
 
     try {
-      const answer = await this.exchange(sending ? [sending] : [], awarenessDue);
+      const answer = await this.exchange(sending ? [sending] : [], awarenessDue, activity);
       this.failures = 0;
       this.setStatus(this.queue.length === 0 && answer.cursor >= answer.head ? "synced" : "syncing");
 
@@ -188,6 +207,11 @@ export class CollabProvider {
     } catch (err) {
       // Nothing is lost: what could not be sent goes back to the front of the queue.
       if (sending) this.queue.unshift(sending);
+      if (activity) {
+        this.typed.added += activity.added;
+        this.typed.removed += activity.removed;
+        this.typed.minutes += activity.minutes;
+      }
       this.fail(err);
       return;
     }
@@ -196,11 +220,16 @@ export class CollabProvider {
   }
 
   /** One round trip to the server. */
-  private async exchange(updates: Uint8Array[], withAwareness: boolean): Promise<SyncAnswer> {
+  private async exchange(
+    updates: Uint8Array[],
+    withAwareness: boolean,
+    activity: { added: number; removed: number; minutes: number } | null = null,
+  ): Promise<SyncAnswer> {
     this.inFlight = true;
 
     try {
       const body: Record<string, unknown> = { since: this.cursor, updates: updates.map(toBase64) };
+      if (activity) body.activity = activity;
 
       if (withAwareness && this.awareness.getLocalState() !== null) {
         body.awareness = toBase64(encodeAwarenessUpdate(this.awareness, [this.doc.clientID]));

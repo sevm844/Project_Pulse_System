@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { describeLastActive } from "./ManuscriptActivity";
 import ManuscriptHistory from "./ManuscriptHistory";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
@@ -123,10 +124,25 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
                       </span>
                     )}
                   </p>
+                  {(group.members ?? []).length > 0 && (
+                    <p className="mt-1 text-xs text-[#59645d]">
+                      Last typed:{" "}
+                      {(group.members ?? []).map((member, index) => {
+                        const last = describeLastActive(member.last_active_at);
+
+                        return (
+                          <span key={member.user_id}>
+                            {index > 0 && " · "}
+                            {member.name} <span className={last.quiet ? "font-semibold text-amber-700" : ""}>{last.text}</span>
+                          </span>
+                        );
+                      })}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
-                  disabled={group.versions === 0}
+                  disabled={group.versions === 0 && (group.members ?? []).length === 0}
                   onClick={() => setOpenId(open ? null : group.project_id)}
                   aria-expanded={open}
                   className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50"
@@ -137,7 +153,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
 
               {open && (
                 <div className="mt-4 rounded-xl border border-[#edf2ec] bg-white p-4">
-                  <ManuscriptHistory projectId={group.project_id} canReview canDecide={role === "Adviser"} plainDownload reloadKey={reloadKey} />
+                  <ManuscriptHistory projectId={group.project_id} canReview canDecide={role === "Adviser"} showActivity plainDownload reloadKey={reloadKey} />
                 </div>
               )}
             </li>

@@ -2,6 +2,7 @@
 
 import { isChangeOrigin } from "@tiptap/extension-collaboration";
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
+import { ReplaceStep } from "@tiptap/pm/transform";
 import { prosemirrorJSONToYDoc } from "@tiptap/y-tiptap";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
@@ -90,6 +91,8 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   const failed = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRef = useRef<() => Promise<void>>(async () => {});
+  // True while the whole draft is being replaced by an older version: that is not typing and is not counted.
+  const skipActivity = useRef(false);
 
   const editor = useEditor({
     extensions,
@@ -100,6 +103,20 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
     onUpdate: ({ transaction }) => {
       // What another member typed is saved by their browser; only my own typing starts a save here.
       if (isChangeOrigin(transaction)) return;
+
+      // Count what this member typed or deleted (the adviser's and the Dean's daily activity view).
+      if (!skipActivity.current) {
+        let added = 0;
+        let removed = 0;
+
+        for (const step of transaction.steps) {
+          if (step instanceof ReplaceStep) {
+            added += step.slice.size;
+            removed += step.to - step.from;
+          }
+        }
+        provider.recordActivity(added, removed);
+      }
 
       dirty.current = true;
       failed.current = false;
@@ -304,7 +321,9 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   // The whole group's draft is replaced, for everyone editing.
   function useVersionAsDraft(content: JSONContent) {
     if (!editor) return;
+    skipActivity.current = true;
     editor.commands.setContent(content, { emitUpdate: true });
+    skipActivity.current = false;
   }
 
   if (loadError) {
@@ -342,6 +361,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           <p role="status" className={`mt-0.5 text-xs ${state === "error" ? "text-red-600" : collabStatus === "offline" ? "text-amber-700" : "text-[#7b877f]"}`}>
             {status}
           </p>
+          <p className="mt-0.5 text-[11px] text-[#9aa59e]">Your adviser and the Dean can see when each member works on the manuscript.</p>
           {others.length > 0 && (
             <p className="mt-0.5 text-xs font-semibold text-[#1f7a4a]">
               {others.join(", ")} {others.length === 1 ? "is" : "are"} also editing now

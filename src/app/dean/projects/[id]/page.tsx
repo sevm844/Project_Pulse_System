@@ -222,7 +222,7 @@ export default function DeanProjectProfilePage() {
             <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
             <div className="mt-4 space-y-4">
               <SimilarityReports projectId={group.project.project_id} canUpload />
-              <ManuscriptHistory projectId={group.project.project_id} canReview plainDownload group={group} />
+              <ManuscriptHistory projectId={group.project.project_id} canReview showActivity plainDownload group={group} />
             </div>
           </Card>
         )}
