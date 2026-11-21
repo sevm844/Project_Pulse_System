@@ -10,7 +10,7 @@ import {
   NO_TITLE_YET,
   type ApiGroup,
 } from "../../_lib/groups";
-import { getStoredUserEmail } from "../../_utils/authStorage";
+import { getStoredToken, getStoredUserEmail } from "../../_utils/authStorage";
 import Card from "../_components/Card";
 
 const cardClass =
@@ -48,10 +48,16 @@ export default function StudentSetupPage() {
 
   useEffect(() => {
     queueMicrotask(() => {
+      // Signed out (for example after Log out and the browser's Back button): go to the login page.
+      if (!getStoredToken()) {
+        router.replace("/login");
+        return;
+      }
+
       setStudentEmail(getStoredUserEmail());
       void loadGroup();
     });
-  }, [loadGroup]);
+  }, [loadGroup, router]);
 
   // While the student waits, look again every 30 seconds, so the invitation shows up without pressing anything.
   useEffect(() => {
