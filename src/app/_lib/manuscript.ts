@@ -10,8 +10,19 @@ export type ManuscriptVersion = {
   // Everyone who saved the draft since the previous version.
   editors: string[];
   saved_at: string | null;
+  // The adviser's decision on this version; null until they decide.
+  review?: ManuscriptReviewResult | null;
   content?: JSONContent;
 };
+
+export type ManuscriptDecision = "Approved" | "Needs Changes";
+export type ManuscriptReviewResult = { decision: ManuscriptDecision; note: string | null; decided_by: string; decided_at: string | null };
+
+export const decideManuscriptVersion = (projectId: number, versionNo: number, decision: ManuscriptDecision, note: string) =>
+  apiFetch<ManuscriptReviewResult>(`/projects/${projectId}/manuscript/versions/${versionNo}/review`, {
+    method: "PUT",
+    body: JSON.stringify({ decision, note: note.trim() || undefined }),
+  });
 
 // The group's private draft.
 export type ManuscriptDraft = {
@@ -128,6 +139,8 @@ export type GrammarianManuscript = {
   latest_saved_at: string | null;
   open_comments: number;
   my_open_comments: number;
+  // The adviser's decision on the latest version; null if none yet.
+  latest_decision?: ManuscriptDecision | null;
 };
 
 export const fetchGrammarianManuscripts = () => apiFetch<GrammarianManuscript[]>("/grammarian/manuscripts");

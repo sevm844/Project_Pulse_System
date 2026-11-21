@@ -9,10 +9,12 @@ import ManuscriptReview from "./ManuscriptReview";
 import ManuscriptView from "./ManuscriptView";
 import { errorMessage, type ApiGroup } from "../../_lib/groups";
 import {
+  decideManuscriptVersion,
   fetchManuscriptComments,
   fetchManuscriptVersion,
   fetchManuscriptVersions,
   type ManuscriptComment,
+  type ManuscriptDecision,
   type ManuscriptVersion,
 } from "../../_lib/manuscript";
 import { formatDateTime } from "../../_lib/requirements";
@@ -24,6 +26,7 @@ export default function ManuscriptHistory({
   reloadKey = 0,
   onUseAsDraft,
   canReview = false,
+  canDecide = false,
   plainDownload = false,
   group,
 }: {
@@ -32,6 +35,8 @@ export default function ManuscriptHistory({
   onUseAsDraft?: (content: JSONContent, versionNo: number) => void;
   // The adviser and the Dean write review comments; students only read and reply.
   canReview?: boolean;
+  // Only the group's own adviser approves a version or asks for changes (the Dean and the Grammarian read the result).
+  canDecide?: boolean;
   // Download as just the manuscript (no title page, contents or page numbers): for the Dean and the Grammarian, who check it elsewhere.
   plainDownload?: boolean;
   // Fills in the title page when a version is downloaded. Students do not pass it: their own group is loaded.
@@ -47,6 +52,11 @@ export default function ManuscriptHistory({
   const [reviewNo, setReviewNo] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [comments, setComments] = useState<ManuscriptComment[]>([]);
+  // The version the adviser is deciding on, what they chose and the note for the group.
+  const [deciding, setDeciding] = useState<{ no: number; decision: ManuscriptDecision } | null>(null);
+  const [decisionNote, setDecisionNote] = useState("");
+  const [decisionBusy, setDecisionBusy] = useState(false);
+  const [decisionError, setDecisionError] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -81,6 +91,23 @@ export default function ManuscriptHistory({
     }
 
     setOpening(null);
+  }
+
+  async function saveDecision() {
+    if (!deciding) return;
+    setDecisionBusy(true);
+    setDecisionError("");
+
+    try {
+      await decideManuscriptVersion(projectId, deciding.no, deciding.decision, decisionNote);
+      setDeciding(null);
+      setDecisionNote("");
+      await load();
+    } catch (err) {
+      setDecisionError(errorMessage(err, "Unable to save your decision."));
+    }
+
+    setDecisionBusy(false);
   }
 
   if (versions === null && !error) return <p className="text-sm text-[#7b877f]">Loading versions...</p>;
@@ -127,6 +154,73 @@ export default function ManuscriptHistory({
                     {others.length > 0 && ` · also edited by ${others.join(", ")}`}
                   </p>
                   {version.note && <p className="mt-1.5 break-words text-xs italic text-[#59645d]">&ldquo;{version.note}&rdquo;</p>}
+                  {version.review && (
+                    <p className={`mt-1.5 break-words text-xs font-semibold ${version.review.decision === "Approved" ? "text-emerald-700" : "text-amber-700"}`}>
+                      {version.review.decision === "Approved" ? "Approved" : "Changes requested"} by {version.review.decided_by}
+                      {version.review.decided_at ? ` · ${formatDateTime(version.review.decided_at)}` : ""}
+                      {version.review.note && <span className="block font-normal italic text-[#59645d]">&ldquo;{version.review.note}&rdquo;</span>}
+                    </p>
+                  )}
+                  {canDecide && deciding?.no !== version.version_no && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeciding({ no: version.version_no, decision: "Approved" });
+                          setDecisionNote("");
+                          setDecisionError("");
+                        }}
+                        className="rounded-full border border-emerald-300 px-3 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-50"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeciding({ no: version.version_no, decision: "Needs Changes" });
+                          setDecisionNote("");
+                          setDecisionError("");
+                        }}
+                        className="rounded-full border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+                      >
+                        Needs changes
+                      </button>
+                    </div>
+                  )}
+                  {canDecide && deciding?.no === version.version_no && (
+                    <div className="mt-2 rounded-lg border border-[#dfe8df] bg-[#f8faf7] p-3">
+                      <p className="text-xs font-semibold text-[#203028]">
+                        {deciding.decision === "Approved" ? `Approve version ${version.version_no}?` : `What should the group change in version ${version.version_no}?`}
+                      </p>
+                      <textarea
+                        value={decisionNote}
+                        onChange={(event) => setDecisionNote(event.target.value)}
+                        rows={2}
+                        maxLength={500}
+                        aria-label="Note for the group"
+                        placeholder={deciding.decision === "Approved" ? "A note for the group (optional)" : "Required: tell the group what to fix"}
+                        className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none focus:border-[#123f2b]"
+                      />
+                      {decisionError && (
+                        <p role="alert" className="mt-2 text-xs text-red-600">
+                          {decisionError}
+                        </p>
+                      )}
+                      <div className="mt-2 flex justify-end gap-2">
+                        <button type="button" onClick={() => setDeciding(null)} className="rounded-full border border-[#dfe8df] px-3 py-1 text-xs font-semibold hover:bg-white">
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={decisionBusy}
+                          onClick={() => void saveDecision()}
+                          className="rounded-full bg-[#123f2b] px-4 py-1 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60"
+                        >
+                          {decisionBusy ? "Saving..." : deciding.decision === "Approved" ? "Approve" : "Send to the group"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {mine.length > 0 && (
                     <p className={`mt-1.5 text-[11px] font-semibold ${openCount > 0 ? "text-amber-700" : "text-emerald-700"}`}>
                       {openCount > 0 ? `${openCount} open ${openCount === 1 ? "comment" : "comments"}` : `${mine.length} ${mine.length === 1 ? "comment" : "comments"} resolved`}

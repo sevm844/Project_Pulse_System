@@ -112,6 +112,11 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
                     {group.versions === 0
                       ? "No version submitted yet"
                       : `${group.versions} ${group.versions === 1 ? "version" : "versions"} · latest is Version ${group.latest_version_no}, ${formatDateTime(group.latest_saved_at)}`}
+                    {group.latest_decision && (
+                      <span className={`ml-2 font-semibold ${group.latest_decision === "Approved" ? "text-emerald-700" : "text-amber-700"}`}>
+                        {group.latest_decision === "Approved" ? "Latest version approved" : "Changes requested on the latest version"}
+                      </span>
+                    )}
                     {group.open_comments > 0 && (
                       <span className="ml-2 font-semibold text-amber-700">
                         {group.open_comments} open {group.open_comments === 1 ? "comment" : "comments"}
@@ -132,7 +137,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
 
               {open && (
                 <div className="mt-4 rounded-xl border border-[#edf2ec] bg-white p-4">
-                  <ManuscriptHistory projectId={group.project_id} canReview plainDownload reloadKey={reloadKey} />
+                  <ManuscriptHistory projectId={group.project_id} canReview canDecide={role === "Adviser"} plainDownload reloadKey={reloadKey} />
                 </div>
               )}
             </li>

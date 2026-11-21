@@ -11,7 +11,7 @@ import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { importWordFile } from "../../_lib/manuscriptImport";
-import { fetchMyManuscript, saveManuscriptDraft, submitManuscriptVersion, type DroppedContent } from "../../_lib/manuscript";
+import { fetchMyManuscript, saveManuscriptDraft, submitManuscriptVersion, type DroppedContent, type ManuscriptReviewResult } from "../../_lib/manuscript";
 import { formatDateTime } from "../../_lib/requirements";
 
 type SaveState = "loading" | "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -43,6 +43,8 @@ export default function ManuscriptEditor() {
   const [importing, setImporting] = useState(false);
   const [importNote, setImportNote] = useState("");
   const [latestVersion, setLatestVersion] = useState(0);
+  // The adviser's decision on the latest submitted version.
+  const [latestReview, setLatestReview] = useState<ManuscriptReviewResult | null>(null);
   const wordFileRef = useRef<HTMLInputElement>(null);
   const extensions = useMemo(() => createManuscriptExtensions(setPages), []);
 
@@ -141,6 +143,7 @@ export default function ManuscriptEditor() {
         revision.current = loaded.draft_revision;
         setProjectId(loaded.project_id);
         setLatestVersion(loaded.versions.reduce((highest, item) => Math.max(highest, item.version_no), 0));
+        setLatestReview([...loaded.versions].sort((a, b) => b.version_no - a.version_no)[0]?.review ?? null);
         setInfo({ savedAt: loaded.saved_at, savedBy: loaded.saved_by, unsubmitted: loaded.has_unsubmitted_changes });
         setState("saved");
       })
@@ -193,6 +196,7 @@ export default function ManuscriptEditor() {
 
       const frozen = await submitManuscriptVersion(revision.current, note);
       setLatestVersion((current) => Math.max(current, frozen.version_no ?? current + 1));
+      setLatestReview(null);
       setInfo((current) => ({ ...current, unsubmitted: false }));
       setReloadKey((key) => key + 1);
       setSubmitOpen(false);
@@ -276,12 +280,16 @@ export default function ManuscriptEditor() {
         <div>
           <h2 className="text-xl font-semibold text-[#203028]">Manuscript</h2>
           {state !== "loading" && (
-            <p className={`mt-0.5 text-xs font-semibold ${latestVersion === 0 || hasNewerChanges ? "text-amber-700" : "text-[#1f7a4a]"}`}>
+            <p className={`mt-0.5 text-xs font-semibold ${latestVersion === 0 || hasNewerChanges || latestReview?.decision === "Needs Changes" ? "text-amber-700" : "text-[#1f7a4a]"}`}>
               {latestVersion === 0
                 ? "Draft · nothing submitted to your adviser yet"
-                : hasNewerChanges
-                  ? `Version ${latestVersion} submitted · your draft has newer changes your adviser cannot see yet`
-                  : `Version ${latestVersion} submitted · your draft matches it`}
+                : `Version ${latestVersion} ${
+                    latestReview?.decision === "Approved"
+                      ? "approved by your adviser"
+                      : latestReview?.decision === "Needs Changes"
+                        ? "needs changes: see your adviser's note in Versions"
+                        : "submitted, waiting for your adviser"
+                  }${hasNewerChanges ? " · your draft has newer changes your adviser cannot see yet" : ""}`}
             </p>
           )}
           <p role="status" className={`mt-0.5 text-xs ${state === "error" || state === "conflict" ? "text-red-600" : "text-[#7b877f]"}`}>

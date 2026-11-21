@@ -601,7 +601,7 @@ export default function AssignedGroupsPage() {
                     {manuscriptOpen === group.group_id && (
                       <div className="mt-3 space-y-4 rounded-xl bg-[#fbfdfb] p-4">
                         <SimilarityReports projectId={group.project.project_id} />
-                        <ManuscriptHistory projectId={group.project.project_id} canReview group={group} />
+                        <ManuscriptHistory projectId={group.project.project_id} canReview canDecide group={group} />
                       </div>
                     )}
                     <div className="mt-3">
