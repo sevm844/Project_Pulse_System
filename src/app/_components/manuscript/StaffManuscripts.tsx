@@ -12,7 +12,7 @@ type Row = GrammarianManuscript;
 
 // The Manuscripts page of the Adviser and the Dean: every group they may read, newest submission first. Groups that have not submitted
 // a version yet are tucked away (there is nothing to read) and can be shown. Open a group to read its versions, compare them and comment.
-export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" }) {
+export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | "Panelist" }) {
   const [groups, setGroups] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -51,7 +51,9 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
       <p className="max-w-2xl text-sm leading-6 text-[#7b877f]">
         {role === "Adviser"
           ? "The manuscripts your groups have submitted. Open a group to read a version, compare two versions, and comment on the exact words."
-          : "The manuscripts submitted by every group. Open a group to read a version, compare two versions, and comment on the exact words."}
+          : role === "Panelist"
+            ? "The manuscripts of the groups you will panel. Open a group to read the versions it submitted and compare them before the defense."
+            : "The manuscripts submitted by every group. Open a group to read a version, compare two versions, and comment on the exact words."}
       </p>
 
       <div className="flex flex-wrap items-center gap-3 border-b border-[#edf2ec] pb-3">
@@ -61,6 +63,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
           onChange={(event) => setSearch(event.target.value)}
           aria-label="Search groups"
           placeholder={role === "Adviser" ? "Search by group, course or section" : "Search by group, course, section or adviser"}
+
           className="min-w-0 flex-1 rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8] sm:max-w-xs"
         />
         <label className="flex items-center gap-2 text-xs text-[#59645d]">
@@ -89,7 +92,9 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
       {groups && shown.length === 0 && !error && (
         <p className="py-10 text-center text-sm text-[#9aa59e]">
           {groups.length === 0
-            ? "No groups yet."
+            ? role === "Panelist"
+              ? "No group yet. A group appears here once you are put on the panel of its defense."
+              : "No groups yet."
             : groups.every((g) => g.versions === 0) && !showEmpty
               ? "No group has submitted a manuscript version yet. A version appears here as soon as a group submits one."
               : "No group matches."}
@@ -153,7 +158,14 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" })
 
               {open && (
                 <div className="mt-4 rounded-xl border border-[#edf2ec] bg-white p-4">
-                  <ManuscriptHistory projectId={group.project_id} canReview canDecide={role === "Adviser"} showActivity plainDownload reloadKey={reloadKey} />
+                  <ManuscriptHistory
+                    projectId={group.project_id}
+                    canReview={role !== "Panelist"}
+                    canDecide={role === "Adviser"}
+                    showActivity={role !== "Panelist"}
+                    plainDownload
+                    reloadKey={reloadKey}
+                  />
                 </div>
               )}
             </li>

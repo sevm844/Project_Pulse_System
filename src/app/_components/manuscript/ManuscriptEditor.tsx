@@ -361,7 +361,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           <p role="status" className={`mt-0.5 text-xs ${state === "error" ? "text-red-600" : collabStatus === "offline" ? "text-amber-700" : "text-[#7b877f]"}`}>
             {status}
           </p>
-          <p className="mt-0.5 text-[11px] text-[#9aa59e]">Your adviser and the Dean can see when each member works on the manuscript.</p>
+          <p className="mt-0.5 text-[11px] text-[#9aa59e]">Everyone in your group, your adviser and the Dean can see when each member works on the manuscript.</p>
           {others.length > 0 && (
             <p className="mt-0.5 text-xs font-semibold text-[#1f7a4a]">
               {others.join(", ")} {others.length === 1 ? "is" : "are"} also editing now
@@ -468,7 +468,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           <p className="mb-3 mt-1 text-xs text-[#7b877f]">
             Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.
           </p>
-          {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
+          {projectId !== null && <ManuscriptHistory projectId={projectId} showActivity reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
         </aside>
       </div>
 
