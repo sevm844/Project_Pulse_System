@@ -95,3 +95,29 @@ body {
 .manuscript-sheet .rv-open { background: #fef3c7; border-bottom: 2px solid #fbbf24; }
 .manuscript-sheet .rv-resolved { background: #ecfdf5; border-bottom: 1px solid #6ee7b7; }
 .manuscript-sheet .rv-active { background: #fcd34d; box-shadow: 0 0 0 1px #f59e0b; }
+
+/* Live co-editing: the other members' cursors (a thin line with the name on top) and their selections. */
+.collaboration-carets__caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid;
+  border-right: 0;
+  word-break: normal;
+  pointer-events: none;
+}
+.collaboration-carets__label {
+  position: absolute;
+  top: -1.55em;
+  left: -2px;
+  padding: 1px 6px;
+  border-radius: 4px 4px 4px 0;
+  color: #fff;
+  font-family: var(--font-plus-jakarta-sans), Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  user-select: none;
+}

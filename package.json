@@ -10,6 +10,8 @@
     "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
+    "@tiptap/extension-collaboration": "^3.33.1",
+    "@tiptap/extension-collaboration-caret": "^3.33.1",
     "@tiptap/extension-highlight": "^3.33.1",
     "@tiptap/extension-image": "^3.33.1",
     "@tiptap/extension-subscript": "^3.33.1",
@@ -20,12 +22,15 @@
     "@tiptap/pm": "^3.33.1",
     "@tiptap/react": "^3.33.1",
     "@tiptap/starter-kit": "^3.33.1",
+    "@tiptap/y-tiptap": "^3.3.1",
     "docx": "^9.15.3",
     "mammoth": "^1.13.0",
     "next": "^16.4.5",
     "pdfmake": "^0.3.14",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.33"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

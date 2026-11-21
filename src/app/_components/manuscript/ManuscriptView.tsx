@@ -7,7 +7,7 @@ import { createManuscriptExtensions } from "./extensions";
 
 // A frozen version, shown exactly as typed and divided into pages. It is rendered by the editor itself (read-only)
 // from the saved JSON, never as raw HTML.
-export default function ManuscriptView({ content }: { content: JSONContent }) {
+export default function ManuscriptView({ content }: { content: JSONContent | string }) {
   const [pages, setPages] = useState(1);
   const extensions = useMemo(() => createManuscriptExtensions(setPages), []);
 

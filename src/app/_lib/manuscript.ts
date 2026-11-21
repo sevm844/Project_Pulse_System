@@ -49,6 +49,14 @@ export const saveManuscriptDraft = (content: JSONContent, baseRevision: number) 
     body: JSON.stringify({ content, base_revision: baseRevision }),
   });
 
+// The readable copy of the live draft (what versions, the adviser and the Dean read). `seq` is the last change of the live document it includes;
+// the server ignores a copy that includes fewer changes than the one it already keeps (`stale`).
+export const saveManuscriptSnapshot = (content: JSONContent, seq: number) =>
+  apiFetch<ManuscriptDraft & { dropped: DroppedContent; content?: JSONContent; stale: boolean }>("/my-manuscript/snapshot", {
+    method: "PUT",
+    body: JSON.stringify({ content, seq }),
+  });
+
 export const submitManuscriptVersion = (baseRevision: number, note: string) =>
   apiFetch<ManuscriptVersion>("/my-manuscript/versions", {
     method: "POST",

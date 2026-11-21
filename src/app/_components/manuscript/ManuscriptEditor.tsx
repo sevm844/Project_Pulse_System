@@ -1,7 +1,10 @@
 "use client";
 
+import { isChangeOrigin } from "@tiptap/extension-collaboration";
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
+import { prosemirrorJSONToYDoc } from "@tiptap/y-tiptap";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as Y from "yjs";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptHistory from "./ManuscriptHistory";
 import SimilarityReports from "./SimilarityReports";
@@ -9,19 +12,42 @@ import PagedScroll from "./PagedScroll";
 import Toolbar from "./Toolbar";
 import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
+import { CollabProvider, cursorColor, type CollabStatus } from "../../_lib/collab";
+import { getStoredUserName, getStoredUserUid } from "../../_utils/authStorage";
 import { errorMessage } from "../../_lib/groups";
 import { importWordFile } from "../../_lib/manuscriptImport";
-import { fetchMyManuscript, saveManuscriptDraft, submitManuscriptVersion, type DroppedContent, type ManuscriptReviewResult } from "../../_lib/manuscript";
+import { fetchMyManuscript, saveManuscriptSnapshot, submitManuscriptVersion, type DroppedContent, type ManuscriptReviewResult } from "../../_lib/manuscript";
 import { formatDateTime } from "../../_lib/requirements";
 
-type SaveState = "loading" | "saved" | "dirty" | "saving" | "error" | "conflict";
+type SaveState = "loading" | "saved" | "dirty" | "saving" | "error";
 
 const AUTOSAVE_MS = 1500;
 const wordCount = (text: string) => (text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) ?? []).length;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// The student's manuscript: type here, it saves by itself, and "Submit version" freezes a copy for the adviser and Dean.
+// The group's manuscript, written together. Everyone in the group edits the same live document: changes travel through the server about once a second
+// and are merged in each browser, so two people typing at once never overwrite each other, and each sees the other's cursor. The server also keeps a
+// readable copy of the draft (saved here a moment after typing stops) that "Submit version", the adviser and the Dean use.
 export default function ManuscriptEditor() {
+  const [provider, setProvider] = useState<CollabProvider | null>(null);
+  const [collabStatus, setCollabStatus] = useState<CollabStatus>("connecting");
+  const [fatal, setFatal] = useState("");
+
+  useEffect(() => {
+    const created = new CollabProvider({ onStatus: setCollabStatus, onFatal: setFatal });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProvider(created);
+
+    return () => created.destroy();
+  }, []);
+
+  if (fatal) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">{fatal}</p>;
+  if (!provider) return <p className="text-sm text-[#7b877f]">Opening the manuscript...</p>;
+
+  return <ManuscriptEditorBody provider={provider} collabStatus={collabStatus} />;
+}
+
+function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProvider; collabStatus: CollabStatus }) {
   const [state, setState] = useState<SaveState>("loading");
   const [message, setMessage] = useState("");
   const [projectId, setProjectId] = useState<number | null>(null);
@@ -45,13 +71,21 @@ export default function ManuscriptEditor() {
   const [latestVersion, setLatestVersion] = useState(0);
   // The adviser's decision on the latest submitted version.
   const [latestReview, setLatestReview] = useState<ManuscriptReviewResult | null>(null);
+  // The other members editing right now.
+  const [others, setOthers] = useState<string[]>([]);
   const wordFileRef = useRef<HTMLInputElement>(null);
-  const extensions = useMemo(() => createManuscriptExtensions(setPages), []);
+
+  // Who I am on the screen: the name and the colour of my cursor (the same colour on every screen).
+  const user = useMemo(() => {
+    const userId = Number(getStoredUserUid() ?? 0);
+
+    return { name: getStoredUserName() || "A member", userId, color: cursorColor(userId) };
+  }, []);
+  const extensions = useMemo(() => createManuscriptExtensions(setPages, { provider, user }), [provider, user]);
 
   const revision = useRef(0);
   const dirty = useRef(false);
   const saving = useRef(false);
-  const conflict = useRef(false);
   // The last save was refused: wait for the next edit or the Try again button instead of retrying in a loop.
   const failed = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,24 +93,25 @@ export default function ManuscriptEditor() {
 
   const editor = useEditor({
     extensions,
-    content: "",
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
     editable: false,
     editorProps: { attributes: { class: "manuscript-sheet", "aria-label": "Manuscript" } },
-    onUpdate: () => {
+    onUpdate: ({ transaction }) => {
+      // What another member typed is saved by their browser; only my own typing starts a save here.
+      if (isChangeOrigin(transaction)) return;
+
       dirty.current = true;
       failed.current = false;
-      if (conflict.current) return;
-
       setState("dirty");
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => void saveRef.current(), AUTOSAVE_MS);
     },
   });
 
+  // The readable copy of the draft (what versions, the adviser and the Dean read). It says which change of the live document it includes.
   const save = useCallback(async () => {
-    if (!editor || conflict.current) return;
+    if (!editor) return;
     if (saving.current) return;
     if (!dirty.current) return;
 
@@ -85,10 +120,13 @@ export default function ManuscriptEditor() {
     setState("saving");
 
     try {
-      const result = await saveManuscriptDraft(editor.getJSON(), revision.current);
+      const result = await saveManuscriptSnapshot(editor.getJSON(), provider.cursor);
       revision.current = result.draft_revision;
       setInfo({ savedAt: result.saved_at, savedBy: result.saved_by, unsubmitted: result.has_unsubmitted_changes });
       setMessage("");
+
+      // A copy that is behind what the server already has is ignored: try again after this browser has caught up.
+      if (result.stale) dirty.current = true;
       setState(dirty.current ? "dirty" : "saved");
 
       // Pasted pictures from other sites, odd links and styles cannot be kept. Show what is really saved.
@@ -103,25 +141,18 @@ export default function ManuscriptEditor() {
       }
     } catch (err) {
       dirty.current = true;
-
-      if (err instanceof ApiError && err.status === 409) {
-        conflict.current = true;
-        setMessage(err.message);
-        setState("conflict");
-      } else {
-        failed.current = true;
-        setMessage(errorMessage(err, "Your last changes could not be saved."));
-        setState("error");
-      }
+      failed.current = true;
+      setMessage(errorMessage(err, "Your last changes could not be saved."));
+      setState("error");
     }
 
     saving.current = false;
 
     // More typing arrived while saving: save again soon (unless something is wrong).
-    if (dirty.current && !conflict.current && !failed.current && !timer.current) {
+    if (dirty.current && !failed.current && !timer.current) {
       timer.current = setTimeout(() => void saveRef.current(), AUTOSAVE_MS);
     }
-  }, [editor]);
+  }, [editor, provider]);
 
   useEffect(() => {
     saveRef.current = async () => {
@@ -130,15 +161,19 @@ export default function ManuscriptEditor() {
     };
   }, [save]);
 
-  // Load the draft once the editor exists.
+  // Open the manuscript: read the saved draft, join the live document (the first member to open it adds the starting text) and let people type.
   useEffect(() => {
     if (!editor) return;
     let cancelled = false;
 
-    fetchMyManuscript()
-      .then((loaded) => {
+    (async () => {
+      try {
+        const loaded = await fetchMyManuscript();
         if (cancelled) return;
-        editor.commands.setContent(loaded.draft, { emitUpdate: false });
+
+        await provider.start(() => Y.encodeStateAsUpdate(prosemirrorJSONToYDoc(editor.schema, loaded.draft, "default")));
+        if (cancelled) return;
+
         editor.setEditable(true, false);
         revision.current = loaded.draft_revision;
         setProjectId(loaded.project_id);
@@ -146,20 +181,33 @@ export default function ManuscriptEditor() {
         setLatestReview([...loaded.versions].sort((a, b) => b.version_no - a.version_no)[0]?.review ?? null);
         setInfo({ savedAt: loaded.saved_at, savedBy: loaded.saved_by, unsubmitted: loaded.has_unsubmitted_changes });
         setState("saved");
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) setLoadError(errorMessage(err, "Unable to open the manuscript."));
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [editor]);
+  }, [editor, provider]);
+
+  // Who else is editing: read from the shared cursors.
+  useEffect(() => {
+    const read = () => {
+      const names = [...provider.awareness.getStates().entries()]
+        .filter(([clientId, value]) => clientId !== provider.doc.clientID && (value as { user?: { name?: string } }).user?.name)
+        .map(([, value]) => (value as { user: { name: string } }).user.name);
+      setOthers([...new Set(names)]);
+    };
+    provider.awareness.on("change", read);
+
+    return () => provider.awareness.off("change", read);
+  }, [provider]);
 
   // Do not lose typing when the page is closed or left.
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
-      if (dirty.current || saving.current) event.preventDefault();
+      if (dirty.current || saving.current || provider.pending) event.preventDefault();
     };
     window.addEventListener("beforeunload", warn);
 
@@ -168,19 +216,23 @@ export default function ManuscriptEditor() {
       if (timer.current) clearTimeout(timer.current);
       if (dirty.current) void saveRef.current();
     };
-  }, []);
+  }, [provider]);
 
-  // Save what is typed now and wait until the server has it.
+  // Be in step with the others and have the server hold the readable copy of exactly this text.
   async function flush() {
     if (timer.current) {
       clearTimeout(timer.current);
       timer.current = null;
     }
     while (saving.current) await sleep(100);
-    if (dirty.current) await save();
+    if (!(await provider.flush())) return false;
+
+    dirty.current = true;
+    failed.current = false;
+    await save();
     while (saving.current) await sleep(100);
 
-    return !dirty.current && !conflict.current;
+    return !dirty.current;
   }
 
   async function submit() {
@@ -188,13 +240,24 @@ export default function ManuscriptEditor() {
     setSubmitError("");
 
     try {
-      if (!(await flush())) {
-        setSubmitError("Your latest changes are not saved yet. Fix the problem shown above, then try again.");
-        setSubmitting(false);
-        return;
+      let frozen = null;
+
+      // Another member may save between my copy and my submit: when that happens, take a new copy and try again.
+      for (let attempt = 0; attempt < 3 && !frozen; attempt += 1) {
+        if (!(await flush())) {
+          setSubmitError("Your latest changes are not saved yet. Fix the problem shown above, then try again.");
+          setSubmitting(false);
+          return;
+        }
+
+        try {
+          frozen = await submitManuscriptVersion(revision.current, note);
+        } catch (err) {
+          if (!(err instanceof ApiError && err.status === 409 && attempt < 2)) throw err;
+        }
       }
 
-      const frozen = await submitManuscriptVersion(revision.current, note);
+      if (!frozen) throw new Error("Unable to submit this version.");
       setLatestVersion((current) => Math.max(current, frozen.version_no ?? current + 1));
       setLatestReview(null);
       setInfo((current) => ({ ...current, unsubmitted: false }));
@@ -208,27 +271,10 @@ export default function ManuscriptEditor() {
     setSubmitting(false);
   }
 
-  async function reloadLatest() {
-    if (!editor) return;
-
-    try {
-      const latest = await fetchMyManuscript();
-      editor.commands.setContent(latest.draft, { emitUpdate: false });
-      revision.current = latest.draft_revision;
-      dirty.current = false;
-      conflict.current = false;
-      setInfo({ savedAt: latest.saved_at, savedBy: latest.saved_by, unsubmitted: latest.has_unsubmitted_changes });
-      setMessage("");
-      setState("saved");
-    } catch (err) {
-      setMessage(errorMessage(err, "Unable to reload the manuscript."));
-    }
-  }
-
   // A Word file is added at the end of the draft (nothing is replaced; Undo takes it back). It saves like any other typing.
   async function addWordFile(file: File | undefined) {
     if (wordFileRef.current) wordFileRef.current.value = "";
-    if (!file || !editor || conflict.current) return;
+    if (!file || !editor) return;
 
     setImporting(true);
     setImportNote("");
@@ -255,8 +301,9 @@ export default function ManuscriptEditor() {
     setImporting(false);
   }
 
+  // The whole group's draft is replaced, for everyone editing.
   function useVersionAsDraft(content: JSONContent) {
-    if (!editor || conflict.current) return;
+    if (!editor) return;
     editor.commands.setContent(content, { emitUpdate: true });
   }
 
@@ -268,10 +315,10 @@ export default function ManuscriptEditor() {
 
   const status =
     state === "loading" ? "Opening..." :
+    collabStatus === "offline" ? "No connection: your changes are kept here and are sent when it is back" :
     state === "saving" ? "Saving..." :
     state === "dirty" ? "Unsaved changes..." :
     state === "error" ? "Not saved" :
-    state === "conflict" ? "Out of date" :
     info.savedAt ? `All changes saved · ${info.savedBy ?? "someone"}, ${formatDateTime(info.savedAt)}` : "Nothing typed yet";
 
   return (
@@ -292,13 +339,18 @@ export default function ManuscriptEditor() {
                   }${hasNewerChanges ? " · your draft has newer changes your adviser cannot see yet" : ""}`}
             </p>
           )}
-          <p role="status" className={`mt-0.5 text-xs ${state === "error" || state === "conflict" ? "text-red-600" : "text-[#7b877f]"}`}>
+          <p role="status" className={`mt-0.5 text-xs ${state === "error" ? "text-red-600" : collabStatus === "offline" ? "text-amber-700" : "text-[#7b877f]"}`}>
             {status}
           </p>
+          {others.length > 0 && (
+            <p className="mt-0.5 text-xs font-semibold text-[#1f7a4a]">
+              {others.join(", ")} {others.length === 1 ? "is" : "are"} also editing now
+            </p>
+          )}
         </div>
         <button
           type="button"
-          disabled={state === "loading" || state === "conflict" || !(info.unsubmitted || state === "dirty" || state === "saving")}
+          disabled={state === "loading" || !(info.unsubmitted || state === "dirty" || state === "saving")}
           onClick={() => {
             setSubmitError("");
             setSubmitOpen(true);
@@ -308,15 +360,6 @@ export default function ManuscriptEditor() {
           Submit version
         </button>
       </div>
-
-      {state === "conflict" && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-          <p>{message} What you typed since then has not been saved.</p>
-          <button type="button" onClick={() => void reloadLatest()} className="rounded-full bg-amber-700 px-4 py-1.5 font-semibold text-white hover:bg-amber-800">
-            Load the latest draft
-          </button>
-        </div>
-      )}
 
       {state === "error" && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
@@ -377,7 +420,7 @@ export default function ManuscriptEditor() {
             <span className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                disabled={!editor || state === "loading" || state === "conflict" || importing}
+                disabled={!editor || state === "loading" || importing}
                 onClick={() => wordFileRef.current?.click()}
                 className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50"
               >

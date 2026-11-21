@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import SecretaryShell from "../_components/SecretaryShell";
 import CertificateList from "../../_components/certificates/CertificateList";
 import OutputList from "../../_components/records/OutputList";
-import { apiFetch } from "../../_lib/api";
+import { apiFetch, downloadProjectDocuments } from "../../_lib/api";
 import { fetchFinalRecords, matchesSearch, type ApiFinalRecord } from "../../_lib/finalOutputs";
 import { errorMessage } from "../../_lib/groups";
 
@@ -126,6 +126,14 @@ export default function GroupFoldersPage() {
                     </p>
 
                     <OutputList outputs={record.outputs} onReceived={() => void load()} onError={setError} />
+
+                    <button
+                      type="button"
+                      onClick={() => void downloadProjectDocuments(record.project_id, record.group_name).catch((err) => setError(errorMessage(err, "There are no documents to download for this group yet.")))}
+                      className="text-xs font-semibold text-[#4f8f58] hover:underline"
+                    >
+                      Download this group&apos;s documents (ZIP)
+                    </button>
 
                     <div className="border-t border-[#edf2ec] pt-4">
                       <CertificateList projectId={record.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />

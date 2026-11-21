@@ -161,6 +161,11 @@ export async function downloadSubmission(
   saveBlob(await fetchPrivateFile(path), fileName);
 }
 
+// Every current file of a group's submissions in one ZIP (the server checks each file with the same rule as a single download).
+export async function downloadProjectDocuments(projectId: number, groupName: string) {
+  saveBlob(await fetchPrivateFile(`/projects/${projectId}/documents.zip`), `${groupName} - documents.zip`);
+}
+
 // The file an adviser attached to an assignment (a template or guide).
 export async function downloadRequirementAttachment(requirementId: number, fileName: string | null) {
   saveBlob(await fetchPrivateFile(`/requirements/${requirementId}/attachment`), fileName);

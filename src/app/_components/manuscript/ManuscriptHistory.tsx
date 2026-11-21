@@ -318,7 +318,7 @@ export default function ManuscriptHistory({
                 {confirmRestore ? (
                   <>
                     <p className="mr-auto text-xs text-[#59645d]">
-                      Your current draft will be replaced. Submit it as a version first if you want to keep it.
+                      The draft your whole group is editing will be replaced, for everyone. Submit it as a version first if you want to keep it.
                     </p>
                     <button type="button" onClick={() => setConfirmRestore(false)} className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
                       Cancel

@@ -1,4 +1,7 @@
 import { Extension, Node, mergeAttributes } from "@tiptap/react";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import type { CollabProvider } from "../../_lib/collab";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Subscript from "@tiptap/extension-subscript";
@@ -84,8 +87,27 @@ const BlockFormat = Extension.create({
 });
 
 // Everything a manuscript can hold. The server accepts exactly this set and nothing else (ManuscriptContent.php).
-export const createManuscriptExtensions = (onPages?: (pages: number) => void) => [
+// The other members' cursor: a thin coloured line with the person's name on top, and their selection tinted in the same colour.
+const renderCaret = (user: Record<string, string>) => {
+  const caret = document.createElement("span");
+  caret.classList.add("collaboration-carets__caret");
+  caret.style.borderColor = user.color;
+  const label = document.createElement("div");
+  label.classList.add("collaboration-carets__label");
+  label.style.backgroundColor = user.color;
+  label.textContent = user.name;
+  caret.appendChild(label);
+
+  return caret;
+};
+
+export type CollabSetup = { provider: CollabProvider; user: { name: string; color: string; userId: number } };
+
+// `collab` is given only to the student's own editor: the document then lives in a shared Yjs document (with its own undo), and the other
+// members' cursors show. Every read-only view (versions, review, preview) builds the same editor without it.
+export const createManuscriptExtensions = (onPages?: (pages: number) => void, collab?: CollabSetup) => [
   StarterKit.configure({
+    ...(collab ? { undoRedo: false as const } : {}),
     heading: { levels: [1, 2, 3] },
     link: { openOnClick: false, autolink: true, defaultProtocol: "https", protocols: ["mailto"] },
   }),
@@ -102,4 +124,15 @@ export const createManuscriptExtensions = (onPages?: (pages: number) => void) =>
   PageBreak,
   BlockFormat,
   Pagination.configure({ onPages }),
+  ...(collab
+    ? [
+        Collaboration.configure({ document: collab.provider.doc }),
+        CollaborationCaret.configure({
+          provider: { awareness: collab.provider.awareness },
+          user: collab.user,
+          render: renderCaret,
+          selectionRender: (user: Record<string, string>) => ({ nodeName: "span", class: "collaboration-carets__selection", style: `background-color: ${user.color}26` }),
+        }),
+      ]
+    : []),
 ];

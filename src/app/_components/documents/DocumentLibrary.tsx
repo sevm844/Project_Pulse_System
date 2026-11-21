@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
+import DocxPreview from "./DocxPreview";
 import VersionHistory from "../requirements/VersionHistory";
-import { apiFetch, downloadSubmission, previewSubmission } from "../../_lib/api";
+import { apiFetch, downloadProjectDocuments, downloadSubmission, previewSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate, toneDot, type StatusTone } from "../../_lib/requirements";
 
 type ApiDocument = {
   submission_id: number;
+  project_id: number;
   requirement_id: number;
   requirement_title: string;
   stage: string;
@@ -89,7 +91,13 @@ const statusLook: Record<ApiDocument["status"], { label: string; tone: StatusTon
   Approved: { label: "Approved", tone: "done" },
 };
 
-const MIME: Record<string, string> = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg" };
+const MIME: Record<string, string> = {
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+};
 
 const selectClass =
   "rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs text-[#59645d] outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -102,6 +110,8 @@ export default function DocumentLibrary({ role }: { role: Role }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [assignment, setAssignment] = useState("All");
+  const [group, setGroup] = useState("All");
+  const [zipping, setZipping] = useState(false);
   const [hits, setHits] = useState<ManuscriptHit[]>([]);
   const [hitsLoading, setHitsLoading] = useState(false);
   const [viewing, setViewing] = useState<{ document: ApiDocument; url: string } | null>(null);
@@ -177,6 +187,11 @@ export default function DocumentLibrary({ role }: { role: Role }) {
     [documents],
   );
 
+  const groups = useMemo(
+    () => [...new Map(documents.map((item) => [item.project_id, item.group_name])).entries()].sort((a, b) => a[1].localeCompare(b[1])),
+    [documents],
+  );
+
   const visible = documents.filter((item) => {
     const needle = search.trim().toLowerCase();
     const haystack = `${item.file_name ?? ""} ${item.link_url ?? ""} ${item.requirement_title} ${item.group_name}`.toLowerCase();
@@ -184,9 +199,27 @@ export default function DocumentLibrary({ role }: { role: Role }) {
     return (
       (!needle || haystack.includes(needle)) &&
       (status === "All" || statusLook[item.status].label === status) &&
-      (assignment === "All" || item.requirement_title === assignment)
+      (assignment === "All" || item.requirement_title === assignment) &&
+      (group === "All" || String(item.project_id) === group)
     );
   });
+
+  // One group's files can be taken as a ZIP: always for a student, and for staff once a single group is chosen (or the search leaves only one).
+  const shownProjects = [...new Set(visible.map((item) => item.project_id))];
+  const zipProject = shownProjects.length === 1 && visible.some((item) => item.has_file || item.link_url) ? visible[0] : null;
+
+  async function downloadAll(item: ApiDocument) {
+    setZipping(true);
+    setError("");
+
+    try {
+      await downloadProjectDocuments(item.project_id, item.group_name);
+    } catch (err) {
+      setError(errorMessage(err, "Unable to download the documents."));
+    }
+
+    setZipping(false);
+  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -208,6 +241,17 @@ export default function DocumentLibrary({ role }: { role: Role }) {
           className="min-w-0 flex-1 rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8] sm:max-w-xs"
         />
 
+        {role !== "Student" && groups.length > 1 && (
+          <select value={group} onChange={(event) => setGroup(event.target.value)} aria-label="Filter by group" className={selectClass}>
+            <option value="All">All groups</option>
+            {groups.map(([id, name]) => (
+              <option key={id} value={String(id)}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+
         <select value={assignment} onChange={(event) => setAssignment(event.target.value)} aria-label="Filter by assignment" className={selectClass}>
           <option value="All">All assignments</option>
           {assignments.map((item) => (
@@ -228,6 +272,16 @@ export default function DocumentLibrary({ role }: { role: Role }) {
         <p className="ml-auto text-xs text-[#9aa59e]">
           {visible.length} document{visible.length === 1 ? "" : "s"}
         </p>
+        {zipProject && (
+          <button
+            type="button"
+            disabled={zipping}
+            onClick={() => void downloadAll(zipProject)}
+            className="text-xs font-semibold text-[#4f8f58] hover:underline disabled:opacity-60"
+          >
+            {zipping ? "Preparing the ZIP..." : role === "Student" ? "Download everything (ZIP)" : `Download ${zipProject.group_name} (ZIP)`}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -361,6 +415,8 @@ export default function DocumentLibrary({ role }: { role: Role }) {
               <div className="min-h-0 flex-1 bg-[#f3f7f1]">
                 {viewing.document.file_type === "pdf" ? (
                   <iframe src={viewing.url} title={viewing.document.file_name ?? "Document"} className="h-full w-full" />
+                ) : viewing.document.file_type === "docx" ? (
+                  <DocxPreview url={viewing.url} name={viewing.document.file_name ?? "document.docx"} />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={viewing.url} alt={viewing.document.file_name ?? "Document"} className="mx-auto h-full max-w-full object-contain" />
