@@ -15,6 +15,7 @@ import {
 } from "../../_lib/requirements";
 import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 import RequirementDialog from "./RequirementDialog";
+import FormsShelf from "./FormsShelf";
 import RequirementsExplorer from "./RequirementsExplorer";
 import SubmissionRow, { filterRows, rowFacts } from "./SubmissionRow";
 import GroupFilterBar, {
@@ -412,6 +413,26 @@ function FlatRequirements({ role }: { role: StaffRole }) {
 
 // Adviser and Dean browse course > section > assignment > group. The Dean's Secretary and Grammarian keep their flat queue.
 export default function StaffRequirements({ role }: { role: StaffRole }) {
-  if (role === "Adviser" || role === "Dean") return <RequirementsExplorer role={role} />;
-  return <FlatRequirements role={role} />;
+  const [showForms, setShowForms] = useState(false);
+
+  if (role !== "Adviser" && role !== "Dean") return <FlatRequirements role={role} />;
+
+  const tab = (active: boolean) =>
+    `-mb-px border-b-2 pb-3 text-sm transition ${
+      active ? "border-[#123f2b] font-semibold text-[#203028]" : "border-transparent text-[#7b877f] hover:text-[#203028]"
+    }`;
+
+  return (
+    <div>
+      <div className="mx-auto mb-6 flex max-w-4xl gap-6 border-b border-[#edf2ec]" role="tablist">
+        <button type="button" role="tab" aria-selected={!showForms} onClick={() => setShowForms(false)} className={tab(!showForms)}>
+          Assignments
+        </button>
+        <button type="button" role="tab" aria-selected={showForms} onClick={() => setShowForms(true)} className={tab(showForms)}>
+          Forms
+        </button>
+      </div>
+      {showForms ? <FormsShelf role={role} /> : <RequirementsExplorer role={role} />}
+    </div>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import StudentShell from "../_components/StudentShell";
+import FormsShelf from "../../_components/requirements/FormsShelf";
 import StudentTitleProposals from "../../_components/groups/StudentTitleProposals";
 import VersionHistory from "../../_components/requirements/VersionHistory";
 import { apiFetch, downloadRequirementAttachment, downloadSubmission } from "../../_lib/api";
@@ -46,6 +47,7 @@ export default function StudentRequirementsPage() {
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("todo");
   const [openId, setOpenId] = useState<number | null>(null);
+  const [showForms, setShowForms] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -76,7 +78,7 @@ export default function StudentRequirementsPage() {
     return result;
   }, [requirements]);
 
-  const visible = requirements.filter((requirement) => tabOf(requirement) === tab);
+  const visible = showForms ? [] : requirements.filter((requirement) => tabOf(requirement) === tab);
 
   const byStage = REQUIREMENT_STAGES.map((stage) => ({
     stage,
@@ -99,10 +101,13 @@ export default function StudentRequirementsPage() {
               key={id}
               type="button"
               role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
+              aria-selected={!showForms && tab === id}
+              onClick={() => {
+                setShowForms(false);
+                setTab(id);
+              }}
               className={`-mb-px border-b-2 pb-3 transition ${
-                tab === id
+                !showForms && tab === id
                   ? "border-[#123f2b] font-semibold text-[#203028]"
                   : "border-transparent text-[#7b877f] hover:text-[#203028]"
               }`}
@@ -111,17 +116,36 @@ export default function StudentRequirementsPage() {
               <span className="ml-1.5 text-xs text-[#9aa59e]">{counts[id]}</span>
             </button>
           ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={showForms}
+            onClick={() => setShowForms(true)}
+            className={`-mb-px border-b-2 pb-3 transition ${
+              showForms
+                ? "border-[#123f2b] font-semibold text-[#203028]"
+                : "border-transparent text-[#7b877f] hover:text-[#203028]"
+            }`}
+          >
+            Forms
+          </button>
         </div>
 
-        {error && (
+        {showForms && (
+          <div className="mt-6 [&>div]:max-w-none">
+            <FormsShelf role="Student" />
+          </div>
+        )}
+
+        {error && !showForms && (
           <p role="alert" className="mt-5 text-sm text-[#b42318]">
             {error}
           </p>
         )}
 
-        {loading && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
+        {loading && !showForms && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
 
-        {!loading && byStage.length === 0 && (
+        {!loading && !showForms && byStage.length === 0 && (
           <p className="mt-10 text-center text-sm text-[#9aa59e]">
             {tab === "todo"
               ? "Nothing left to do. You are all caught up."

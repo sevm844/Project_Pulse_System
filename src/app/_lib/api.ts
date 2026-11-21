@@ -171,6 +171,11 @@ export async function downloadRequirementAttachment(requirementId: number, fileN
   saveBlob(await fetchPrivateFile(`/requirements/${requirementId}/attachment`), fileName);
 }
 
+// A form from the Forms shelf (Requirements page).
+export async function downloadSharedForm(formId: number, fileName: string | null) {
+  saveBlob(await fetchPrivateFile(`/forms/${formId}/file`), fileName);
+}
+
 // A temporary address for showing a submitted PDF or image in the browser. Call URL.revokeObjectURL when done.
 export async function previewSubmission(submissionId: number, mimeType: string): Promise<string> {
   const blob = await fetchPrivateFile(`/submissions/${submissionId}/download`);
