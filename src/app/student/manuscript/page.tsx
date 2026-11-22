@@ -1,12 +1,12 @@
 "use client";
 
 import StudentShell from "../_components/StudentShell";
-import ManuscriptEditor from "../../_components/manuscript/ManuscriptEditor";
+import ManuscriptHome from "../../_components/manuscript/ManuscriptHome";
 
 export default function StudentManuscriptPage() {
   return (
     <StudentShell title="Manuscript">
-      <ManuscriptEditor />
+      <ManuscriptHome />
     </StudentShell>
   );
 }

@@ -4,6 +4,7 @@ import type { JSONContent } from "@tiptap/react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ClockIcon } from "./ClockIcon";
+import SharedDocuments from "./SharedDocuments";
 import ManuscriptTimeline from "./ManuscriptTimeline";
 import ManuscriptCompare from "./ManuscriptCompare";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
@@ -130,6 +131,7 @@ export default function ManuscriptHistory({
             <ClockIcon /> Version history: every edit since the start, and what each one changed
           </button>
           {timelineOpen && <ManuscriptTimeline projectId={projectId} onClose={() => setTimelineOpen(false)} />}
+          <SharedDocuments projectId={projectId} />
         </>
       )}
 
