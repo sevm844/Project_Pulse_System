@@ -17,6 +17,7 @@ export default function SidebarToggle({
     <button
       type="button"
       onClick={onClick}
+      data-sidebar-toggle
       aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       className={

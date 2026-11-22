@@ -121,3 +121,8 @@ body {
   white-space: nowrap;
   user-select: none;
 }
+
+/* The sidebar toggle sits half over the page, so it must never show above a pop-up or a full-screen view (any page). */
+body:has([aria-modal="true"], .fixed.inset-0) [data-sidebar-toggle] {
+  visibility: hidden;
+}
