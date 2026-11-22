@@ -30,14 +30,19 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 9 | Open **Chat** and send a message to your group or your adviser. | | |
 | 10 | Open **Notifications**. Can you tell what each one is about, and open it? | | |
 | 11 | Open **My Project** and find your team members (the **Team** tab). Then open the **Timeline** tab: find what is overdue, what is due soon, and where "Today" sits. | | |
-| 12 | (Student 1) Open **Manuscript**. Write or paste a few paragraphs, make a chapter title and a heading, change a font and size, and add a table. Watch the **page count** under the page and the **page bubble** ("3 of 7") beside the scrollbar while you scroll. | | |
-| 13 | (Student 1) Look at the **Versions** list. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
+| 12 | (Student 1) Open **Manuscript** (it opens on a home screen: press **Capstone manuscript** under **Official manuscript**). Write or paste a few paragraphs, make a chapter title and a heading, change a font and size, and add a table. Watch the **page count** under the page and the **page bubble** ("3 of 7") beside the scrollbar while you scroll. | | |
+| 13 | (Student 1) Press the **Versions** button at the top of the manuscript. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
 | 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
 | 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
 | 16 | (Student 1) After your adviser gives the **Letter for interview** (under **Requirements, Title Proposal**): replace the [square brackets] with your own details, press **Save letter**, then **Download PDF** and open it. Does it look like a letter you could print and sign? | | |
 | 17 | (Student 7) After the Grammarian has issued the certificate, open **My Project → Overview**: find the **Certificate of Editing/Originality**, press **View**, then download it as **PDF**. (Student 1 has none yet: the card should not appear.) | | |
-| 18 | (Student 1) After the Dean uploads a similarity report for UAT Alpha, open **Manuscript**. Find the report at the top of the right-hand column, view it and download it. Is it clear what to do next? | | |
-| 19 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 18 | (Student 1) After the Dean uploads a similarity report for UAT Alpha, open **Manuscript**. Press **Versions**; the report is at the top of that panel. View it and download it. Is it clear what to do next? | | |
+| 19 | Open **Requirements** and press the **Forms** tab. Read who each form is from, then download one and open it. You should see the Dean's forms and your own adviser's forms, and no Upload button. | | |
+| 20 | (Student 1) Open **Manuscript**, press **Blank document**, change its name and type a few lines. Press **← All documents** and find it in the list. | | |
+| 21 | (Students 1 and 2 at the same time, on two computers) Open the same blank document and type together. Do you see each other's coloured cursor and the line "<name> is also editing now"? Is all the text kept on both screens? | | |
+| 22 | In that document press **Share** and tick your adviser. Ask the adviser to find it (Manuscripts → Show versions → **Other documents shared with you**). Then untick it. | | |
+| 23 | In the official manuscript try the **zoom** box and **Full screen** under the page (press Esc to leave). Does the page count stay the same? | | |
+| 24 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -64,6 +69,8 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 15 | (Adviser 2) In **Assigned Groups**, once the certificate for UAT Delta is issued, find it under that group and open it. Does UAT Alpha (Adviser 1) show none? | | |
 | 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 | 17 | (Adviser who has UAT Gamma) Open **Defenses**. After the panelists evaluate UAT Gamma, record the Proposal Defense result yourself. | | |
+| 18 | Open **Requirements → Forms**, press **Upload a form** and put up a form for your students (for example the letter for interview). A student of yours should see it; a student of another adviser should not. | | |
+| 19 | Open **Manuscripts → Show versions** on a group. If its students shared a document with you, find **Other documents shared with you** and press **Read** (it is read only). | | |
 
 ---
 
@@ -89,6 +96,7 @@ Email: `uat-dean@uat.test`
 | 14 | When the Grammarian has issued the certificate, find it under **Certificates** as "Passed: certificate received". Open it, then download it as PDF and Word. If she returned the group instead, read her remarks and send it again. | | |
 | 15 | Open **Defenses → Schedule defense** and read the note about the order. Try to schedule an **Alpha Defense** for UAT Gamma before its Proposal Defense is passed: it should be refused with a clear message. | | |
 | 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 17 | Open **Requirements → Forms**, press **Upload a form** and put up a form for every student (for example the milestone monitoring form). Check that a student can download it, then remove it. | | |
 
 ---
 
