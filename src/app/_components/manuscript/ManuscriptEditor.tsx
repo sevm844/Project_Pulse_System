@@ -11,7 +11,9 @@ import { ClockIcon } from "./ClockIcon";
 import ManuscriptHistory from "./ManuscriptHistory";
 import ManuscriptTimeline from "./ManuscriptTimeline";
 import SimilarityReports from "./SimilarityReports";
+import { createPortal } from "react-dom";
 import PagedScroll from "./PagedScroll";
+import ZoomBox from "./ZoomBox";
 import Toolbar from "./Toolbar";
 import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
@@ -25,6 +27,7 @@ import { formatDateTime } from "../../_lib/requirements";
 type SaveState = "loading" | "saved" | "dirty" | "saving" | "error";
 
 const AUTOSAVE_MS = 1500;
+const ZOOMS = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2];
 const wordCount = (text: string) => (text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) ?? []).length;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -98,6 +101,18 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   const [historyOpen, setHistoryOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [full, setFull] = useState(false);
+  const [zoom, setZoom] = useState(1);
+
+  // The zoom is a per-browser convenience.
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem("pulse-manuscript-zoom"));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (ZOOMS.includes(saved)) setZoom(saved);
+    } catch {
+      /* the zoom just starts at 100% */
+    }
+  }, []);
 
   const editor = useEditor({
     extensions,
@@ -470,10 +485,14 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
       )}
 
       <div className="grid items-start gap-4">
+        {(() => {
+        const card = (
         <div className={full ? "fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#eef2ee]" : "overflow-hidden rounded-2xl border border-[#dfe8df] bg-[#eef2ee]"}>
           {editor && <Toolbar editor={editor} onError={setToolbarError} />}
-          <PagedScroll pages={pages} outerClassName={full ? "flex min-h-0 flex-1 flex-col" : ""} className={full ? "min-h-0 flex-1 p-5" : "max-h-[82vh] p-5"}>
-            <EditorContent editor={editor} />
+          <PagedScroll pages={pages} zoom={zoom} outerClassName={full ? "flex min-h-0 flex-1 flex-col" : ""} className={full ? "min-h-0 flex-1 p-5" : "max-h-[82vh] p-5"}>
+            <ZoomBox zoom={zoom}>
+              <EditorContent editor={editor} />
+            </ZoomBox>
           </PagedScroll>
           <div className="flex items-center justify-between border-t border-[#dfe8df] bg-white px-4 py-2 text-xs text-[#59645d]">
             <span>{pages} {pages === 1 ? "page" : "pages"}</span>
@@ -499,6 +518,26 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
               </button>
             </span>
             <span className="flex items-center gap-3">
+              <select
+                aria-label="Zoom"
+                value={zoom}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  setZoom(next);
+                  try {
+                    localStorage.setItem("pulse-manuscript-zoom", String(next));
+                  } catch {
+                    /* not saved, still applied */
+                  }
+                }}
+                className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-2 py-1 text-xs font-semibold text-[#123f2b]"
+              >
+                {ZOOMS.map((value) => (
+                  <option key={value} value={value}>
+                    {Math.round(value * 100)}%
+                  </option>
+                ))}
+              </select>
               <button type="button" onClick={() => setFull((value) => !value)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
                 {full ? "Exit full screen" : "Full screen"}
               </button>
@@ -506,6 +545,10 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
             </span>
           </div>
         </div>
+        );
+
+        return full ? createPortal(card, document.body) : card;
+      })()}
 
         {versionsOpen && (
           <div className="fixed inset-0 z-40 flex justify-end bg-black/30" onClick={() => setVersionsOpen(false)}>

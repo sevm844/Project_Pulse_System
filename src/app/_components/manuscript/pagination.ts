@@ -31,13 +31,20 @@ function breakElement(height: number) {
 // as if no page break had been drawn: the heights of the breaks already on screen are taken back out.
 function measure(view: EditorView): Unit[] {
   const root = view.dom as HTMLElement;
-  const rootTop = root.getBoundingClientRect().top + root.clientTop;
+  const rootBox = root.getBoundingClientRect();
+  const rootTop = rootBox.top + root.clientTop;
+  // The page can be zoomed on screen (ZoomBox): measure in the page's own pixels.
+  const scale = root.offsetWidth > 0 && rootBox.width > 0 ? rootBox.width / root.offsetWidth : 1;
   const spacers = [...root.querySelectorAll<HTMLElement>(".pg-break")].map((el) => {
     const r = el.getBoundingClientRect();
-    return { top: r.top - rootTop, height: r.height };
+    return { top: (r.top - rootTop) / scale, height: r.height / scale };
   });
   const shiftAt = (y: number) => spacers.reduce((sum, s) => (s.top + s.height <= y + 0.5 ? sum + s.height : sum), 0);
-  const natural = (clientY: number) => clientY - rootTop - shiftAt(clientY - rootTop);
+  const natural = (clientY: number) => {
+    const y = (clientY - rootTop) / scale;
+
+    return y - shiftAt(y);
+  };
 
   const units: Unit[] = [];
 

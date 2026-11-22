@@ -9,6 +9,7 @@ export default function PagedScroll({
   pages,
   className = "",
   padding = 20,
+  zoom = 1,
   outerClassName = "",
   children,
 }: {
@@ -17,6 +18,8 @@ export default function PagedScroll({
   outerClassName?: string;
   // Space between the top of the scrolling area and the first page, so the page number lines up.
   padding?: number;
+  // The page is shown bigger or smaller (ZoomBox).
+  zoom?: number;
   children: ReactNode;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
@@ -30,13 +33,13 @@ export default function PagedScroll({
     const room = el.scrollHeight - el.clientHeight;
     const fraction = room > 0 ? el.scrollTop / room : 0;
     // The page under the middle of the screen.
-    const middle = el.scrollTop + el.clientHeight / 2 - padding;
+    const middle = (el.scrollTop + el.clientHeight / 2 - padding) / zoom;
     const page = Math.min(pages, Math.max(1, Math.floor(middle / (PAGE_HEIGHT + GAP)) + 1));
 
     setBubble({ page, top: fraction * Math.max(0, el.clientHeight - 34), show: true });
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setBubble((current) => ({ ...current, show: false })), 1400);
-  }, [pages, padding]);
+  }, [pages, padding, zoom]);
 
   useEffect(
     () => () => {
