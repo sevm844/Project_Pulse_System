@@ -96,6 +96,8 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   // True while the whole draft is being replaced by an older version: that is not typing and is not counted.
   const skipActivity = useRef(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [full, setFull] = useState(false);
 
   const editor = useEditor({
     extensions,
@@ -331,6 +333,15 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
     skipActivity.current = false;
   }
 
+  // Escape leaves full screen.
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setFull(false);
+    window.addEventListener("keydown", onKey);
+
+    return () => window.removeEventListener("keydown", onKey);
+  }, [full]);
+
   if (loadError) {
     return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</p>;
   }
@@ -374,6 +385,15 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={state === "loading" || projectId === null}
+          onClick={() => setVersionsOpen(true)}
+          title="The versions you submitted, compare them, read comments and similarity reports"
+          className="rounded-full border border-[#cfe0d3] bg-white px-4 py-2.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-50"
+        >
+          Versions{latestVersion > 0 ? ` (${latestVersion})` : ""}
+        </button>
         <button
           type="button"
           disabled={state === "loading" || projectId === null}
@@ -449,10 +469,10 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
         </p>
       )}
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-[#eef2ee]">
+      <div className="grid items-start gap-4">
+        <div className={full ? "fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#eef2ee]" : "overflow-hidden rounded-2xl border border-[#dfe8df] bg-[#eef2ee]"}>
           {editor && <Toolbar editor={editor} onError={setToolbarError} />}
-          <PagedScroll pages={pages} className="max-h-[75vh] p-5">
+          <PagedScroll pages={pages} outerClassName={full ? "flex min-h-0 flex-1 flex-col" : ""} className={full ? "min-h-0 flex-1 p-5" : "max-h-[82vh] p-5"}>
             <EditorContent editor={editor} />
           </PagedScroll>
           <div className="flex items-center justify-between border-t border-[#dfe8df] bg-white px-4 py-2 text-xs text-[#59645d]">
@@ -478,18 +498,30 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
                 Export PDF / Word
               </button>
             </span>
-            <span>{editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words</span>
+            <span className="flex items-center gap-3">
+              <button type="button" onClick={() => setFull((value) => !value)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
+                {full ? "Exit full screen" : "Full screen"}
+              </button>
+              {editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words
+            </span>
           </div>
         </div>
 
-        <aside className="space-y-4 rounded-2xl border border-[#dfe8df] bg-white p-4">
-          {projectId !== null && <SimilarityReports projectId={projectId} reloadKey={reloadKey} />}
-          <h3 className="text-base font-semibold text-[#203028]">Versions</h3>
-          <p className="mb-3 mt-1 text-xs text-[#7b877f]">
-            Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.
-          </p>
-          {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
-        </aside>
+        {versionsOpen && (
+          <div className="fixed inset-0 z-40 flex justify-end bg-black/30" onClick={() => setVersionsOpen(false)}>
+            <aside role="dialog" aria-modal="true" aria-label="Versions" onClick={(event) => event.stopPropagation()} className="h-full w-full max-w-md space-y-4 overflow-y-auto bg-white p-5 shadow-2xl">
+              <button type="button" onClick={() => setVersionsOpen(false)} className="float-right rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
+                Close
+              </button>
+              {projectId !== null && <SimilarityReports projectId={projectId} reloadKey={reloadKey} />}
+              <h3 className="text-base font-semibold text-[#203028]">Versions</h3>
+              <p className="mb-3 mt-1 text-xs text-[#7b877f]">
+                Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.
+              </p>
+              {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
+            </aside>
+          </div>
+        )}
       </div>
 
       {exportOpen && editor && projectId !== null && (

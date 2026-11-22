@@ -38,6 +38,7 @@ export default function DocumentEditor({ documentId }: { documentId: number }) {
   const [importing, setImporting] = useState(false);
   const [removedNote, setRemovedNote] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [full, setFull] = useState(false);
   const wordFileRef = useRef<HTMLInputElement>(null);
 
   const revision = useRef(0);
@@ -202,6 +203,15 @@ export default function DocumentEditor({ documentId }: { documentId: number }) {
     }
   }
 
+  // Escape leaves full screen.
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setFull(false);
+    window.addEventListener("keydown", onKey);
+
+    return () => window.removeEventListener("keydown", onKey);
+  }, [full]);
+
   if (loadError) {
     return (
       <div className="space-y-3">
@@ -294,9 +304,9 @@ export default function DocumentEditor({ documentId }: { documentId: number }) {
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">{toolbarError}</p>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-[#eef2ee]">
+      <div className={full ? "fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#eef2ee]" : "overflow-hidden rounded-2xl border border-[#dfe8df] bg-[#eef2ee]"}>
         {editor && <Toolbar editor={editor} onError={setToolbarError} />}
-        <PagedScroll pages={pages} className="max-h-[75vh] p-5">
+        <PagedScroll pages={pages} outerClassName={full ? "flex min-h-0 flex-1 flex-col" : ""} className={full ? "min-h-0 flex-1 p-5" : "max-h-[82vh] p-5"}>
           <EditorContent editor={editor} />
         </PagedScroll>
         <div className="flex items-center justify-between border-t border-[#dfe8df] bg-white px-4 py-2 text-xs text-[#59645d]">
@@ -327,7 +337,12 @@ export default function DocumentEditor({ documentId }: { documentId: number }) {
               Export PDF / Word
             </button>
           </span>
-          <span>{editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words</span>
+          <span className="flex items-center gap-3">
+              <button type="button" onClick={() => setFull((value) => !value)} className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
+                {full ? "Exit full screen" : "Full screen"}
+              </button>
+              {editor ? wordCount(editor.getText()).toLocaleString("en-PH") : 0} words
+            </span>
         </div>
       </div>
 
