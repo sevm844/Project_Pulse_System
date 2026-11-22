@@ -20,6 +20,27 @@ import PagedScroll from "./PagedScroll";
 import ReviewPaper, { type PaperMark, type PaperPick } from "./ReviewPaper";
 
 type Pick = PaperPick;
+
+// Where the paper and its comments come from. The official manuscript uses its versions; an extra document uses a copy sent for review.
+export type ReviewSource = {
+  label: string; // "version 3" or the document's title
+  load: () => Promise<{ content: JSONContent; comments: ManuscriptComment[] }>;
+  add: (body: string, anchor?: CommentAnchor) => Promise<ManuscriptComment>;
+  reply: (commentId: number, body: string) => Promise<ManuscriptComment>;
+  setStatus: (commentId: number, status: "Open" | "Resolved") => Promise<ManuscriptComment>;
+  subtitle?: string;
+};
+
+const versionSource = (projectId: number, versionNo: number): ReviewSource => ({
+  label: `version ${versionNo}`,
+  load: async () => {
+    const [v, comments] = await Promise.all([fetchManuscriptVersion(projectId, versionNo), fetchManuscriptComments(projectId, versionNo)]);
+    return { content: v.content, comments };
+  },
+  add: (body, anchor) => addManuscriptComment(projectId, versionNo, body, anchor),
+  reply: replyToManuscriptComment,
+  setStatus: setManuscriptCommentStatus,
+});
 type Filter = "All" | "Open" | "Resolved";
 
 // Where the words of a comment sit now. The saved range is used when it still holds the quoted words; otherwise the
@@ -36,16 +57,18 @@ function resolveRange(block: Block | undefined, comment: ManuscriptComment): [nu
 // Reading one submitted version with its review comments. The adviser and the Dean select words to comment and decide
 // when a comment is resolved; the students read the comments and reply.
 export default function ManuscriptReview({
-  projectId,
-  versionNo,
+  projectId = 0,
+  versionNo = 0,
   version,
+  source,
   canComment,
   onClose,
   onChanged,
 }: {
-  projectId: number;
-  versionNo: number;
+  projectId?: number;
+  versionNo?: number;
   version?: ManuscriptVersion;
+  source?: ReviewSource;
   canComment: boolean;
   onClose: () => void;
   onChanged?: () => void;
@@ -62,24 +85,27 @@ export default function ManuscriptReview({
   const [composing, setComposing] = useState<CommentAnchor | "whole" | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const api = useMemo(() => source ?? versionSource(projectId, versionNo), [source, projectId, versionNo]);
   const paper = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchManuscriptVersion(projectId, versionNo), fetchManuscriptComments(projectId, versionNo)])
-      .then(([v, list]) => {
+    api
+      .load()
+      .then((v) => {
         if (cancelled) return;
         setContent(v.content);
         setBlocks(toBlocks(v.content));
-        setComments(list);
+        setComments(v.comments);
       })
       .catch((err) => !cancelled && setError(errorMessage(err, "Unable to open this version.")));
 
     return () => {
       cancelled = true;
     };
-  }, [projectId, versionNo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, versionNo, source?.label]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
@@ -131,7 +157,7 @@ export default function ManuscriptReview({
     setError("");
 
     try {
-      const created = await addManuscriptComment(projectId, versionNo, draft.trim(), composing === "whole" ? undefined : composing);
+      const created = await api.add(draft.trim(), composing === "whole" ? undefined : composing);
       setComments((list) => [...list, created]);
       setComposing(null);
       setDraft("");
@@ -156,12 +182,12 @@ export default function ManuscriptReview({
 
   return createPortal(
     <div className="fixed inset-0 z-[100] bg-white">
-      <div role="dialog" aria-modal="true" aria-label={`${canComment ? "Review" : "Comments on"} version ${versionNo}`} className="flex h-full w-full flex-col overflow-hidden">
+      <div role="dialog" aria-modal="true" aria-label={`${canComment ? "Review" : "Comments on"} ${api.label}`} className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] px-5 py-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#203028]">{canComment ? "Review" : "Comments on"} version {versionNo}</h3>
+            <h3 className="text-lg font-semibold text-[#203028]">{canComment ? "Review" : "Comments on"} {api.label}</h3>
             <p className="mt-0.5 text-xs text-[#59645d]">
-              {version ? `Saved by ${version.saved_by ?? "Unknown"} · ${formatDateTime(version.saved_at)} · ${version.word_count.toLocaleString("en-PH")} words` : ""}
+              {api.subtitle ?? (version ? `Saved by ${version.saved_by ?? "Unknown"} · ${formatDateTime(version.saved_at)} · ${version.word_count.toLocaleString("en-PH")} words` : "")}
             </p>
             <p className="mt-1 text-xs text-[#7b877f]">
               {canComment ? "Select any words in the paper to leave a comment on them." : "Your adviser's and the Dean's comments appear here. Reply to tell them what you changed."}
@@ -266,6 +292,7 @@ export default function ManuscriptReview({
                     located={comment.block_index === null || resolveRange(blocks[comment.block_index], comment) !== null}
                     onActivate={() => focusComment(comment.comment_id, "panel")}
                     onChange={replace}
+                    api={api}
                   />
                 ))}
               </div>
@@ -300,7 +327,9 @@ function CommentCard({
   located,
   onActivate,
   onChange,
+  api,
 }: {
+  api: ReviewSource;
   comment: ManuscriptComment;
   canResolve: boolean;
   active: boolean;
@@ -392,7 +421,7 @@ function CommentCard({
             <button
               type="button"
               disabled={busy || text.trim().length < 1}
-              onClick={() => void run(() => replyToManuscriptComment(comment.comment_id, text.trim()), () => { setText(""); setReplying(false); })}
+              onClick={() => void run(() => api.reply(comment.comment_id, text.trim()), () => { setText(""); setReplying(false); })}
               className="rounded-full bg-[#123f2b] px-3 py-1 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-50"
             >
               {busy ? "Sending..." : "Reply"}
@@ -408,7 +437,7 @@ function CommentCard({
             <button
               type="button"
               disabled={busy}
-              onClick={() => void run(() => setManuscriptCommentStatus(comment.comment_id, resolved ? "Open" : "Resolved"))}
+              onClick={() => void run(() => api.setStatus(comment.comment_id, resolved ? "Open" : "Resolved"))}
               className={`rounded-full border px-3 py-1 text-xs font-semibold disabled:opacity-50 ${resolved ? "border-[#dfe8df] hover:bg-[#f3f7f1]" : "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"}`}
             >
               {resolved ? "Reopen" : "Mark resolved"}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DocumentReviews from "./DocumentReviews";
 import ManuscriptView from "./ManuscriptView";
 import { fetchSharedDocument, fetchSharedDocuments, type GroupDocument, type GroupDocumentFull } from "../../_lib/groupDocuments";
 import { errorMessage } from "../../_lib/groups";
 import { formatDateTime } from "../../_lib/requirements";
+import { getStoredUserRole } from "../../_utils/authStorage";
 
 // The extra documents a group's members chose to share with the adviser or the Dean. Read only. Nothing shows when nothing was shared.
 export default function SharedDocuments({ projectId }: { projectId: number }) {
@@ -36,6 +38,8 @@ export default function SharedDocuments({ projectId }: { projectId: number }) {
 
   if (docs.length === 0) return null;
 
+  const role = getStoredUserRole() === "Dean" ? "Dean" : "Adviser";
+
   return (
     <div className="mb-4 rounded-xl border border-[#dfe8df] bg-[#f8fbf8] p-3">
       <p className="text-sm font-semibold text-[#203028]">Other documents shared with you</p>
@@ -46,9 +50,17 @@ export default function SharedDocuments({ projectId }: { projectId: number }) {
               <p className="truncate text-sm text-[#203028]">{doc.title}</p>
               <p className="text-xs text-[#7b877f]">Edited {formatDateTime(doc.saved_at)}{doc.saved_by ? ` · ${doc.saved_by}` : ""}</p>
             </div>
-            <button type="button" onClick={() => void read(doc.document_id)} className="shrink-0 rounded-full border border-[#cfe0d3] bg-white px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
-              Read
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <DocumentReviews
+                documentId={doc.document_id}
+                title={doc.title}
+                role={role}
+                buttonClass="rounded-full border border-[#cfe0d3] bg-white px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]"
+              />
+              <button type="button" onClick={() => void read(doc.document_id)} className="rounded-full border border-[#cfe0d3] bg-white px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
+                Read now
+              </button>
+            </div>
           </li>
         ))}
       </ul>

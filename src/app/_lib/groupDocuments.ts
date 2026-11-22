@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/react";
 import { apiFetch } from "./api";
-import type { DroppedContent } from "./manuscript";
+import type { CommentAnchor, DroppedContent, ManuscriptComment } from "./manuscript";
 
 // Extra documents of a group, beside the official manuscript (the Manuscript home).
 export type GroupDocument = {
@@ -56,3 +56,40 @@ export const saveGroupDocumentSnapshot = (id: number, content: JSONContent, seq:
 // A rename never conflicts with typing.
 export const renameGroupDocument = (id: number, title: string) =>
   apiFetch<GroupDocument>(`/my-documents/${id}`, { method: "PUT", body: JSON.stringify({ title }) });
+
+// Step 2: a member sends a frozen copy of a shared document for review. The adviser and the Dean comment on the copy; the adviser decides.
+export type DocumentReview = {
+  review_id: number;
+  document_id: number;
+  review_no: number;
+  word_count: number;
+  note: string | null;
+  sent_by: string;
+  sent_at: string;
+  comments_total: number;
+  comments_open: number;
+  decision: "Approved" | "Needs Changes" | null;
+  decision_note: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+};
+
+export const fetchDocumentReviews = (documentId: number) => apiFetch<DocumentReview[]>(`/documents/${documentId}/reviews`);
+
+export const sendDocumentForReview = (documentId: number, note: string) =>
+  apiFetch<DocumentReview>(`/my-documents/${documentId}/reviews`, { method: "POST", body: JSON.stringify({ note: note.trim() || null }) });
+
+export const fetchDocumentReview = (reviewId: number) =>
+  apiFetch<DocumentReview & { content: JSONContent; comments: ManuscriptComment[] }>(`/document-reviews/${reviewId}`);
+
+export const addDocumentComment = (reviewId: number, body: string, anchor?: CommentAnchor) =>
+  apiFetch<ManuscriptComment>(`/document-reviews/${reviewId}/comments`, { method: "POST", body: JSON.stringify({ body, ...anchor }) });
+
+export const replyToDocumentComment = (commentId: number, body: string) =>
+  apiFetch<ManuscriptComment>(`/document-comments/${commentId}/replies`, { method: "POST", body: JSON.stringify({ body }) });
+
+export const setDocumentCommentStatus = (commentId: number, status: "Open" | "Resolved") =>
+  apiFetch<ManuscriptComment>(`/document-comments/${commentId}/status`, { method: "PUT", body: JSON.stringify({ status }) });
+
+export const decideDocumentReview = (reviewId: number, decision: "Approved" | "Needs Changes", note: string) =>
+  apiFetch<DocumentReview>(`/document-reviews/${reviewId}/decision`, { method: "PUT", body: JSON.stringify({ decision, note }) });

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as Y from "yjs";
+import DocumentReviews from "./DocumentReviews";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import PagedScroll from "./PagedScroll";
 import Toolbar from "./Toolbar";
@@ -294,6 +295,17 @@ function DocumentEditorBody({ documentId, provider, collabStatus }: { documentId
     }
   }
 
+  // Everything typed so far is saved as the readable copy before a copy is sent for review.
+  async function flush() {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+
+    while (saving.current) await sleep(100);
+    await save();
+  }
+
   async function retry() {
     failed.current = false;
     while (saving.current) await sleep(100);
@@ -340,6 +352,7 @@ function DocumentEditorBody({ documentId, provider, collabStatus }: { documentId
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <DocumentReviews documentId={documentId} title={title || "Untitled document"} role="Student" canSend={shared.adviser || shared.dean} beforeSend={flush} />
           <button
             type="button"
             disabled={state === "loading"}
