@@ -45,3 +45,14 @@ export const deleteGroupDocument = (id: number) => apiFetch<{ message: string }>
 export const fetchSharedDocuments = (projectId: number) => apiFetch<GroupDocument[]>(`/projects/${projectId}/shared-documents`);
 
 export const fetchSharedDocument = (id: number) => apiFetch<GroupDocumentFull>(`/shared-documents/${id}`);
+
+// The readable copy of the live document (what the adviser and the Dean read when it is shared). `seq` is the last change of the live document it includes.
+export const saveGroupDocumentSnapshot = (id: number, content: JSONContent, seq: number) =>
+  apiFetch<GroupDocument & { dropped: DroppedContent; stale: boolean }>(`/my-documents/${id}/snapshot`, {
+    method: "PUT",
+    body: JSON.stringify({ content, seq }),
+  });
+
+// A rename never conflicts with typing.
+export const renameGroupDocument = (id: number, title: string) =>
+  apiFetch<GroupDocument>(`/my-documents/${id}`, { method: "PUT", body: JSON.stringify({ title }) });

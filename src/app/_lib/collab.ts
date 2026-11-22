@@ -55,13 +55,18 @@ export class CollabProvider {
   private typed = { added: 0, removed: 0, minutes: 0 };
   private lastTypedMinute = 0;
 
+  private readonly path: string;
+
   constructor(
     private readonly handlers: {
       onStatus?: (status: CollabStatus) => void;
       /** Something went wrong that retrying cannot fix (for example the group was closed). */
       onFatal?: (message: string) => void;
+      /** Where the group's collab routes live: the official manuscript by default, or `/my-documents/{id}` for an extra document. */
+      basePath?: string;
     } = {},
   ) {
+    this.path = `${handlers.basePath ?? "/my-manuscript"}/collab`;
     this.doc.on("update", this.onLocalUpdate);
     this.awareness.on("update", this.onAwarenessUpdate);
     document.addEventListener("visibilitychange", this.onVisibility);
@@ -76,7 +81,7 @@ export class CollabProvider {
       let answer = await this.pullAll();
 
       if (!answer.initialised) {
-        await apiFetch("/my-manuscript/collab/start", { method: "POST", body: JSON.stringify({ data: toBase64(seed()) }) });
+        await apiFetch(`${this.path}/start`, { method: "POST", body: JSON.stringify({ data: toBase64(seed()) }) });
         answer = await this.pullAll();
       }
 
@@ -131,7 +136,7 @@ export class CollabProvider {
 
     // Tell the others this cursor is gone (best effort), then free everything.
     this.awareness.setLocalState(null);
-    void apiFetch("/my-manuscript/collab/sync", {
+    void apiFetch(`${this.path}/sync`, {
       method: "POST",
       body: JSON.stringify({ since: this.cursor, updates: this.queue.length ? [toBase64(Y.mergeUpdates(this.queue))] : [], awareness: null }),
       keepalive: true,
@@ -235,7 +240,7 @@ export class CollabProvider {
         body.awareness = toBase64(encodeAwarenessUpdate(this.awareness, [this.doc.clientID]));
       }
 
-      const answer = await apiFetch<SyncAnswer>("/my-manuscript/collab/sync", { method: "POST", body: JSON.stringify(body) });
+      const answer = await apiFetch<SyncAnswer>(`${this.path}/sync`, { method: "POST", body: JSON.stringify(body) });
 
       if (withAwareness) {
         this.awarenessDirty = false;
@@ -289,7 +294,7 @@ export class CollabProvider {
     if (answer.log_size < COMPACT_AFTER || this.queue.length > 0 || this.cursor !== answer.head || Date.now() - this.lastCompact < 60000) return;
     this.lastCompact = Date.now();
 
-    void apiFetch("/my-manuscript/collab/compact", {
+    void apiFetch(`${this.path}/compact`, {
       method: "POST",
       body: JSON.stringify({ upto: answer.head, data: toBase64(Y.encodeStateAsUpdate(this.doc)) }),
     }).catch(() => {});
