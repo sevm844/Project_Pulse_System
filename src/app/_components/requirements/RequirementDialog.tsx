@@ -70,8 +70,15 @@ function SectionPicker({
   );
 }
 
+const SIZES = [5, 10, 25, 50, 100];
+const ATTACHMENT_LIMIT = 3;
+
 const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
+  "mt-1.5 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2.5 text-sm font-normal text-[#203028] outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]";
+
+const cardClass = "rounded-xl border border-[#dfe8df] bg-white p-4 sm:p-5";
+const labelClass = "block text-sm font-semibold text-[#203028]";
+const hintClass = "mt-0.5 block text-xs font-normal leading-5 text-[#7b877f]";
 
 type Props = {
   role: "Adviser" | "Dean";
@@ -84,17 +91,21 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const [title, setTitle] = useState(requirement?.title ?? "");
   const [description, setDescription] = useState(requirement?.description ?? "");
   const [stage, setStage] = useState(requirement?.stage ?? REQUIREMENT_STAGES[0]);
-  const [type, setType] = useState<"File" | "Link">(requirement?.submission_type ?? "File");
+  // New assignments are always a file. An older assignment that asks for a link keeps asking for one.
+  const type: "File" | "Link" = requirement?.submission_type ?? "File";
   const [dueDate, setDueDate] = useState(requirement?.due_date ?? "");
   const [course, setCourse] = useState(requirement?.course ?? "");
   const [grammar, setGrammar] = useState(requirement?.needs_grammar_check ?? false);
   const [finalOutput, setFinalOutput] = useState(requirement?.is_final_output ?? false);
   const [sections, setSections] = useState<string[]>(requirement?.sections ?? []);
   const [allowedTypes, setAllowedTypes] = useState<string[]>(requirement?.allowed_types ?? FILE_TYPES);
-  const [maxMb, setMaxMb] = useState(requirement?.max_file_mb ?? 10);
+  const [maxMb, setMaxMb] = useState(requirement?.max_file_mb ?? 25);
   const [resubmit, setResubmit] = useState(requirement?.allow_resubmission ?? true);
-  const [attachment, setAttachment] = useState<File | null>(null);
-  const [removeAttachment, setRemoveAttachment] = useState(false);
+  // Up to 3 template or guide files: the ones already saved (some may be marked for removal) and the ones just chosen.
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [removedIds, setRemovedIds] = useState<number[]>([]);
+  const keptFiles = (requirement?.attachments ?? []).filter((file) => !removedIds.includes(file.attachment_id));
+  const filesLeft = ATTACHMENT_LIMIT - keptFiles.length - newFiles.length;
   const [sectionOptions, setSectionOptions] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -139,8 +150,8 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             submission_type: type,
             due_date: dueDate || null,
             course: role === "Dean" ? course || null : null,
-            needs_grammar_check: grammar,
-            is_final_output: finalOutput,
+            // Sending a group's documents on to the Grammarian or the Dean's Secretary is the Dean's job: only the Dean's form has these two.
+            ...(role === "Dean" ? { needs_grammar_check: grammar, is_final_output: finalOutput } : {}),
             sections: role === "Adviser" && sections.length > 0 ? sections : null,
             allowed_types: allowedTypes.length === FILE_TYPES.length ? null : allowedTypes,
             max_file_mb: maxMb,
@@ -149,13 +160,15 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
         },
       );
 
-      // The template is a separate upload, sent once the assignment exists.
-      if (attachment) {
+      // The template files are separate uploads, sent once the assignment exists (removed ones first, so their places are free).
+      for (const id of removedIds) {
+        await apiFetch(`/requirements/${saved.requirement_id}/attachment/${id}`, { method: "DELETE" });
+      }
+
+      for (const file of newFiles) {
         const body = new FormData();
-        body.append("file", attachment);
+        body.append("file", file);
         await apiFetch(`/requirements/${saved.requirement_id}/attachment`, { method: "POST", body });
-      } else if (removeAttachment && requirement?.attachment_name) {
-        await apiFetch(`/requirements/${saved.requirement_id}/attachment`, { method: "DELETE" });
       }
 
       onSaved();
@@ -165,255 +178,281 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
     }
   }
 
+  const sizes = SIZES.includes(maxMb) ? SIZES : [...SIZES, maxMb].sort((a, b) => a - b);
+  const fileRules = !isTitle && type === "File";
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1f2a24]/40 p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1f2a24]/40 p-3 sm:p-6">
       <form
         onSubmit={save}
         role="dialog"
         aria-modal="true"
         aria-labelledby="requirement-dialog-title"
-        className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_24px_70px_rgba(31,42,36,0.22)]"
+        className={`flex max-h-[96dvh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(31,42,36,0.22)] ${isTitle ? "max-w-2xl" : role === "Dean" ? "max-w-7xl" : "max-w-6xl"}`}
       >
-        <h2 id="requirement-dialog-title" className="text-lg font-semibold text-[#203028]">
-          {isTitle ? "Title Proposal" : requirement ? "Edit requirement" : "New requirement"}
-        </h2>
-        <p className="mt-1 text-xs text-[#7b877f]">
-          {isTitle
-            ? "This is every group's first assignment. Add your directions for the title proposal."
-            : role === "Adviser"
-              ? "Students in the sections you pick will see this in their Requirements."
-              : "Students will see this in their Requirements."}
-        </p>
+        <header className="shrink-0 border-b border-[#edf2ec] px-6 py-3 sm:px-8">
+          <h2 id="requirement-dialog-title" className="text-xl font-semibold text-[#203028]">
+            {isTitle ? "Title Proposal" : requirement ? "Edit assignment" : "New assignment"}
+          </h2>
+          <p className="mt-1 text-sm text-[#7b877f]">
+            {isTitle
+              ? "This is every group's first assignment. Add your directions for the title proposal."
+              : role === "Adviser"
+                ? "Students in the sections you pick will see this in their Requirements."
+                : "Students will see this in their Requirements."}
+          </p>
+        </header>
 
-        <div className="mt-5 space-y-4">
-          {!isTitle && (
-            <label className="block text-xs font-semibold text-[#59645d]">
-              Title
-              <input
-                required
-                maxLength={150}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="e.g., Chapter 1 draft"
-                className={fieldClass}
+        <div className={`grid min-h-0 flex-1 gap-5 overflow-y-auto bg-[#f8faf7] p-5 sm:p-6 ${isTitle ? "" : role === "Dean" ? "lg:grid-cols-2 xl:grid-cols-[1fr_1.3fr_0.85fr]" : "lg:grid-cols-2"}`}>
+          <section className={`${cardClass} space-y-4`}>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9aa59e]">{isTitle ? "Directions" : "1 · About the assignment"}</h3>
+
+            {!isTitle && (
+              <label className={labelClass}>
+                Title
+                <input
+                  required
+                  maxLength={150}
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="e.g., Chapter 1 draft"
+                  className={fieldClass}
+                />
+              </label>
+            )}
+
+            <label className={labelClass}>
+              Instructions for students
+              <textarea
+                rows={isTitle ? 5 : 6}
+                maxLength={2000}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Tell your students what to prepare, what format you expect, and what you will look for."
+                className={`${fieldClass} resize-none leading-6`}
               />
             </label>
-          )}
 
-          <label className="block text-xs font-semibold text-[#59645d]">
-            Instructions for students
-            <textarea
-              rows={5}
-              maxLength={2000}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Tell your students what to prepare, what format you expect, and what you will look for."
-              className={`${fieldClass} resize-none leading-6`}
-            />
-          </label>
+            <div className={isTitle ? "" : "grid gap-4 sm:grid-cols-2"}>
+              {!isTitle && (
+                <label className={labelClass}>
+                  Stage
+                  <select value={stage} onChange={(event) => setStage(event.target.value)} className={fieldClass}>
+                    {REQUIREMENT_STAGES.map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
-          <div className={isTitle ? "" : "grid grid-cols-2 gap-3"}>
-            {!isTitle && (
-              <label className="block text-xs font-semibold text-[#59645d]">
-                Stage
-                <select value={stage} onChange={(event) => setStage(event.target.value)} className={fieldClass}>
-                  {REQUIREMENT_STAGES.map((item) => (
-                    <option key={item}>{item}</option>
+              <label className={labelClass}>
+                Due date
+                <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className={fieldClass} />
+              </label>
+            </div>
+
+            {role === "Adviser" && (
+              <div>
+                <p className={labelClass}>For which sections?</p>
+                <div className="mt-1.5">
+                  <SectionPicker options={sectionOptions} value={sections} onChange={setSections} />
+                </div>
+              </div>
+            )}
+
+            {role === "Dean" && (
+              <label className={labelClass}>
+                For which course?
+                <select value={course} onChange={(event) => setCourse(event.target.value)} className={fieldClass}>
+                  <option value="">All courses</option>
+                  {COURSE_OPTIONS.map((item) => (
+                    <option key={item} value={item}>
+                      {item} only
+                    </option>
                   ))}
                 </select>
               </label>
             )}
-
-            <label className="block text-xs font-semibold text-[#59645d]">
-              Due date
-              <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className={fieldClass} />
-            </label>
-          </div>
-
-          {role === "Adviser" && (
-            <div>
-              <p className="text-xs font-semibold text-[#59645d]">For which sections?</p>
-              <div className="mt-1.5">
-                <SectionPicker options={sectionOptions} value={sections} onChange={setSections} />
-              </div>
-            </div>
-          )}
+          </section>
 
           {!isTitle && (
-          <div>
-            <p className="text-xs font-semibold text-[#59645d]">Students submit</p>
-            <div className="mt-1.5 inline-flex rounded-lg border border-[#dfe8df] p-0.5 text-xs font-semibold">
-              {(["File", "Link"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setType(item)}
-                  className={`rounded-md px-4 py-1.5 transition ${
-                    type === item ? "bg-[#123f2b] text-white" : "text-[#59645d] hover:bg-[#f3f7f1]"
-                  }`}
-                >
-                  {item === "File" ? "A file" : "A link"}
-                </button>
-              ))}
-            </div>
-          </div>
+            <section className={`${cardClass} space-y-4`}>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9aa59e]">2 · What students hand in</h3>
 
-          )}
+              {type === "File" ? (
+                <>
+                  <div>
+                    <p className={labelClass}>
+                      Accepted files
+                      <span className={hintClass}>Press a type to allow it or block it.</span>
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {FILE_TYPES.map((item) => {
+                        const on = allowedTypes.includes(item);
 
-          {!isTitle && type === "File" && (
-            <div className="space-y-4 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4">
-              <div>
-                <p className="text-xs font-semibold text-[#59645d]">Accepted files</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {FILE_TYPES.map((item) => {
-                    const on = allowedTypes.includes(item);
+                        return (
+                          <button
+                            key={item}
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() => setAllowedTypes((current) => (on ? current.filter((value) => value !== item) : [...current, item]))}
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase transition ${
+                              on ? "border-[#123f2b] bg-[#123f2b] text-white" : "border-[#dfe8df] bg-white text-[#7b877f] hover:bg-[#f3f7f1]"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {allowedTypes.length === 0 && <p className="mt-1.5 text-xs text-[#b42318]">Pick at least one file type.</p>}
+                  </div>
 
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() =>
-                          setAllowedTypes((current) =>
-                            on ? current.filter((value) => value !== item) : [...current, item],
-                          )
-                        }
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase transition ${
-                          on
-                            ? "border-[#123f2b] bg-[#123f2b] text-white"
-                            : "border-[#dfe8df] bg-white text-[#7b877f] hover:bg-[#f3f7f1]"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-                {allowedTypes.length === 0 && (
-                  <p className="mt-1.5 text-xs text-[#b42318]">Pick at least one file type.</p>
-                )}
-              </div>
+                  <div>
+                    <p className={labelClass}>
+                      Biggest file
+                      <span className={hintClass}>The largest single file a student can upload.</span>
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {sizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          aria-pressed={maxMb === size}
+                          onClick={() => setMaxMb(size)}
+                          className={`rounded-lg border px-3.5 py-1.5 text-xs font-semibold transition ${
+                            maxMb === size ? "border-[#123f2b] bg-[#123f2b] text-white" : "border-[#dfe8df] bg-white text-[#59645d] hover:bg-[#f3f7f1]"
+                          }`}
+                        >
+                          {size} MB
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-3">
-                <label htmlFor="max-file-mb" className="text-xs font-semibold text-[#59645d]">
-                  Biggest file
-                </label>
-                <select
-                  id="max-file-mb"
-                  value={maxMb}
-                  onChange={(event) => setMaxMb(Number(event.target.value))}
-                  className="w-28 rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
-                >
-                  {[1, 2, 5, 10].map((size) => (
-                    <option key={size} value={size}>
-                      {size} MB
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <label className="flex items-start gap-3 text-sm text-[#203028]">
+                    <input type="checkbox" checked={resubmit} onChange={(event) => setResubmit(event.target.checked)} className="mt-1 h-4 w-4" />
+                    <span className="font-semibold">
+                      Students can replace a file while it waits for review
+                      <span className={hintClass}>If off, a new version is accepted only after you ask for changes.</span>
+                    </span>
+                  </label>
+                </>
+              ) : (
+                <p className="text-sm text-[#59645d]">Students send a link for this assignment.</p>
+              )}
 
-              <label className="flex items-start gap-2.5 text-sm text-[#203028]">
-                <input type="checkbox" checked={resubmit} onChange={(event) => setResubmit(event.target.checked)} className="mt-1" />
-                <span>
-                  Students can replace a file while it waits for review
-                  <span className="block text-xs text-[#7b877f]">If off, a new version is accepted only after you ask for changes.</span>
-                </span>
-              </label>
-            </div>
-          )}
-
-          {!isTitle && (
-            <div>
-              <p className="text-xs font-semibold text-[#59645d]">Template or guide for students (optional)</p>
-
-              {requirement?.attachment_name && !removeAttachment && !attachment && (
-                <p className="mt-1.5 flex items-center gap-3 text-xs text-[#59645d]">
-                  <button
-                    type="button"
-                    onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name)}
-                    className="font-semibold text-[#4f8f58] hover:underline"
-                  >
-                    {requirement.attachment_name}
-                  </button>
-                  <button type="button" onClick={() => setRemoveAttachment(true)} className="text-[#b42318] hover:underline">
-                    Remove
-                  </button>
+              <div className="border-t border-[#edf2ec] pt-4">
+                <p className={labelClass}>
+                  Template or guide files for students
+                  <span className={hintClass}>Optional. Up to {ATTACHMENT_LIMIT} files your students can download, such as a form or an outline.</span>
                 </p>
-              )}
 
-              <input
-                type="file"
-                accept={FILE_TYPES.map((item) => `.${item}`).join(",")}
-                onChange={(event) => {
-                  setAttachment(event.target.files?.[0] ?? null);
-                  setRemoveAttachment(false);
-                }}
-                className="mt-1.5 block w-full text-xs text-[#59645d] file:mr-3 file:rounded-lg file:border file:border-[#dfe8df] file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#203028] hover:file:bg-[#f3f7f1]"
-              />
-              {requirement?.attachment_name && attachment && (
-                <p className="mt-1 text-xs text-[#7b877f]">This replaces {requirement.attachment_name}.</p>
-              )}
-            </div>
+                {(keptFiles.length > 0 || newFiles.length > 0) && (
+                  <ul className="mt-3 divide-y divide-[#edf2ec] rounded-lg border border-[#edf2ec]">
+                    {keptFiles.map((file) => (
+                      <li key={file.attachment_id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-sm text-[#203028]">
+                        <button
+                          type="button"
+                          onClick={() => void downloadRequirementAttachment(requirement!.requirement_id, file.attachment_id, file.name)}
+                          className="min-w-0 truncate text-left font-semibold text-[#4f8f58] hover:underline"
+                        >
+                          {file.name}
+                        </button>
+                        <button type="button" onClick={() => setRemovedIds((current) => [...current, file.attachment_id])} className="shrink-0 text-xs font-semibold text-[#b42318] hover:underline">
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                    {newFiles.map((file, index) => (
+                      <li key={`new-${index}-${file.name}`} className="flex items-center justify-between gap-3 px-3 py-1.5 text-sm text-[#203028]">
+                        <span className="min-w-0 truncate">
+                          {file.name} <span className="text-xs text-[#9aa59e]">· new</span>
+                        </span>
+                        <button type="button" onClick={() => setNewFiles((current) => current.filter((_, i) => i !== index))} className="shrink-0 text-xs font-semibold text-[#b42318] hover:underline">
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="mt-2.5 flex flex-wrap items-center gap-3">
+                  <label
+                    className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-semibold focus-within:ring-2 focus-within:ring-[#123f2b]/30 ${
+                      filesLeft > 0 ? "cursor-pointer border-[#123f2b] bg-white text-[#123f2b] hover:bg-[#f4f6f3]" : "cursor-not-allowed border-[#dfe8df] bg-[#f3f7f1] text-[#9aa59e]"
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
+                    </svg>
+                    Add a file
+                    <input
+                      type="file"
+                      accept={FILE_TYPES.map((item) => `.${item}`).join(",")}
+                      disabled={filesLeft <= 0}
+                      onChange={(event) => {
+                        const chosen = event.target.files?.[0];
+                        event.target.value = "";
+                        if (chosen && filesLeft > 0) setNewFiles((current) => [...current, chosen]);
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                  <span className="text-sm text-[#59645d]">
+                    {keptFiles.length + newFiles.length} of {ATTACHMENT_LIMIT} files{filesLeft <= 0 ? " (the most allowed)" : ""}
+                  </span>
+                </div>
+              </div>
+            </section>
           )}
 
-          {role === "Dean" && (
-            <label className="block text-xs font-semibold text-[#59645d]">
-              For
-              <select value={course} onChange={(event) => setCourse(event.target.value)} className={fieldClass}>
-                <option value="">All courses</option>
-                {COURSE_OPTIONS.map((item) => (
-                  <option key={item} value={item}>
-                    {item} only
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {!isTitle && role === "Dean" && (
+            <section className={`${cardClass} lg:col-span-2 xl:col-span-1`}>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9aa59e]">3 · After students submit</h3>
+              <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                <label className="flex items-start gap-3 text-sm text-[#203028]">
+                  <input type="checkbox" checked={grammar} onChange={(event) => setGrammar(event.target.checked)} className="mt-1 h-4 w-4" />
+                  <span className="font-semibold">
+                    Needs a grammar check
+                    <span className={hintClass}>After the review, the Grammarian checks it too.</span>
+                  </span>
+                </label>
 
-          {!isTitle && (
-          <div className="space-y-2.5 text-sm text-[#203028]">
-            <label className="flex items-start gap-2.5">
-              <input type="checkbox" checked={grammar} onChange={(event) => setGrammar(event.target.checked)} className="mt-1" />
-              <span>
-                Needs a grammar check
-                <span className="block text-xs text-[#7b877f]">After you approve it, the Grammarian reviews it too.</span>
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2.5">
-              <input type="checkbox" checked={finalOutput} onChange={(event) => setFinalOutput(event.target.checked)} className="mt-1" />
-              <span>
-                Final output
-                <span className="block text-xs text-[#7b877f]">The Dean&apos;s Secretary collects it once it is approved.</span>
-              </span>
-            </label>
-          </div>
+                <label className="flex items-start gap-3 text-sm text-[#203028]">
+                  <input type="checkbox" checked={finalOutput} onChange={(event) => setFinalOutput(event.target.checked)} className="mt-1 h-4 w-4" />
+                  <span className="font-semibold">
+                    Final output
+                    <span className={hintClass}>The Dean&apos;s Secretary collects it once it is approved.</span>
+                  </span>
+                </label>
+              </div>
+            </section>
           )}
         </div>
 
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-[#b42318]">
+        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-[#edf2ec] px-6 py-3 sm:px-8">
+          <p role="alert" className="min-w-0 text-sm text-[#b42318]">
             {error}
           </p>
-        )}
-
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving || !title.trim() || (!isTitle && type === "File" && allowedTypes.length === 0)}
-            className="rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
-          >
-            {saving ? "Saving..." : requirement ? "Save changes" : "Create"}
-          </button>
-        </div>
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-lg border border-[#dfe8df] px-5 py-2.5 text-sm font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !title.trim() || (fileRules && allowedTypes.length === 0)}
+              className="rounded-lg bg-[#123f2b] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
+            >
+              {saving ? "Saving..." : requirement ? "Save changes" : "Create assignment"}
+            </button>
+          </div>
+        </footer>
       </form>
     </div>
   );

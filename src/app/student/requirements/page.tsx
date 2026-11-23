@@ -284,15 +284,20 @@ function RequirementRow({
             </div>
           )}
 
-          {requirement.attachment_name && (
-            <button
-              type="button"
-              onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name).catch((err) => setMessage(errorMessage(err, "Unable to open the file.")))}
-              className="flex items-center gap-2 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
-            >
-              <span className="text-[#7b877f]">From your adviser</span>
-              {requirement.attachment_name}
-            </button>
+          {requirement.attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {requirement.attachments.map((file) => (
+                <button
+                  key={file.attachment_id}
+                  type="button"
+                  onClick={() => void downloadRequirementAttachment(requirement.requirement_id, file.attachment_id, file.name).catch((err) => setMessage(errorMessage(err, "Unable to open the file.")))}
+                  className="flex items-center gap-2 rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs font-semibold text-[#203028] hover:bg-[#f3f7f1]"
+                >
+                  <span className="text-[#7b877f]">Guide</span>
+                  {file.name}
+                </button>
+              ))}
+            </div>
           )}
 
           {isTitle && group && <StudentTitleProposals group={group} onChanged={onSaved} />}

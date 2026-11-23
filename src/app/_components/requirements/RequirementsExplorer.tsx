@@ -189,7 +189,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
           onClick={() => setDialog({})}
           className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
         >
-          New requirement
+          New assignment
         </button>
       </div>
 
@@ -266,7 +266,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
       {!loading && nav.course && nav.section && !requirement && (
         <>
           {assignmentsOf(nav.course, nav.section).length === 0 && (
-            <p className="py-10 text-center text-sm text-[#9aa59e]">No assignments for this section yet. Use New requirement to add one.</p>
+            <p className="py-10 text-center text-sm text-[#9aa59e]">No assignments for this section yet. Use New assignment to add one.</p>
           )}
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {assignmentsOf(nav.course, nav.section).map((item) => {
@@ -304,15 +304,16 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
               {requirement.kind === "Standard" && requirement.submission_type === "File" && (
                 <span className="mt-1 block text-[#9aa59e]">{describeFileRules(requirement)}</span>
               )}
-              {requirement.attachment_name && (
+              {requirement.attachments.map((file) => (
                 <button
+                  key={file.attachment_id}
                   type="button"
-                  onClick={() => void downloadRequirementAttachment(requirement.requirement_id, requirement.attachment_name).catch((err) => setError(errorMessage(err, "Unable to open the file.")))}
+                  onClick={() => void downloadRequirementAttachment(requirement.requirement_id, file.attachment_id, file.name).catch((err) => setError(errorMessage(err, "Unable to open the file.")))}
                   className="mt-1 block font-semibold text-[#4f8f58] hover:underline"
                 >
-                  Template: {requirement.attachment_name}
+                  Template: {file.name}
                 </button>
-              )}
+              ))}
             </p>
 
             {canEdit(requirement) && (
@@ -348,7 +349,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null);
-            void refresh(dialog.requirement ? "Requirement updated." : "Requirement created.");
+            void refresh(dialog.requirement ? "Assignment updated." : "Assignment created.");
           }}
         />
       )}

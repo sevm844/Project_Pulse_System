@@ -48,8 +48,8 @@ export type ApiRequirement = {
   allowed_types: string[];
   max_file_mb: number;
   allow_resubmission: boolean;
-  // A file from the adviser (template, guide) students can download.
-  attachment_name: string | null;
+  // Template or guide files (up to 3) from the adviser or the Dean that students can download.
+  attachments: { attachment_id: number; name: string; size: number }[];
   needs_grammar_check: boolean;
   is_final_output: boolean;
   created_by: string | null;

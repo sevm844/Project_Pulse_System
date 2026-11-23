@@ -166,9 +166,9 @@ export async function downloadProjectDocuments(projectId: number, groupName: str
   saveBlob(await fetchPrivateFile(`/projects/${projectId}/documents.zip`), `${groupName} - documents.zip`);
 }
 
-// The file an adviser attached to an assignment (a template or guide).
-export async function downloadRequirementAttachment(requirementId: number, fileName: string | null) {
-  saveBlob(await fetchPrivateFile(`/requirements/${requirementId}/attachment`), fileName);
+// A template or guide file attached to an assignment (up to 3 per assignment).
+export async function downloadRequirementAttachment(requirementId: number, attachmentId: number, fileName: string | null) {
+  saveBlob(await fetchPrivateFile(`/requirements/${requirementId}/attachment/${attachmentId}`), fileName);
 }
 
 // A form from the Forms shelf (Requirements page).

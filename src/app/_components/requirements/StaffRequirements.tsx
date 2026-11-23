@@ -172,7 +172,7 @@ function FlatRequirements({ role }: { role: StaffRole }) {
             onClick={() => setDialog({})}
             className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]"
           >
-            New requirement
+            New assignment
           </button>
         )}
       </div>
@@ -294,13 +294,15 @@ function FlatRequirements({ role }: { role: StaffRole }) {
                             {describeFileRules(requirement)}
                           </span>
                         )}
-                      {requirement.attachment_name && (
+                      {requirement.attachments.map((file) => (
                         <button
+                          key={file.attachment_id}
                           type="button"
                           onClick={() =>
                             void downloadRequirementAttachment(
                               requirement.requirement_id,
-                              requirement.attachment_name,
+                              file.attachment_id,
+                              file.name,
                             ).catch((err) =>
                               setError(
                                 errorMessage(err, "Unable to open the file."),
@@ -309,9 +311,9 @@ function FlatRequirements({ role }: { role: StaffRole }) {
                           }
                           className="mt-1 block font-semibold text-[#4f8f58] hover:underline"
                         >
-                          Template: {requirement.attachment_name}
+                          Template: {file.name}
                         </button>
-                      )}
+                      ))}
                     </p>
 
                     {canEdit && (
@@ -404,8 +406,8 @@ function FlatRequirements({ role }: { role: StaffRole }) {
             setDialog(null);
             void refresh(
               dialog.requirement
-                ? "Requirement updated."
-                : "Requirement created.",
+                ? "Assignment updated."
+                : "Assignment created.",
             );
           }}
         />
