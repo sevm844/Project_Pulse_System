@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import LegalFooter from "./LegalFooter";
 
 // The layout of the Terms and the Privacy Policy: the login page's background, one compact card that fits a laptop screen,
 // and the points as small cards in a grid (it stacks and scrolls only on a phone).
@@ -37,17 +37,11 @@ export default function LegalPage({
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-3">{children}</div>
 
-        <p className="mt-5 text-center text-xs text-gray-500">
-          Last updated {updated}
-          {" · "}
-          <Link href={other.href} className="text-green-600 hover:underline">
-            {other.label}
-          </Link>
-          {" · "}
-          <Link href="/login" className="text-green-600 hover:underline">
-            Back to login
-          </Link>
-        </p>
+        <Suspense
+          fallback={<p className="mt-5 text-center text-xs text-gray-500">Last updated {updated}</p>}
+        >
+          <LegalFooter updated={updated} other={other} />
+        </Suspense>
       </div>
     </main>
   );

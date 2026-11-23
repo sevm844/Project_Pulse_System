@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiError, apiFetch } from "../_lib/api";
 import { passwordIsStrong } from "../_lib/password";
 
@@ -16,6 +16,38 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Reading the Terms or the Privacy Policy leaves this page (same tab). Keep what was typed, except the passwords, for the way back.
+  const DRAFT_KEY = "project-pulse-register-draft";
+
+  const restored = useRef(false);
+
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? "null");
+
+      if (saved) {
+        queueMicrotask(() => {
+          setFullName(String(saved.fullName ?? ""));
+          setEmail(String(saved.email ?? ""));
+          setAgreed(saved.agreed === true);
+        });
+      }
+    } catch {
+      // Storage blocked or unreadable: start with an empty form.
+    }
+  }, []);
+
+  function saveDraft(next: { fullName?: string; email?: string; agreed?: boolean }) {
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ fullName, email, agreed, ...next }));
+    } catch {
+      // ignore
+    }
+  }
 
   function isValidStudentEmail(value: string) {
     return /^\d{7}@ub\.edu\.ph$/.test(value.toLowerCase());
@@ -81,6 +113,12 @@ export default function RegisterPage() {
           }),
         },
       );
+
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // ignore
+      }
 
       setSuccess(
         "Account created. You can log in now. Your adviser will add you to a group. Redirecting to login...",
@@ -180,11 +218,11 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Full Name</label>
-              <input type="text" placeholder="Juan Dela Cruz" className={input} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <input type="text" placeholder="Juan Dela Cruz" className={input} value={fullName} onChange={(e) => { setFullName(e.target.value); saveDraft({ fullName: e.target.value }); }} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Student Email</label>
-              <input type="email" placeholder="1234567@ub.edu.ph" className={input} value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" placeholder="1234567@ub.edu.ph" className={input} value={email} onChange={(e) => { setEmail(e.target.value); saveDraft({ email: e.target.value }); }} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -198,14 +236,14 @@ export default function RegisterPage() {
             </div>
 
             <label className="flex items-start gap-3 text-sm text-gray-600">
-              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 h-4 w-4 accent-[#123f2b]" />
+              <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); saveDraft({ agreed: e.target.checked }); }} className="mt-1 h-4 w-4 accent-[#123f2b]" />
               <span>
                 I agree to the{" "}
-                <Link href="/terms" target="_blank" className="font-medium text-gray-900 underline">
+                <Link href="/terms?from=register" className="font-medium text-gray-900 underline">
                   Terms and Conditions
                 </Link>{" "}
                 and the{" "}
-                <Link href="/privacy" target="_blank" className="font-medium text-gray-900 underline">
+                <Link href="/privacy?from=register" className="font-medium text-gray-900 underline">
                   Privacy Policy
                 </Link>
                 .

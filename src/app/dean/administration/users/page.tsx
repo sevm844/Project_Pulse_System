@@ -26,7 +26,15 @@ const emptyForm = {
 };
 
 // Only these roles can be held together (the server checks it too): an Adviser who is also a Grammarian, and so on.
+// A Dean may also act as Panelist (the Dean sometimes sits on a defense panel), and nothing else.
 const COMBINABLE = ["Adviser", "Panelist", "Grammarian"];
+
+// The roles that can be ticked under "Also acts as" for a person whose main role is this one (none for everyone else).
+function extrasFor(mainName: string | undefined): string[] {
+  if (mainName === "Dean") return ["Panelist"];
+
+  return mainName && COMBINABLE.includes(mainName) ? COMBINABLE.filter((name) => name !== mainName) : [];
+}
 
 // "Also acts as": tick the other roles this person holds besides the main one.
 function ExtraRoles({
@@ -42,9 +50,11 @@ function ExtraRoles({
 }) {
   const main = roles.find((role) => role.role_id === mainRoleId);
 
-  if (!main || !COMBINABLE.includes(main.role_name)) return null;
+  const allowed = extrasFor(main?.role_name);
 
-  const others = roles.filter((role) => COMBINABLE.includes(role.role_name) && role.role_id !== mainRoleId);
+  if (!main || allowed.length === 0) return null;
+
+  const others = roles.filter((role) => allowed.includes(role.role_name) && role.role_id !== mainRoleId);
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#59645d]">
@@ -181,7 +191,7 @@ export default function DeanUsersPage() {
         body: JSON.stringify({
           ...form,
           role_id: Number(form.role_id),
-          extra_role_ids: COMBINABLE.includes(roles.find((r) => r.role_id === Number(form.role_id))?.role_name ?? "") ? form.extra_role_ids : [],
+          extra_role_ids: extrasFor(roles.find((r) => r.role_id === Number(form.role_id))?.role_name).length > 0 ? form.extra_role_ids : [],
         }),
       });
 
@@ -416,8 +426,11 @@ export default function DeanUsersPage() {
                         const nextId = Number(event.target.value);
                         const nextName = roles.find((role) => role.role_id === nextId)?.role_name ?? "";
 
-                        // Moving someone to a role that cannot be shared drops their extra roles.
-                        updateUser(user, COMBINABLE.includes(nextName) ? { role_id: nextId } : { role_id: nextId, extra_role_ids: [] });
+                        // Keep only the extra roles that still fit the new main role (none for roles that cannot be shared).
+                        const allowed = extrasFor(nextName);
+                        const kept = (user.extra_role_ids ?? []).filter((id) => allowed.includes(roles.find((role) => role.role_id === id)?.role_name ?? ""));
+
+                        updateUser(user, { role_id: nextId, extra_role_ids: kept });
                       }}
                       className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs outline-none"
                     >
