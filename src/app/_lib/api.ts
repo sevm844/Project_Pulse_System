@@ -217,3 +217,12 @@ export async function logoutFromApi() {
 
   clearStoredUserSession();
 }
+// A form from the Forms shelf, read into memory (to show it, or to copy a Word form into a group's own document).
+export async function fetchSharedFormBlob(formId: number): Promise<Blob> {
+  return fetchPrivateFile(`/forms/${formId}/file`);
+}
+
+// A temporary address for showing a form in the browser. The type is set here, so a file can never be shown as a web page. Call URL.revokeObjectURL when done.
+export async function previewSharedForm(formId: number, mimeType: string): Promise<string> {
+  return URL.createObjectURL(new Blob([await fetchPrivateFile(`/forms/${formId}/file`)], { type: mimeType }));
+}

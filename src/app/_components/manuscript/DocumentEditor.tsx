@@ -23,6 +23,7 @@ import {
   type GroupDocumentFull,
 } from "../../_lib/groupDocuments";
 import { errorMessage } from "../../_lib/groups";
+import { fetchSharedFormBlob } from "../../_lib/api";
 import { importWordFile } from "../../_lib/manuscriptImport";
 import { formatDateTime } from "../../_lib/requirements";
 import { getStoredUserName, getStoredUserUid } from "../../_utils/authStorage";
@@ -37,7 +38,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // One extra document of the group (not the official manuscript), written together like Google Docs: every member types in the same live document,
 // changes travel through the server about once a second and merge in each browser, and each member sees the others' coloured cursors. The server
 // also keeps a readable copy (saved a moment after typing stops) that the adviser and the Dean read when a member shared the document with them.
-export default function DocumentEditor({ documentId }: { documentId: number }) {
+export default function DocumentEditor({ documentId, fromFormId }: { documentId: number; fromFormId?: number }) {
   const [provider, setProvider] = useState<CollabProvider | null>(null);
   const [collabStatus, setCollabStatus] = useState<CollabStatus>("connecting");
   const [fatal, setFatal] = useState("");
@@ -61,10 +62,10 @@ export default function DocumentEditor({ documentId }: { documentId: number }) {
 
   if (!provider) return <p className="text-sm text-[#7b877f]">Opening the document...</p>;
 
-  return <DocumentEditorBody documentId={documentId} provider={provider} collabStatus={collabStatus} />;
+  return <DocumentEditorBody documentId={documentId} provider={provider} collabStatus={collabStatus} fromFormId={fromFormId} />;
 }
 
-function DocumentEditorBody({ documentId, provider, collabStatus }: { documentId: number; provider: CollabProvider; collabStatus: CollabStatus }) {
+function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: { documentId: number; provider: CollabProvider; collabStatus: CollabStatus; fromFormId?: number }) {
   const [doc, setDoc] = useState<GroupDocumentFull | null>(null);
   const [loadError, setLoadError] = useState("");
   const [state, setState] = useState<SaveState>("loading");
@@ -218,6 +219,28 @@ function DocumentEditorBody({ documentId, provider, collabStatus }: { documentId
       cancelled = true;
     };
   }, [editor, documentId, provider]);
+
+  // "Edit" on a Word form of the Forms shelf opens a new document of the group with the form's text put in once (the form on the shelf is never changed).
+  const formCopied = useRef(false);
+  useEffect(() => {
+    if (!fromFormId || !editor || state === "loading" || formCopied.current) return;
+    formCopied.current = true;
+
+    (async () => {
+      try {
+        const blob = await fetchSharedFormBlob(fromFormId);
+        const imported = await importWordFile(new File([blob], "form.docx"));
+
+        if (imported.empty) setToolbarError("That form has no text to copy. Type your own text here.");
+        else if (editor.isEmpty) editor.chain().focus("start").insertContent(imported.html).run();
+      } catch (err) {
+        setToolbarError(err instanceof Error ? err.message : "The form could not be copied into this document.");
+      }
+
+      // The address no longer asks for the copy, so a refresh never adds it twice.
+      window.history.replaceState(null, "", window.location.pathname);
+    })();
+  }, [fromFormId, editor, state]);
 
   // Who else is editing: read from the shared cursors.
   useEffect(() => {
