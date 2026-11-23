@@ -3,10 +3,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { roleHomePath } from "../_lib/roleHome";
-import { ApiError, apiFetch, toAppRole } from "../_lib/api";
-import { saveStoredToken, saveStoredUserSession } from "../_utils/authStorage";
+import { ApiError, apiFetch, logoutFromApi, toAppRole } from "../_lib/api";
+import {
+  getStoredToken,
+  getStoredUserName,
+  getStoredUserRole,
+  saveStoredToken,
+  saveStoredUserSession,
+} from "../_utils/authStorage";
 
 type LoginResponse = {
   token: string;
@@ -29,6 +35,25 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Someone who pressed the browser's Back button lands here while still signed in. Say so, and let them choose.
+  const [signedIn, setSignedIn] = useState<{ name: string; home: string } | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const role = getStoredUserRole();
+
+    if (getStoredToken() && role) {
+      queueMicrotask(() => setSignedIn({ name: getStoredUserName() ?? "your account", home: roleHomePath(role) }));
+    }
+  }, []);
+
+  async function handleLogoutHere() {
+    setLoggingOut(true);
+    await logoutFromApi();
+    setSignedIn(null);
+    setLoggingOut(false);
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -133,6 +158,31 @@ export default function LoginPage() {
               </span>
             </div>
 
+            {signedIn ? (
+              <div role="status">
+                <h1 className="text-3xl font-bold tracking-tight">You are still signed in</h1>
+                <p className="mt-2 text-base text-gray-500">
+                  You are signed in as <span className="font-semibold text-[#123f2b]">{signedIn.name}</span>. Do you want to go back to your dashboard, or log out?
+                </p>
+                <div className="mt-7 space-y-3">
+                  <Link
+                    href={signedIn.home}
+                    className="block w-full rounded-xl bg-gradient-to-r from-[#123f2b] to-[#2f8f4e] py-3.5 text-center text-base font-semibold text-white shadow-[0_12px_28px_rgba(47,143,78,0.35)] transition hover:brightness-110"
+                  >
+                    Back to my dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={loggingOut}
+                    onClick={() => void handleLogoutHere()}
+                    className="w-full rounded-xl border border-[#e3e8e3] bg-white py-3.5 text-base font-semibold text-[#203028] transition hover:bg-[#f7f9f7] disabled:opacity-60"
+                  >
+                    {loggingOut ? "Logging out..." : "Log out"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
             <h1 className="text-3xl font-bold tracking-tight">Log in</h1>
             <p className="mt-2 text-base text-gray-400">
               Sign in using your UB account.
@@ -214,6 +264,8 @@ export default function LoginPage() {
                 Privacy Policy
               </Link>
             </p>
+              </>
+            )}
           </div>
         </section>
       </div>
