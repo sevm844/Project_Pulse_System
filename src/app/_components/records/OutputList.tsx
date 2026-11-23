@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiFetch, downloadSubmission } from "../../_lib/api";
+import { apiFetch, openSubmissionInTab } from "../../_lib/api";
 import { outputDot, type ApiFinalOutput } from "../../_lib/finalOutputs";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate, formatDateTime } from "../../_lib/requirements";
@@ -22,7 +22,7 @@ export default function OutputList({
     if (!output.submission_id) return;
 
     try {
-      await downloadSubmission(output.submission_id, output.file_name);
+      await openSubmissionInTab(output.submission_id, output.file_name);
     } catch (err) {
       onError(errorMessage(err, "Unable to open the file."));
     }

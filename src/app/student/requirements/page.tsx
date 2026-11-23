@@ -5,7 +5,7 @@ import StudentShell from "../_components/StudentShell";
 import FormsShelf from "../../_components/requirements/FormsShelf";
 import StudentTitleProposals from "../../_components/groups/StudentTitleProposals";
 import VersionHistory from "../../_components/requirements/VersionHistory";
-import { apiFetch, downloadRequirementAttachment, downloadSubmission } from "../../_lib/api";
+import { apiFetch, downloadRequirementAttachment, openSubmissionInTab } from "../../_lib/api";
 import { errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
 import {
   describeFileRules,
@@ -246,7 +246,7 @@ function RequirementRow({
 
   async function openFile(current: ApiSubmission) {
     try {
-      await downloadSubmission(current.submission_id, current.file_name);
+      await openSubmissionInTab(current.submission_id, current.file_name);
     } catch (err) {
       setMessage(errorMessage(err, "Unable to open the file."));
     }

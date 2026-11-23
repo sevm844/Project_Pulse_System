@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiFetch, downloadSubmission, previewSubmission } from "../../_lib/api";
+import { apiFetch, downloadSubmission, openSubmissionInTab } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import RowToggle from "../RowToggle";
 import VersionHistory from "./VersionHistory";
@@ -17,9 +17,6 @@ import {
   type StaffRole,
 } from "../../_lib/requirements";
 import { matchesGroupFilter, type GroupFacts, type GroupFilter } from "./GroupFilterBar";
-
-// The kinds of file that can be shown in a browser tab.
-const PREVIEW_TYPES: Record<string, string> = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg" };
 
 export function rowFacts(
   requirement: ApiRequirement,
@@ -92,32 +89,14 @@ export default function SubmissionRow({
     setBusy(false);
   }
 
-  // A PDF or picture opens in a new tab (its type is forced here, so a file can never be shown as a web page); any other kind is saved to the computer.
+  // The file opens in a new tab (PDF, picture or Word); only kinds a browser cannot show are saved to the computer.
   async function openFile(current: ApiSubmission) {
     if (fileAction) return;
     setFileAction("open");
     setFileError("");
-    const extension = (current.file_name ?? "").split(".").pop()?.toLowerCase() ?? "";
-    const type = PREVIEW_TYPES[extension];
 
     try {
-      if (!type) {
-        await downloadSubmission(current.submission_id, current.file_name);
-        setFileAction(null);
-        return;
-      }
-
-      // The tab is opened first, while the click is still fresh, or the browser blocks it as a pop-up; the file is put in it afterwards.
-      const tab = window.open("", "_blank");
-
-      try {
-        const url = await previewSubmission(current.submission_id, type);
-        if (tab) tab.location.href = url;
-        else await downloadSubmission(current.submission_id, current.file_name);
-      } catch (err) {
-        tab?.close();
-        throw err;
-      }
+      await openSubmissionInTab(current.submission_id, current.file_name);
     } catch (err) {
       setFileError(errorMessage(err, "Unable to open the file."));
     }

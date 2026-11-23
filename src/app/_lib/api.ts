@@ -176,12 +176,50 @@ export async function downloadSharedForm(formId: number, fileName: string | null
   saveBlob(await fetchPrivateFile(`/forms/${formId}/file`), fileName);
 }
 
-// A temporary address for showing a submitted PDF or image in the browser. Call URL.revokeObjectURL when done.
-export async function previewSubmission(submissionId: number, mimeType: string): Promise<string> {
-  const blob = await fetchPrivateFile(`/submissions/${submissionId}/download`);
+// A temporary address for showing a submitted file in the browser. Call URL.revokeObjectURL when done.
+export async function previewSubmission(submissionId: number, mimeType: string, version?: number): Promise<string> {
+  const blob = await fetchPrivateFile(
+    version === undefined ? `/submissions/${submissionId}/download` : `/submissions/${submissionId}/versions/${version}/download`,
+  );
 
   // The type is set here (PDF or image only), so a file can never be shown as a web page.
   return URL.createObjectURL(new Blob([blob], { type: mimeType }));
+}
+
+// The kinds of file a browser tab can show by itself (the type is forced here, so a submitted file can never be shown as a web page).
+const TAB_TYPES: Record<string, string> = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg" };
+export const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+// A submitted file opens in a NEW TAB, never in the download list: a PDF or picture straight in the tab, a Word (.docx) file in the website's own
+// reading page (/view/submission/...). Only kinds a browser cannot show at all (older .doc, PowerPoint, ZIP) are saved to the computer.
+// The tab is opened first, while the click is still fresh, or the browser blocks it as a pop-up.
+export async function openSubmissionInTab(submissionId: number, fileName: string | null, version?: number) {
+  const extension = (fileName ?? "").split(".").pop()?.toLowerCase() ?? "";
+  const type = TAB_TYPES[extension];
+
+  if (extension === "docx") {
+    const query = new URLSearchParams({ name: fileName ?? "document.docx" });
+    if (version !== undefined) query.set("v", String(version));
+
+    if (!window.open(`/view/submission/${submissionId}?${query}`, "_blank")) await downloadSubmission(submissionId, fileName, version);
+    return;
+  }
+
+  if (!type) {
+    await downloadSubmission(submissionId, fileName, version);
+    return;
+  }
+
+  const tab = window.open("", "_blank");
+
+  try {
+    const url = await previewSubmission(submissionId, type, version);
+    if (tab) tab.location.href = url;
+    else await downloadSubmission(submissionId, fileName, version);
+  } catch (err) {
+    tab?.close();
+    throw err;
+  }
 }
 
 // The Dean's similarity report (a PDF): saved to the computer, or opened in the browser (the type is forced to PDF, never a web page).

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, downloadSubmission } from "../../_lib/api";
+import { apiFetch, openSubmissionInTab } from "../../_lib/api";
 import type { ApiDefenseDocument } from "../../_lib/defenses";
 import { errorMessage } from "../../_lib/groups";
 
@@ -24,7 +24,7 @@ export default function DefenseDocuments({ defenseId }: { defenseId: number }) {
 
   async function open(document: ApiDefenseDocument) {
     try {
-      await downloadSubmission(document.submission_id, document.file_name);
+      await openSubmissionInTab(document.submission_id, document.file_name);
     } catch (err) {
       setError(errorMessage(err, "Unable to open the file."));
     }

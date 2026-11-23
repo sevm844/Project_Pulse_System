@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { createPortal } from "react-dom";
-import DocxPreview from "./DocxPreview";
 import VersionHistory from "../requirements/VersionHistory";
-import { apiFetch, downloadProjectDocuments, downloadSubmission, previewSubmission } from "../../_lib/api";
+import { apiFetch, downloadProjectDocuments, downloadSubmission, openSubmissionInTab } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate, formatDateTime, toneDot, type StatusTone } from "../../_lib/requirements";
 
@@ -91,14 +89,6 @@ const statusLook: Record<ApiDocument["status"], { label: string; tone: StatusTon
   Approved: { label: "Approved", tone: "done" },
 };
 
-const MIME: Record<string, string> = {
-  pdf: "application/pdf",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-};
-
 const selectClass =
   "rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs text-[#59645d] outline-none focus:ring-2 focus:ring-[#d7f7d8]";
 
@@ -114,7 +104,6 @@ export default function DocumentLibrary({ role }: { role: Role }) {
   const [zipping, setZipping] = useState(false);
   const [hits, setHits] = useState<ManuscriptHit[]>([]);
   const [hitsLoading, setHitsLoading] = useState(false);
-  const [viewing, setViewing] = useState<{ document: ApiDocument; url: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -163,20 +152,12 @@ export default function DocumentLibrary({ role }: { role: Role }) {
     };
   }, [search]);
 
-  // Release the temporary address of the open preview.
-  useEffect(() => {
-    const url = viewing?.url;
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [viewing]);
-
-  async function preview(document: ApiDocument) {
+  // A file opens in a new tab (PDF, picture or Word); other kinds are saved to the computer.
+  async function openFile(document: ApiDocument) {
     setError("");
 
     try {
-      const url = await previewSubmission(document.submission_id, MIME[document.file_type ?? ""] ?? "application/octet-stream");
-      setViewing({ document, url });
+      await openSubmissionInTab(document.submission_id, document.file_name);
     } catch (err) {
       setError(errorMessage(err, "Unable to open the file."));
     }
@@ -359,9 +340,9 @@ export default function DocumentLibrary({ role }: { role: Role }) {
                     {look.label}
                   </span>
 
-                  {item.can_preview && (
-                    <button type="button" onClick={() => void preview(item)} className="font-semibold text-[#4f8f58] hover:underline">
-                      Preview
+                  {item.has_file && (
+                    <button type="button" onClick={() => void openFile(item)} className="font-semibold text-[#4f8f58] hover:underline">
+                      Open
                     </button>
                   )}
 
@@ -391,41 +372,6 @@ export default function DocumentLibrary({ role }: { role: Role }) {
         })}
       </ul>
 
-      {viewing &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1f2a24]/60 p-3 sm:p-6">
-            <div role="dialog" aria-modal="true" aria-label="Document preview" className="flex h-full max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(31,42,36,0.3)]">
-              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[#edf2ec] px-5 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#203028]">{viewing.document.file_name}</p>
-                  <p className="text-[11px] text-[#9aa59e]">
-                    {viewing.document.requirement_title} · Version {viewing.document.version_no}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setViewing(null)}
-                  autoFocus
-                  className="rounded-lg border border-[#dfe8df] px-3 py-1.5 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="min-h-0 flex-1 bg-[#f3f7f1]">
-                {viewing.document.file_type === "pdf" ? (
-                  <iframe src={viewing.url} title={viewing.document.file_name ?? "Document"} className="h-full w-full" />
-                ) : viewing.document.file_type === "docx" ? (
-                  <DocxPreview url={viewing.url} name={viewing.document.file_name ?? "document.docx"} />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={viewing.url} alt={viewing.document.file_name ?? "Document"} className="mx-auto h-full max-w-full object-contain" />
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
     </div>
   );
 }

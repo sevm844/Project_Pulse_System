@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiFetch, downloadSubmission } from "../../_lib/api";
+import { apiFetch, openSubmissionInTab } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { formatDateTime, type ApiSubmissionVersion } from "../../_lib/requirements";
 
@@ -34,7 +34,7 @@ export default function VersionHistory({
 
   async function openVersion(version: ApiSubmissionVersion) {
     try {
-      await downloadSubmission(submissionId, version.file_name, version.version_no);
+      await openSubmissionInTab(submissionId, version.file_name, version.version_no);
     } catch (err) {
       setMessage(errorMessage(err, "Unable to open the file."));
     }
