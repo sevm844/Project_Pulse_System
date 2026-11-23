@@ -415,7 +415,7 @@ function FAQAccordion() {
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f9f9ff] text-[#171c19]">
+    <main className="min-h-screen overflow-x-clip bg-[#f9f9ff] text-[#171c19]">
       <style>{`
         @keyframes landing-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
         .landing-float { animation: landing-float 6s ease-in-out infinite; }
@@ -423,25 +423,22 @@ export default function Home() {
         @media (prefers-reduced-motion: reduce) { .landing-float, .landing-float-slow { animation: none; } }
       `}</style>
 
-      <header className="sticky top-0 z-50 border-b border-[#e5e7ef] bg-[#f9f9ff]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-4 lg:px-8">
-          <a href="#" className="flex items-center gap-3">
-            <Image
-              src="/logotop.png"
-              alt="Project Pulse"
-              width={36}
-              height={36}
-              className="rounded-lg"
-              priority
-            />
-            <span className="text-lg font-bold">
-              Project <span className="text-[#3a7f35]">Pulse</span>
+      {/* Fixed at the top while scrolling, as a solid dark floating card (black blending into deep green) with room around it. */}
+      <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-5 rounded-2xl border border-white/10 bg-[linear-gradient(120deg,#08090a_0%,#0e1411_55%,#123f2b_100%)] px-5 py-3 shadow-[0_14px_40px_rgba(8,9,10,0.35)] lg:px-7">
+          <a href="#" className="flex shrink-0 items-center gap-2.5 sm:gap-3">
+            {/* The logo has dark dots, so it sits on a small white tile to stay clearly visible on the black card. */}
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.25),0_0_18px_rgba(74,194,20,0.25)]">
+              <Image src="/logotop.png" alt="Project Pulse" width={30} height={30} className="rounded-md" priority />
+            </span>
+            <span className="whitespace-nowrap text-base font-bold text-white sm:text-lg">
+              Project <span className="text-[#4ac214]">Pulse</span>
             </span>
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-[#4d5751] md:flex">
+          <nav className="hidden items-center gap-8 text-sm font-semibold text-white/70 md:flex">
             {navLinks.map(([label, href]) => (
-              <a key={href} href={href} className="transition hover:text-[#171c19]">
+              <a key={href} href={href} className="transition hover:text-white">
                 {label}
               </a>
             ))}
@@ -450,16 +447,16 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <a
               href="/login"
-              className="hidden rounded-lg border border-[#d8dce5] bg-white px-4 py-2 text-sm font-bold text-[#171c19] transition hover:border-[#171c19] sm:inline-flex"
+              className="hidden rounded-lg border border-white/25 px-4 py-2 text-sm font-bold text-white transition hover:border-white hover:bg-white/10 sm:inline-flex"
             >
               Log in
             </a>
-              <a
-                href="/register"
-                className="rounded-lg border border-[#123f2b] bg-[#123f2b] px-4 py-2 text-sm font-bold text-white transition hover:border-[#0f3324] hover:bg-[#0f3324]"
-              >
-                Create Account
-              </a>
+            <a
+              href="/register"
+              className="whitespace-nowrap rounded-lg bg-[#4ac214] px-3 py-2 text-xs font-bold text-[#08140c] transition hover:bg-[#5fd62a] sm:px-4 sm:text-sm"
+            >
+              Create Account
+            </a>
           </div>
         </div>
       </header>
@@ -517,7 +514,7 @@ export default function Home() {
       </section>
 
       {/* See it in action */}
-      <section id="about" className="bg-white px-5 py-24 lg:px-8">
+      <section id="about" className="scroll-mt-28 bg-white px-5 py-24 lg:px-8">
         <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-[1fr_1fr]">
           <div>
             <Eyebrow>About Project Pulse</Eyebrow>
@@ -531,7 +528,7 @@ export default function Home() {
       </section>
 
       {/* Journey */}
-      <section id="workflow" className="px-5 py-24 lg:px-8">
+      <section id="workflow" className="scroll-mt-28 px-5 py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Eyebrow>The journey</Eyebrow>
           <h2 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Seven steps. We keep track of every one.</h2>
@@ -541,7 +538,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-white px-5 py-24 lg:px-8">
+      <section id="features" className="scroll-mt-28 bg-white px-5 py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Eyebrow>What you can do</Eyebrow>
           <h2 className="mt-3 max-w-3xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Everything for your capstone, nothing you don&apos;t need.</h2>
@@ -561,7 +558,7 @@ export default function Home() {
       </section>
 
       {/* Roles */}
-      <section id="roles" className="px-5 py-24 lg:px-8">
+      <section id="roles" className="scroll-mt-28 px-5 py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Eyebrow>Who it&apos;s for</Eyebrow>
           <h2 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Everyone sees exactly what they need.</h2>
@@ -593,7 +590,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="bg-white px-5 py-24 lg:px-8">
+      <section id="faq" className="scroll-mt-28 bg-white px-5 py-24 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <Eyebrow>FAQ</Eyebrow>
