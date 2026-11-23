@@ -62,6 +62,8 @@ export type ApiTitleSubmission = {
   proposal_content: Record<string, unknown> | null;
   title_status: "Pending" | "Approved" | "Needs Revision" | "Rejected";
   submitted_at: string | null;
+  // The student who sent it; null on proposals sent before this was recorded.
+  submitted_by: { user_id: number; name: string } | null;
   review_remarks: string | null;
   reviewed_by: { user_id: number; name: string } | null;
   reviewed_at: string | null;

@@ -158,7 +158,8 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
                   <p className="mt-0.5 text-[11px] text-[#9aa59e]">
-                    Sent {formatDate(item.submitted_at)}
+                    {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Sent "}
+                    {formatDate(item.submitted_at)}
                   </p>
                 </div>
 

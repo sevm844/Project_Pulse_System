@@ -427,7 +427,8 @@ export default function DeanProjectProfilePage() {
                         {item.proposed_title}
                       </p>
                       <p className="mt-1 text-xs text-[#7b877f]">
-                        Submitted {formatDate(item.submitted_at)}
+                        {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}
+                        {formatDate(item.submitted_at)}
                         {item.reviewed_by ? ` • Reviewed by ${item.reviewed_by.name}` : ""}
                       </p>
                     </div>

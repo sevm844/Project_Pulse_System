@@ -48,6 +48,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Dean's Secretary (the database rol
 - **Titles:** only the group's Adviser approves / requests revision / rejects. The Dean has NO title-approval action
   (do not add one). Up to 3 titles Pending or Approved at a time. Approving does not set the project title; the single
   chosen title is set at "choose title" and must be one the Dean endorsed.
+- **Every title proposal records which student sent it** (`title_submissions.submitted_by`, shown as "Submitted by <name> · <date>" to the group, the adviser and the Dean; the adviser's "New title proposal" notice also names the student). Proposals sent before this existed have no name and just say "Sent <date>": nobody guesses.
 - **A title proposal is written in a simple text editor** (`ProposalEditor`, TipTap: bold, italic, underline, bullet and numbered lists only; a Title box above it). The student writes
   everything in it (context, target audience, technology stack...): there are no separate fields, and nothing is pre-filled. It is stored as editor JSON in
   `title_submissions.proposal_content` (never HTML), checked by the manuscript whitelist (`ManuscriptContent::check`, max 200 KB), with its plain text copied to

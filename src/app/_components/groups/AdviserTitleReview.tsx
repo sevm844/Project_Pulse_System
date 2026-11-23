@@ -367,7 +367,8 @@ export default function AdviserTitleReview({
                       <div>
                         <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
                         <p className="mt-0.5 text-[11px] text-[#9aa59e]">
-                          Submitted {formatDate(item.submitted_at)}
+                          {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}
+                          {formatDate(item.submitted_at)}
                         </p>
                       </div>
 
