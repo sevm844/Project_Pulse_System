@@ -24,7 +24,7 @@ function sizeText(bytes: number) {
 }
 
 // The shelf of forms on the Requirements page: the Dean and advisers put a file up once, students download it.
-export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "Dean" }) {
+export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "Dean" | "Panelist" | "Grammarian" | "Secretary" }) {
   const [forms, setForms] = useState<SharedForm[] | null>(null);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
@@ -32,7 +32,7 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const canAdd = role !== "Student";
+  const canAdd = role === "Adviser" || role === "Dean";
 
   const load = useCallback(async () => {
     try {
@@ -95,10 +95,10 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
     <div className="mx-auto max-w-3xl">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
-          {role === "Student"
-            ? "Forms from the Dean and your adviser. Download, fill in, print and sign."
+          {role !== "Adviser" && role !== "Dean"
+            ? role === "Student" ? "Forms from the Dean and your adviser. Download, fill in, print and sign." : "Forms from the Dean. Download them any time."
             : role === "Dean"
-              ? "Forms for every student, such as the milestone monitoring form. Advisers can put up their own forms for their students."
+              ? "Forms for everyone in the system, such as the milestone monitoring form. They stay here for every new batch of teams. Advisers can put up their own forms for their students."
               : "Forms for your students, such as the letter for interview. The Dean's forms show here too."}
         </p>
         {canAdd && !adding && (
@@ -136,16 +136,25 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
               className="mt-1 w-full rounded-lg border border-[#dfe3eb] px-3 py-2 text-sm font-normal text-[#203028]"
             />
           </label>
-          <label className="block text-xs font-semibold text-[#203028]">
+          <div className="text-xs font-semibold text-[#203028]">
             File (PDF, Word, Excel, PowerPoint, picture or ZIP, up to 10 MB)
-            <input
-              type="file"
-              accept={ACCEPT}
-              required
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-sm font-normal text-[#203028]"
-            />
-          </label>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#123f2b] bg-white px-4 py-2.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f4f6f3] focus-within:ring-2 focus-within:ring-[#123f2b]/30">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
+                </svg>
+                {file ? "Choose another file" : "Choose a file"}
+                <input
+                  type="file"
+                  accept={ACCEPT}
+                  required
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  className="sr-only"
+                />
+              </label>
+              <span className="min-w-0 truncate text-sm font-normal text-[#4d5751]">{file ? file.name : "No file chosen yet"}</span>
+            </div>
+          </div>
           <div className="flex gap-3">
             <button
               type="submit"

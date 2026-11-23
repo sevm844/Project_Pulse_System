@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { label: "Group Folders", icon: "/nav/projects.png", href: "/secretary/group-folders" },
   { label: "Collection Tracker", icon: "/nav/collection-tracker.png", href: "/secretary/collection-tracker" },
   { label: "Archive Records", icon: "/nav/archive-records.png", href: "/secretary/archive-records" },
+  { label: "Forms", icon: "/nav/documents.png", href: "/secretary/forms" },
   { label: "Messages", icon: "/nav/messages.png", href: "/secretary/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/secretary/notifications" },
   { label: "Profile", icon: "/nav/profile.png", href: "/secretary/profile" },
