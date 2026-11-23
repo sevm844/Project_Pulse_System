@@ -82,7 +82,9 @@ export default function AdviserTitleReview({
         })),
       );
 
-      setItems(loaded);
+      // The group that sent a title most recently is on top.
+      const newest = (item: GroupTitles) => Math.max(0, ...item.titles.map((title) => Date.parse(title.submitted_at ?? "") || 0));
+      setItems([...loaded].sort((a, b) => newest(b) - newest(a) || a.group.group_name.localeCompare(b.group.group_name)));
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Unable to load title proposals."));

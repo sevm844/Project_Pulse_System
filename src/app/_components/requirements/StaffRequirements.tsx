@@ -9,6 +9,7 @@ import {
   attentionLabel,
   describeFileRules,
   formatDate,
+  newestAssignmentsFirst,
   type ApiRequirement,
   type ApiSubmissionRow,
   type StaffRole,
@@ -82,7 +83,7 @@ function FlatRequirements({ role }: { role: StaffRole }) {
 
   const loadRequirements = useCallback(async () => {
     try {
-      setRequirements(await apiFetch<ApiRequirement[]>("/requirements"));
+      setRequirements(newestAssignmentsFirst(await apiFetch<ApiRequirement[]>("/requirements")));
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Unable to load requirements."));

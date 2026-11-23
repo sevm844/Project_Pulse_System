@@ -20,7 +20,7 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | # | Task | Result | Notes |
 |---|---|---|---|
 | 1 | Log in. On the dashboard, find which phase your group is in and what to do next. | | |
-| 2 | Open **Requirements**. Find the **Title Proposal** (under **In review** when a title is already waiting) and read your adviser's instructions. | | |
+| 2 | Open **Requirements**. Find the **Title Proposal** (under **Pending** when a title is already waiting) and read your adviser's instructions. | | |
 | 3 | (Student 1) Propose a new title for your group. See it appear in your list as "Pending". | | |
 | 4 | (Student 1) Open **Chapter 1 draft**. Try to upload a file that is *not* allowed (for example a picture). Read the message. | | |
 | 5 | (Student 1) Upload a PDF for Chapter 1 draft. See the status change to "Under review". | | |

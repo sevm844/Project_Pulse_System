@@ -6,6 +6,7 @@ import { COURSE_NAMES, COURSE_OPTIONS, errorMessage, type ApiGroup } from "../..
 import {
   describeFileRules,
   formatDate,
+  newestAssignmentsFirst,
   type ApiRequirement,
   type ApiSubmissionRow,
 } from "../../_lib/requirements";
@@ -164,10 +165,12 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
     const name = sectionLabel(course, section);
     const hasGroups = groupsOf(course, section).length > 0;
 
-    return requirements.filter((item) =>
-      item.kind === "Title Proposal"
-        ? role === "Adviser" && hasGroups && (!item.sections || item.sections.length === 0 || item.sections.includes(name))
-        : (rowsById[item.requirement_id] ?? []).some((row) => row.course === course && row.section === section),
+    return newestAssignmentsFirst(
+      requirements.filter((item) =>
+        item.kind === "Title Proposal"
+          ? role === "Adviser" && hasGroups && (!item.sections || item.sections.length === 0 || item.sections.includes(name))
+          : (rowsById[item.requirement_id] ?? []).some((row) => row.course === course && row.section === section),
+      ),
     );
   }
 

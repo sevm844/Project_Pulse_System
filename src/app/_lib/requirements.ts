@@ -139,6 +139,17 @@ export function describeTitleProposal(summary: TitleSummary | undefined): {
 
 export const FILE_TYPES = ["pdf", "doc", "docx", "ppt", "pptx", "zip", "png", "jpg", "jpeg"];
 
+// Newest first, everywhere (the user's standing rule): a new assignment, a new submission or a fresh review always sits at the top of its list.
+const moment = (value: string | null | undefined) => (value ? Date.parse(value) || 0 : 0);
+
+/** The last time a submission was touched: sent or reviewed, whichever came later (0 when nothing was sent). */
+export const submissionMoment = (submission: Pick<ApiSubmission, "submitted_at" | "reviewed_at"> | null | undefined) =>
+  submission ? Math.max(moment(submission.submitted_at), moment(submission.reviewed_at)) : 0;
+
+/** Assignments, newest first (by the day they were given). */
+export const newestAssignmentsFirst = <T extends { created_at: string | null; requirement_id: number }>(items: T[]) =>
+  [...items].sort((a, b) => moment(b.created_at) - moment(a.created_at) || b.requirement_id - a.requirement_id);
+
 // "PDF, DOCX · up to 5 MB" (every type is shown as "Any file type").
 export function describeFileRules(requirement: Pick<ApiRequirement, "allowed_types" | "max_file_mb"> & { max_attempts?: number }) {
   const types =

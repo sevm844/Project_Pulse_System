@@ -9,6 +9,8 @@ import { apiFetch, downloadRequirementAttachment, openSubmissionInTab } from "..
 import { errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
 import {
   describeFileRules,
+  newestAssignmentsFirst,
+  submissionMoment,
   describeStatus,
   describeTitleProposal,
   feedbackFor,
@@ -19,15 +21,15 @@ import {
   type ApiRequirement,
   type ApiSubmission,
 } from "../../_lib/requirements";
-import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 import RowToggle from "../../_components/RowToggle";
 
 type Tab = "todo" | "review" | "done";
 
+// School-style names for the three lists.
 const tabLabels: Record<Tab, string> = {
-  todo: "To do",
-  review: "In review",
-  done: "Done",
+  todo: "Assignments",
+  review: "Pending",
+  done: "Completed",
 };
 
 function tabOf(requirement: ApiRequirement): Tab {
@@ -82,13 +84,16 @@ export default function StudentRequirementsPage() {
 
   const visible = showForms ? [] : requirements.filter((requirement) => tabOf(requirement) === tab);
 
-  const byStage = REQUIREMENT_STAGES.map((stage) => ({
-    stage,
-    // The Title Proposal is the first assignment, so it always comes first in its stage.
-    items: visible
-      .filter((requirement) => requirement.stage === stage)
-      .sort((a, b) => Number(b.kind === "Title Proposal") - Number(a.kind === "Title Proposal")),
-  })).filter((section) => section.items.length > 0);
+  // One list, the newest on top: a new assignment first under Assignments; under Pending and Completed, the one sent or reviewed last.
+  const ordered =
+    tab === "todo"
+      ? newestAssignmentsFirst(visible)
+      : [...visible].sort(
+          (a, b) =>
+            submissionMoment(b.submission) - submissionMoment(a.submission) ||
+            Date.parse(b.created_at ?? "") - Date.parse(a.created_at ?? "") ||
+            b.requirement_id - a.requirement_id,
+        );
 
   return (
     <StudentShell title="Requirements">
@@ -147,40 +152,30 @@ export default function StudentRequirementsPage() {
 
         {loading && !showForms && <p className="mt-8 text-sm text-[#7b877f]">Loading...</p>}
 
-        {!loading && !showForms && byStage.length === 0 && (
+        {!loading && !showForms && ordered.length === 0 && (
           <p className="mt-10 text-center text-sm text-[#9aa59e]">
             {tab === "todo"
               ? "Nothing left to do. You are all caught up."
               : tab === "review"
                 ? "Nothing is waiting for review."
-                : "Approved requirements will show here."}
+                : "Approved assignments will show here."}
           </p>
         )}
 
-        {byStage.map((section) => (
-          <section key={section.stage} className="mt-8">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9aa59e]">
-              {section.stage}
-            </h2>
-
-            <ul className="mt-3 space-y-3">
-              {section.items.map((requirement) => (
-                <RequirementRow
-                  key={requirement.requirement_id}
-                  requirement={requirement}
-                  group={group}
-                  open={openId === requirement.requirement_id}
-                  onToggle={() =>
-                    setOpenId((current) =>
-                      current === requirement.requirement_id ? null : requirement.requirement_id,
-                    )
-                  }
-                  onSaved={() => void load()}
-                />
-              ))}
-            </ul>
-          </section>
-        ))}
+        {ordered.length > 0 && (
+          <ul className="mt-6 space-y-3">
+            {ordered.map((requirement) => (
+              <RequirementRow
+                key={requirement.requirement_id}
+                requirement={requirement}
+                group={group}
+                open={openId === requirement.requirement_id}
+                onToggle={() => setOpenId((current) => (current === requirement.requirement_id ? null : requirement.requirement_id))}
+                onSaved={() => void load()}
+              />
+            ))}
+          </ul>
+        )}
       </div>
     </StudentShell>
   );
@@ -263,7 +258,7 @@ function RequirementRow({
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-[#203028]">{requirement.title}</p>
           <p className={`mt-0.5 text-xs ${overdue ? "text-[#b42318]" : "text-[#7b877f]"}`}>
-            {requirement.due_date ? `Due ${formatDate(requirement.due_date)}` : "No due date"}
+            {requirement.stage} · {requirement.due_date ? `Due ${formatDate(requirement.due_date)}` : "No due date"}
             {overdue ? " · overdue" : ""}
             {requirement.submission_type === "Link" ? " · link" : ""}
           </p>

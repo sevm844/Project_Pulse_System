@@ -10,6 +10,7 @@ import {
   formatDate,
   formatDateTime,
   isOverdue,
+  submissionMoment,
   toneDot,
   type ApiRequirement,
   type ApiSubmission,
@@ -35,9 +36,10 @@ export function filterRows(
   rows: ApiSubmissionRow[],
   filter: GroupFilter,
 ) {
-  return rows.filter((row) =>
-    matchesGroupFilter(rowFacts(requirement, row), filter),
-  );
+  // The group whose file was sent or reviewed last is on top; groups that sent nothing yet follow, by name.
+  return rows
+    .filter((row) => matchesGroupFilter(rowFacts(requirement, row), filter))
+    .sort((a, b) => submissionMoment(b.submission) - submissionMoment(a.submission) || a.group_name.localeCompare(b.group_name));
 }
 
 export default function SubmissionRow({
