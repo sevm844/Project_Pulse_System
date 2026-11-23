@@ -414,10 +414,10 @@ export default function Home() {
         @media (prefers-reduced-motion: reduce) { .landing-float, .landing-float-slow { animation: none; } }
       `}</style>
 
-      {/* The top of the page is one smooth fade in a single colour family: a deep emerald edge, a vivid green, then pastel mint and white. A fine grain
+      {/* The top of the page is one smooth fade in a single colour family: a medium emerald edge (not black), a fresh green, then pastel mint and white. A fine grain
           makes it feel soft like paper, and the rounded corners frame it like a card. Nothing here can be clicked. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-2 top-2 z-0 h-[580px] overflow-hidden rounded-t-[28px] sm:inset-x-3 sm:top-3">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#052b1d_0%,#0a3d2b_9%,#14684a_21%,#3fa97c_35%,#9fdcbf_50%,#d5f1e3_63%,#eef9f3_78%,rgba(255,255,255,0)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#0e4330_0%,#15604a_4%,#1d7a58_10%,#2a8c66_17%,#3fa17a_26%,#66bb97_36%,#9fdcbf_48%,#d5f1e3_61%,#eef9f3_76%,rgba(255,255,255,0)_100%)]" />
         <div
           className="absolute inset-0 opacity-[0.5] mix-blend-soft-light [mask-image:linear-gradient(180deg,#000_0%,#000_45%,transparent_85%)]"
           style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }}
