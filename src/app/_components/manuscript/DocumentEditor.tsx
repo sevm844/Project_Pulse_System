@@ -288,6 +288,8 @@ function DocumentEditorBody({ documentId, provider, collabStatus }: { documentId
     setShared(next);
 
     try {
+      // The adviser reads the saved copy: save everything typed so far first, so what they open is what the group sees now.
+      if (next.adviser || next.dean) await flush();
       await shareGroupDocument(documentId, next.adviser, next.dean);
     } catch (err) {
       setShared(before);

@@ -171,6 +171,9 @@ export type GrammarianManuscript = {
   latest_decision?: ManuscriptDecision | null;
   // Adviser and Dean only: each member and when they last typed in the manuscript (null = not since this was recorded).
   members?: { user_id: number; name: string; last_active_at: string | null }[];
+  // Adviser and Dean only: extra documents the group chose to share with this person's role, and when the latest was edited.
+  shared_documents?: number;
+  latest_shared_at?: string | null;
 };
 
 export const fetchGrammarianManuscripts = () => apiFetch<GrammarianManuscript[]>("/grammarian/manuscripts");

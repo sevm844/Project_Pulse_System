@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { describeLastActive } from "./ManuscriptActivity";
 import ManuscriptHistory from "./ManuscriptHistory";
+import RowToggle from "../RowToggle";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { type GrammarianManuscript } from "../../_lib/manuscript";
@@ -10,8 +11,12 @@ import { formatDateTime } from "../../_lib/requirements";
 
 type Row = GrammarianManuscript;
 
-// The Manuscripts page of the Adviser and the Dean: every group they may read, newest submission first. Groups that have not submitted
-// a version yet are tucked away (there is nothing to read) and can be shown. Open a group to read its versions, compare them and comment.
+// The Manuscripts page of the Adviser and the Dean: every group they may read, newest submission or newest shared document first. A group that
+// has neither submitted a version nor shared a document is tucked away (there is nothing to read) and can be shown. Open a group to read
+// its versions and the documents it shared with you, compare versions and comment.
+const sharedCount = (g: Row) => g.shared_documents ?? 0;
+const isEmptyGroup = (g: Row) => g.versions === 0 && sharedCount(g) === 0;
+const lastActivity = (g: Row) => [g.latest_saved_at ?? "", g.latest_shared_at ?? ""].sort().pop() ?? "";
 export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | "Panelist" }) {
   const [groups, setGroups] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
@@ -35,14 +40,14 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
   }, [load, reloadKey]);
 
   const needle = search.trim().toLowerCase();
-  const empty = (groups ?? []).filter((g) => g.versions === 0).length;
+  const empty = (groups ?? []).filter(isEmptyGroup).length;
 
   const shown = useMemo(
     () =>
       (groups ?? [])
-        .filter((g) => (showEmpty || g.versions > 0) && (!onlyOpen || g.open_comments > 0))
+        .filter((g) => (showEmpty || !isEmptyGroup(g)) && (!onlyOpen || g.open_comments > 0))
         .filter((g) => `${g.group_name} ${g.course} ${g.section} ${g.adviser ?? ""}`.toLowerCase().includes(needle))
-        .sort((a, b) => (b.latest_saved_at ?? "").localeCompare(a.latest_saved_at ?? "") || a.group_name.localeCompare(b.group_name)),
+        .sort((a, b) => lastActivity(b).localeCompare(lastActivity(a)) || a.group_name.localeCompare(b.group_name)),
     [groups, showEmpty, onlyOpen, needle],
   );
 
@@ -50,10 +55,10 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
     <div className="mx-auto max-w-4xl space-y-5">
       <p className="max-w-2xl text-sm leading-6 text-[#7b877f]">
         {role === "Adviser"
-          ? "The manuscripts your groups have submitted. Open a group to read a version, compare two versions, and comment on the exact words."
+          ? "The manuscripts your groups have submitted and the documents they shared with you. Open a group to read a version or a shared document, compare two versions, and comment on the exact words."
           : role === "Panelist"
             ? "The manuscripts of the groups you will panel. Open a group to read the versions it submitted and compare them before the defense."
-            : "The manuscripts submitted by every group. Open a group to read a version, compare two versions, and comment on the exact words."}
+            : "The manuscripts submitted by every group and the documents they shared with you. Open a group to read a version or a shared document, compare two versions, and comment on the exact words."}
       </p>
 
       <div className="flex flex-wrap items-center gap-3 border-b border-[#edf2ec] pb-3">
@@ -73,7 +78,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
         {empty > 0 && (
           <label className="flex items-center gap-2 text-xs text-[#59645d]">
             <input type="checkbox" checked={showEmpty} onChange={(event) => setShowEmpty(event.target.checked)} />
-            Also show the {empty} {empty === 1 ? "group" : "groups"} with nothing submitted
+            Also show the {empty} {empty === 1 ? "group" : "groups"} with nothing submitted or shared
           </label>
         )}
         <button type="button" onClick={() => setReloadKey((key) => key + 1)} className="ml-auto text-xs font-semibold text-[#59645d] underline">
@@ -95,8 +100,8 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
             ? role === "Panelist"
               ? "No group yet. A group appears here once you are put on the panel of its defense."
               : "No groups yet."
-            : groups.every((g) => g.versions === 0) && !showEmpty
-              ? "No group has submitted a manuscript version yet. A version appears here as soon as a group submits one."
+            : groups.every(isEmptyGroup) && !showEmpty
+              ? "No group has submitted a manuscript version or shared a document yet. They appear here as soon as a group does."
               : "No group matches."}
         </p>
       )}
@@ -107,8 +112,14 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
 
           return (
             <li key={group.project_id} className="py-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
+              <button
+                type="button"
+                disabled={isEmptyGroup(group) && (group.members ?? []).length === 0}
+                onClick={() => setOpenId(open ? null : group.project_id)}
+                aria-expanded={open}
+                className="group flex w-full items-start gap-4 text-left disabled:opacity-60"
+              >
+                <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-[#203028]">{group.group_name}</h3>
                   <p className="mt-0.5 text-xs text-[#59645d]">
                     {group.course} {group.section}
@@ -129,6 +140,11 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                       </span>
                     )}
                   </p>
+                  {sharedCount(group) > 0 && (
+                    <p className="mt-1 text-xs font-semibold text-[#2f6b3c]">
+                      {sharedCount(group)} shared {sharedCount(group) === 1 ? "document" : "documents"} · latest edited {formatDateTime(group.latest_shared_at ?? null)}
+                    </p>
+                  )}
                   {(group.members ?? []).length > 0 && (
                     <p className="mt-1 text-xs text-[#59645d]">
                       Last typed:{" "}
@@ -145,16 +161,10 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  disabled={group.versions === 0 && (group.members ?? []).length === 0}
-                  onClick={() => setOpenId(open ? null : group.project_id)}
-                  aria-expanded={open}
-                  className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50"
-                >
-                  {open ? "Hide versions" : "Show versions"}
-                </button>
-              </div>
+                <div className="pt-0.5">
+                  <RowToggle open={open} />
+                </div>
+              </button>
 
               {open && (
                 <div className="mt-4 rounded-xl border border-[#edf2ec] bg-white p-4">
