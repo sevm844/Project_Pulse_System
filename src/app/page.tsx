@@ -15,43 +15,36 @@ const navLinks = [
 const journey = [
   {
     name: "Title Proposal",
-    emoji: "💡",
     text: "Write up to three title ideas in a simple editor. Your adviser reads each one and approves it, asks for changes, or turns it down.",
     who: "You and your adviser",
   },
   {
     name: "Dean's Endorsement",
-    emoji: "✍️",
     text: "Your adviser gives your group the letter for the client interview, then sends you to the Dean. The Dean endorses your titles, or sends the group back with a note.",
     who: "Adviser and Dean",
   },
   {
     name: "Client Consultation",
-    emoji: "🤝",
     text: "Your adviser chooses the one title the Dean endorsed, and you go meet your client. After that you are ready for your first defense.",
     who: "You, your adviser and your client",
   },
   {
     name: "Proposal Defense",
-    emoji: "🎤",
     text: "Your group gets a date, a room and a panel. Each panelist scores you on the department's own rubric, ten criteria out of 40. Your adviser records the result.",
     who: "Panel and adviser",
   },
   {
     name: "Alpha, Beta, Omega",
-    emoji: "🚀",
     text: "Three more defenses, always in order. You can only schedule the next one after you pass the one before. The Dean records the results.",
     who: "Panel and Dean",
   },
   {
     name: "Final Defense",
-    emoji: "🏁",
     text: "The last defense. When your group passes, your final manuscript goes to the Grammarian for checking.",
     who: "Panel and Dean",
   },
   {
     name: "Certificate and Archive",
-    emoji: "🎓",
     text: "The Grammarian issues your certification of editing. Your final outputs are received and your project is archived by the Dean's Secretary.",
     who: "Grammarian and Dean's Secretary",
   },
@@ -61,14 +54,14 @@ const features = [
   {
     title: "Write together, like Google Docs",
     body: "Your whole group types in the same manuscript at once. You see each other's cursors, and every edit is kept in a version history you can go back to.",
-    tone: "bg-[#eef6df] text-[#123f2b]",
-    soft: "text-[#3d5a3e]",
+    tone: "bg-white text-[#123f2b]",
+    soft: "text-[#4d5751]",
   },
   {
     title: "Feedback on the exact words",
     body: "Your adviser highlights a sentence and comments on it. You reply, fix it, and they mark it resolved.",
-    tone: "bg-[#eef6df] text-[#123f2b]",
-    soft: "text-[#3d5a3e]",
+    tone: "bg-white text-[#123f2b]",
+    soft: "text-[#4d5751]",
   },
   {
     title: "Always know what's next",
@@ -85,8 +78,8 @@ const features = [
   {
     title: "Chat with your group and adviser",
     body: "Direct messages and one group chat for every project, plus notices in the app and by email so nothing slips.",
-    tone: "bg-[#fff4d6] text-[#5b4300]",
-    soft: "text-[#7a5f10]",
+    tone: "bg-white text-[#123f2b]",
+    soft: "text-[#4d5751]",
   },
   {
     title: "Your files, in one place",
@@ -99,7 +92,6 @@ const features = [
 const roles = [
   {
     name: "Student",
-    emoji: "🧑‍🎓",
     lead: "Your whole capstone, one tab away.",
     points: [
       "Write the manuscript with your group, live",
@@ -110,7 +102,6 @@ const roles = [
   },
   {
     name: "Adviser",
-    emoji: "🧑‍🏫",
     lead: "Guide your groups without the paper chase.",
     points: [
       "Form groups and add your students",
@@ -121,7 +112,6 @@ const roles = [
   },
   {
     name: "Dean",
-    emoji: "🏛️",
     lead: "The whole department at a glance.",
     points: [
       "Endorse titles and watch every group's progress",
@@ -132,7 +122,6 @@ const roles = [
   },
   {
     name: "Panelist",
-    emoji: "🎤",
     lead: "Be ready for every defense you sit on.",
     points: [
       "See the defenses you are assigned to",
@@ -142,7 +131,6 @@ const roles = [
   },
   {
     name: "Grammarian",
-    emoji: "✏️",
     lead: "Check the final manuscript with care.",
     points: [
       "Receive final manuscripts from the Dean",
@@ -152,7 +140,6 @@ const roles = [
   },
   {
     name: "Dean's Secretary",
-    emoji: "🗂️",
     lead: "Records that are always in order.",
     points: [
       "Group folders for every project",
@@ -215,9 +202,9 @@ function EditorPreview() {
     <div className="relative mx-auto w-full max-w-md" aria-hidden="true">
       <div className="landing-float rounded-3xl border border-[#dfe8d6] bg-white p-5 shadow-[0_30px_70px_rgba(18,63,43,0.16)]">
         <div className="flex items-center gap-2 border-b border-[#eef1e8] pb-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff8a7a]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ffd36b]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#7ed957]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#d7f7d8]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#a8e87a]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#4ac214]" />
           <p className="ml-2 text-xs font-semibold text-[#6a736e]">Chapter 1 · Introduction</p>
         </div>
 
@@ -225,16 +212,16 @@ function EditorPreview() {
           <p className="font-bold text-[#123f2b]">Background of the Study</p>
           <p>
             Capstone groups at the college still track their work on paper, so{" "}
-            <span className="rounded bg-[#fff0a8] px-0.5">advisers lose track of who has done what</span>
-            <span className="relative mx-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-[#e0507a]">
-              <span className="absolute -top-5 left-0 whitespace-nowrap rounded-md rounded-bl-none bg-[#e0507a] px-1.5 py-0.5 text-[10px] font-bold text-white">Mika</span>
+            <span className="rounded bg-[#d7f7d8] px-0.5">advisers lose track of who has done what</span>
+            <span className="relative mx-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-[#123f2b]">
+              <span className="absolute -top-5 left-0 whitespace-nowrap rounded-md rounded-bl-none bg-[#123f2b] px-1.5 py-0.5 text-[10px] font-bold text-white">Erin</span>
             </span>
             .
           </p>
           <p>
             This study builds one place where the group writes together,
-            <span className="relative mx-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-[#2f7bd8]">
-              <span className="absolute -top-5 left-0 whitespace-nowrap rounded-md rounded-bl-none bg-[#2f7bd8] px-1.5 py-0.5 text-[10px] font-bold text-white">Jun</span>
+            <span className="relative mx-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-[#3a7f35]">
+              <span className="absolute -top-5 left-0 whitespace-nowrap rounded-md rounded-bl-none bg-[#3a7f35] px-1.5 py-0.5 text-[10px] font-bold text-white">Sheena</span>
             </span>{" "}
             and the adviser can follow along.
           </p>
@@ -253,7 +240,8 @@ function EditorPreview() {
       </div>
 
       <div className="landing-float-slow absolute -left-3 -top-5 rounded-2xl bg-[#123f2b] px-3.5 py-2 text-xs font-bold text-white shadow-lg sm:-left-8">
-        🎤 Proposal Defense · Mon 9:00
+        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#4ac214]" />
+        Proposal Defense · Mon 9:00
       </div>
     </div>
   );
@@ -307,7 +295,7 @@ function Journey() {
       </div>
 
       <div role="tabpanel" className="mt-4 grid gap-6 rounded-3xl border border-[#dfe8d6] bg-white p-6 shadow-[0_20px_60px_rgba(18,63,43,0.08)] md:grid-cols-[auto_1fr] md:items-center md:p-8">
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[#eef6df] text-5xl">{step.emoji}</div>
+        <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-[#dfe8d6] bg-white text-4xl font-extrabold text-[#3a7f35]">{String(active + 1).padStart(2, "0")}</div>
         <div>
           <p className="text-sm font-bold text-[#3a7f35]">
             Step {active + 1} of {journey.length} · {step.who}
@@ -338,6 +326,9 @@ function Journey() {
   );
 }
 
+// A short mark for a role (its initial), so no picture is needed.
+const roleMark = (name: string) => (name === "Dean's Secretary" ? "DS" : name.charAt(0));
+
 function Roles() {
   const [active, setActive] = useState(0);
   const role = roles[active];
@@ -359,7 +350,7 @@ function Roles() {
                 selected ? "border-[#123f2b] bg-[#123f2b] text-white" : "border-[#dfe8d6] bg-white text-[#123f2b] hover:border-[#123f2b]"
               }`}
             >
-              <span className="text-xl">{item.emoji}</span>
+              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] ${selected ? "bg-white/20 text-white" : "bg-[#eef6df] text-[#123f2b]"}`}>{roleMark(item.name)}</span>
               {item.name}
             </button>
           );
@@ -367,12 +358,12 @@ function Roles() {
       </div>
 
       <div role="tabpanel" className="rounded-3xl border border-[#dfe8d6] bg-white p-6 md:p-8">
-        <p className="text-4xl">{role.emoji}</p>
+        <p className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#dfe8d6] bg-white text-lg font-extrabold text-[#3a7f35]">{roleMark(role.name)}</p>
         <h3 className="mt-3 text-2xl font-bold text-[#123f2b]">{role.name}</h3>
         <p className="mt-1 text-base text-[#4d5751]">{role.lead}</p>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {role.points.map((point) => (
-            <li key={point} className="flex gap-3 rounded-2xl bg-[#f6f9ef] p-4 text-sm font-semibold leading-6 text-[#2c3a31]">
+            <li key={point} className="flex gap-3 rounded-2xl border border-[#e3eadd] bg-white p-4 text-sm font-semibold leading-6 text-[#2c3a31]">
               <span className="mt-0.5 text-[#3a7f35]">✓</span>
               {point}
             </li>
@@ -415,7 +406,7 @@ function FAQAccordion() {
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#f9f9ff] text-[#171c19]">
+    <main className="relative min-h-screen overflow-x-clip bg-white text-[#171c19]">
       <style>{`
         @keyframes landing-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
         .landing-float { animation: landing-float 6s ease-in-out infinite; }
@@ -423,37 +414,41 @@ export default function Home() {
         @media (prefers-reduced-motion: reduce) { .landing-float, .landing-float-slow { animation: none; } }
       `}</style>
 
-      {/* Fixed at the top while scrolling, as a solid dark floating card (black blending into deep green) with room around it. */}
-      <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-5 rounded-2xl border border-white/10 bg-[linear-gradient(120deg,#08090a_0%,#0e1411_55%,#123f2b_100%)] px-5 py-3 shadow-[0_14px_40px_rgba(8,9,10,0.35)] lg:px-7">
-          <a href="#" className="flex shrink-0 items-center gap-2.5 sm:gap-3">
-            {/* The logo has dark dots, so it sits on a small white tile to stay clearly visible on the black card. */}
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.25),0_0_18px_rgba(74,194,20,0.25)]">
-              <Image src="/logotop.png" alt="Project Pulse" width={30} height={30} className="rounded-md" priority />
-            </span>
-            <span className="whitespace-nowrap text-base font-bold text-white sm:text-lg">
-              Project <span className="text-[#4ac214]">Pulse</span>
+      {/* The top of the page is one smooth fade in a single colour family: a deep emerald edge, a vivid green, then pastel mint and white. A fine grain
+          makes it feel soft like paper, and the rounded corners frame it like a card. Nothing here can be clicked. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-2 top-2 z-0 h-[580px] overflow-hidden rounded-t-[28px] sm:inset-x-3 sm:top-3">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#052b1d_0%,#0a3d2b_9%,#14684a_21%,#3fa97c_35%,#9fdcbf_50%,#d5f1e3_63%,#eef9f3_78%,rgba(255,255,255,0)_100%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.5] mix-blend-soft-light [mask-image:linear-gradient(180deg,#000_0%,#000_45%,transparent_85%)]"
+          style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }}
+        />
+      </div>
+
+      {/* Fixed at the top while scrolling: a small white card with a soft glow, centred, with room around it. */}
+      <header className="sticky top-0 z-50 px-4 pt-5 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 rounded-xl bg-white px-4 py-2.5 shadow-[0_0_40px_rgba(220,255,225,0.35),0_10px_28px_rgba(10,60,35,0.2)] sm:px-5">
+          <a href="#" className="flex shrink-0 items-center gap-2.5">
+            <Image src="/logotop.png" alt="Project Pulse" width={30} height={30} className="rounded-md" priority />
+            <span className="whitespace-nowrap text-base font-bold tracking-tight text-[#123f2b] sm:text-lg">
+              Project <span className="text-[#3f9f1a]">Pulse</span>
             </span>
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-white/70 md:flex">
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-[#2b3a31] md:flex">
             {navLinks.map(([label, href]) => (
-              <a key={href} href={href} className="transition hover:text-white">
+              <a key={href} href={href} className="transition hover:text-[#3f9f1a]">
                 {label}
               </a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <a
-              href="/login"
-              className="hidden rounded-lg border border-white/25 px-4 py-2 text-sm font-bold text-white transition hover:border-white hover:bg-white/10 sm:inline-flex"
-            >
+          <div className="flex items-center gap-1 sm:gap-2">
+            <a href="/login" className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-[#2b3a31] transition hover:bg-[#f1f5f1] sm:inline-flex">
               Log in
             </a>
             <a
               href="/register"
-              className="whitespace-nowrap rounded-lg bg-[#4ac214] px-3 py-2 text-xs font-bold text-[#08140c] transition hover:bg-[#5fd62a] sm:px-4 sm:text-sm"
+              className="whitespace-nowrap rounded-lg bg-[#123f2b] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#0f3324] sm:px-5 sm:text-sm"
             >
               Create Account
             </a>
@@ -462,13 +457,9 @@ export default function Home() {
       </header>
 
       <section
-        className="relative overflow-hidden px-5 pb-28 pt-14 text-center lg:px-8 lg:pb-36 lg:pt-16"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 100%, rgba(210, 255, 158, 0.65), rgba(207, 247, 236, 0.55) 46%, rgba(249, 249, 255, 0) 82%), radial-gradient(circle at 50% 28%, rgba(207, 247, 236, 0.34), rgba(249, 249, 255, 0) 58%), linear-gradient(180deg, #f9f9ff 0%, #f9f9ff 100%)",
-        }}
+        className="relative z-10 overflow-hidden px-5 pb-28 pt-40 text-center lg:px-8 lg:pb-36 lg:pt-44"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(#dfe3eb_1px,transparent_1px)] opacity-45 [background-size:24px_24px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#d3e3d0_1px,transparent_1px)] opacity-45 [background-size:24px_24px] [mask-image:linear-gradient(180deg,transparent_0%,transparent_30%,#000_65%)]" />
 
         <div className="relative z-10 mx-auto max-w-5xl">
           <PulseMark />
@@ -574,7 +565,7 @@ export default function Home() {
           <h2 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Ready in three steps.</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {gettingStarted.map(([title, text], index) => (
-              <div key={title} className="rounded-2xl bg-[#f6f9ef] p-6">
+              <div key={title} className="rounded-2xl border border-[#e3eadd] bg-white p-6">
                 <p className="text-4xl font-extrabold text-[#4ac214]">{index + 1}</p>
                 <h3 className="mt-3 text-lg font-bold text-[#123f2b]">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#4d5751]">{text}</p>
