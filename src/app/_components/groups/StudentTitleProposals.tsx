@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { titleStatusClass } from "../ProposalStage";
+import CollapsibleTitle from "./CollapsibleTitle";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage, type ApiGroup, type ApiTitleSubmission } from "../../_lib/groups";
-import { formatDate } from "../../_lib/requirements";
+import { formatDateTime } from "../../_lib/requirements";
 import type { JSONContent } from "@tiptap/react";
 import ProposalEditor from "./ProposalEditor";
 import ProposalView from "./ProposalView";
@@ -153,28 +153,20 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
         <ul className="mt-2 divide-y divide-[#edf2ec]">
           {titles.map((item) => (
             <li key={item.title_id} className="py-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
-                  <p className="mt-0.5 text-[11px] text-[#9aa59e]">
-                    {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Sent "}
-                    {formatDate(item.submitted_at)}
-                  </p>
-                </div>
+              <CollapsibleTitle
+                title={item.proposed_title}
+                meta={`${item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Sent "}${formatDateTime(item.submitted_at)}`}
+                status={item.title_status}
+              >
+                {item.review_remarks && (
+                  <div className="mt-2 border-l-2 border-rose-300 pl-3">
+                    <p className="text-xs font-semibold text-[#203028]">Adviser says</p>
+                    <p className="mt-0.5 text-xs leading-5 text-[#59645d]">{item.review_remarks}</p>
+                  </div>
+                )}
 
-                <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
-                  {item.title_status}
-                </span>
-              </div>
-
-              <ProposalView item={item} />
-
-              {item.review_remarks && (
-                <div className="mt-2 border-l-2 border-rose-300 pl-3">
-                  <p className="text-xs font-semibold text-[#203028]">Adviser says</p>
-                  <p className="mt-0.5 text-xs leading-5 text-[#59645d]">{item.review_remarks}</p>
-                </div>
-              )}
+                <ProposalView item={item} />
+              </CollapsibleTitle>
             </li>
           ))}
         </ul>

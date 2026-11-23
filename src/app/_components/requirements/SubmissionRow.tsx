@@ -7,6 +7,7 @@ import VersionHistory from "./VersionHistory";
 import {
   describeStatus,
   formatDate,
+  formatDateTime,
   isOverdue,
   toneDot,
   type ApiRequirement,
@@ -170,7 +171,7 @@ export default function SubmissionRow({
             {row.course} {row.section}
             {role !== "Adviser" && row.adviser ? ` · ${row.adviser}` : ""}
             {submission
-              ? ` · Version ${submission.version_no}, ${formatDate(submission.submitted_at)}`
+              ? ` · Version ${submission.version_no} · ${submission.submitted_by ? `Submitted by ${submission.submitted_by} · ` : "Submitted "}${formatDateTime(submission.submitted_at)}`
               : ""}
           </p>
         </div>
@@ -233,11 +234,10 @@ export default function SubmissionRow({
             </p>
           )}
 
-          {submission && (submission.submitted_by || submission.notes) && (
+          {submission && (
             <p className="mt-1.5 text-[11px] text-[#9aa59e]">
-              {submission.submitted_by ? `Sent by ${submission.submitted_by}` : ""}
-              {submission.submitted_by && submission.notes ? " · " : ""}
-              {submission.notes ? `“${submission.notes}”` : ""}
+              {submission.submitted_by ? `Submitted by ${submission.submitted_by}` : "Submitted"} · {formatDateTime(submission.submitted_at)}
+              {submission.notes ? ` · “${submission.notes}”` : ""}
             </p>
           )}
 

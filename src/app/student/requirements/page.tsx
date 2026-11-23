@@ -13,6 +13,7 @@ import {
   describeTitleProposal,
   feedbackFor,
   formatDate,
+  formatDateTime,
   isOverdue,
   toneDot,
   type ApiRequirement,
@@ -304,8 +305,8 @@ function RequirementRow({
           {submission && (
             <div className="text-xs leading-6 text-[#7b877f]">
               <p>
-                Version {submission.version_no} · sent {formatDate(submission.submitted_at)}
-                {submission.submitted_by ? ` by ${submission.submitted_by}` : ""}
+                Version {submission.version_no} · {submission.submitted_by ? `Submitted by ${submission.submitted_by} · ` : "Submitted "}
+                {formatDateTime(submission.submitted_at)}
               </p>
 
               {submission.has_file && (

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiFetch, downloadSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
-import { formatDate, type ApiSubmissionVersion } from "../../_lib/requirements";
+import { formatDateTime, type ApiSubmissionVersion } from "../../_lib/requirements";
 
 // Earlier versions of one submission. Loaded only when opened.
 export default function VersionHistory({
@@ -62,7 +62,8 @@ export default function VersionHistory({
           {versions.map((version) => (
             <li key={version.version_no} className="leading-5 text-[#7b877f]">
               <p>
-                Version {version.version_no} · {formatDate(version.submitted_at)} ·{" "}
+                Version {version.version_no} · {version.submitted_by ? `submitted by ${version.submitted_by} · ` : ""}
+                {formatDateTime(version.submitted_at)} ·{" "}
                 {version.outcome === "Needs Revision" ? "sent back" : version.outcome.toLowerCase()}
               </p>
 

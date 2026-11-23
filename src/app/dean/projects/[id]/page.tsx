@@ -7,7 +7,7 @@ import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
-import { GroupStatusNote, StageSteps, titleStatusClass } from "../../../_components/ProposalStage";
+import { GroupStatusNote, StageSteps } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
 import CertificateList from "../../../_components/certificates/CertificateList";
 import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
@@ -31,7 +31,8 @@ import {
   type CloseReason,
   type RemovalReason,
 } from "../../../_lib/groups";
-import { formatDate } from "../../../_lib/requirements";
+import { formatDate, formatDateTime } from "../../../_lib/requirements";
+import CollapsibleTitle from "../../../_components/groups/CollapsibleTitle";
 import ProposalView from "../../../_components/groups/ProposalView";
 import DescriptionText from "../../../_components/groups/DescriptionText";
 
@@ -258,11 +259,14 @@ export default function DeanProjectProfilePage() {
 
             <ul className="mt-4 space-y-2">
               {approved.map((item) => (
-                <li key={item.title_id} className="rounded-lg bg-[#f8faf7] px-4 py-3 text-sm font-semibold text-[#203028]">
-                  {item.proposed_title}
-                  <div className="font-normal">
+                <li key={item.title_id} className="rounded-lg bg-[#f8faf7] px-4 py-3">
+                  <CollapsibleTitle
+                    title={item.proposed_title}
+                    meta={`${item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}${formatDateTime(item.submitted_at)}`}
+                    status={item.title_status}
+                  >
                     <ProposalView item={item} />
-                  </div>
+                  </CollapsibleTitle>
                 </li>
               ))}
             </ul>
@@ -414,28 +418,19 @@ export default function DeanProjectProfilePage() {
 
               {titles.map((item) => (
                 <div key={item.title_id} className="rounded-xl bg-[#f8faf7] p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#203028]">
-                        {item.proposed_title}
-                      </p>
-                      <p className="mt-1 text-xs text-[#7b877f]">
-                        {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}
-                        {formatDate(item.submitted_at)}
-                        {item.reviewed_by ? ` • Reviewed by ${item.reviewed_by.name}` : ""}
-                      </p>
-                    </div>
+                  <CollapsibleTitle
+                    title={item.proposed_title}
+                    meta={`${item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}${formatDateTime(item.submitted_at)}${item.reviewed_by ? ` · Reviewed by ${item.reviewed_by.name}` : ""}`}
+                    status={item.title_status}
+                  >
+                    <ProposalView item={item} />
 
-                    <span className={`text-xs font-semibold ${titleStatusClass[item.title_status]}`}>
-                      {item.title_status}
-                    </span>
-                  </div>
-
-                  {item.review_remarks && (
-                    <p className="mt-3 text-xs leading-5 text-[#59645d]">
-                      Remarks: {item.review_remarks}
-                    </p>
-                  )}
+                    {item.review_remarks && (
+                      <p className="mt-3 text-xs leading-5 text-[#59645d]">
+                        Remarks: {item.review_remarks}
+                      </p>
+                    )}
+                  </CollapsibleTitle>
                 </div>
               ))}
             </div>

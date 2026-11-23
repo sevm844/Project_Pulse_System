@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { GroupStatusNote, StageSteps, titleStatusClass } from "../ProposalStage";
+import { GroupStatusNote, StageSteps } from "../ProposalStage";
 import { apiFetch } from "../../_lib/api";
 import {
   chooseGroupTitle,
@@ -13,8 +13,9 @@ import {
   type ApiGroup,
   type ApiTitleSubmission,
 } from "../../_lib/groups";
-import { formatDate } from "../../_lib/requirements";
+import { formatDateTime } from "../../_lib/requirements";
 import GroupFilterBar, { NO_GROUP_FILTER, matchesGroupFilter, type GroupFacts, type GroupFilter } from "../requirements/GroupFilterBar";
+import CollapsibleTitle from "./CollapsibleTitle";
 import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
@@ -338,20 +339,11 @@ export default function AdviserTitleReview({
 
                 {titles.map((item) => (
                   <li key={item.title_id} className="py-3">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#203028]">{item.proposed_title}</p>
-                        <p className="mt-0.5 text-[11px] text-[#9aa59e]">
-                          {item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}
-                          {formatDate(item.submitted_at)}
-                        </p>
-                      </div>
-
-                      <span className={`text-[11px] font-semibold ${titleStatusClass[item.title_status]}`}>
-                        {item.title_status}
-                      </span>
-                    </div>
-
+                    <CollapsibleTitle
+                      title={item.proposed_title}
+                      meta={`${item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}${formatDateTime(item.submitted_at)}`}
+                      status={item.title_status}
+                    >
                     <ProposalView item={item} />
 
                     {item.review_remarks && (
@@ -426,6 +418,7 @@ export default function AdviserTitleReview({
                         )}
                       </div>
                     )}
+                    </CollapsibleTitle>
                   </li>
                 ))}
               </ul>

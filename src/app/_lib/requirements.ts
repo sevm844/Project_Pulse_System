@@ -204,6 +204,8 @@ export type ApiSubmissionVersion = {
   link_url: string | null;
   notes: string | null;
   submitted_at: string | null;
+  // The student who sent this version (null if it was not recorded).
+  submitted_by: string | null;
   outcome: SubmissionStatus;
   remarks: string | null;
 };

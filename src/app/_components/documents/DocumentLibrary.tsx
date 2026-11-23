@@ -7,7 +7,7 @@ import DocxPreview from "./DocxPreview";
 import VersionHistory from "../requirements/VersionHistory";
 import { apiFetch, downloadProjectDocuments, downloadSubmission, previewSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
-import { formatDate, toneDot, type StatusTone } from "../../_lib/requirements";
+import { formatDate, formatDateTime, toneDot, type StatusTone } from "../../_lib/requirements";
 
 type ApiDocument = {
   submission_id: number;
@@ -348,8 +348,8 @@ export default function DocumentLibrary({ role }: { role: Role }) {
                     {item.requirement_title}
                     {role !== "Student" ? ` · ${item.group_name} (${item.course} ${item.section})` : ""}
                     {` · Version ${item.version_no}`}
-                    {item.submitted_at ? ` · ${formatDate(item.submitted_at)}` : ""}
-                    {item.submitted_by && role !== "Student" ? ` · ${item.submitted_by}` : ""}
+                    {item.submitted_by ? ` · Submitted by ${item.submitted_by}` : ""}
+                    {item.submitted_at ? ` · ${formatDateTime(item.submitted_at)}` : ""}
                   </p>
                 </div>
 

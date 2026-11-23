@@ -48,7 +48,8 @@ Dean, Student, Adviser, Panelist, Grammarian, Dean's Secretary (the database rol
 - **Titles:** only the group's Adviser approves / requests revision / rejects. The Dean has NO title-approval action
   (do not add one). Up to 3 titles Pending or Approved at a time. Approving does not set the project title; the single
   chosen title is set at "choose title" and must be one the Dean endorsed.
-- **Every title proposal records which student sent it** (`title_submissions.submitted_by`, shown as "Submitted by <name> · <date>" to the group, the adviser and the Dean; the adviser's "New title proposal" notice also names the student). Proposals sent before this existed have no name and just say "Sent <date>": nobody guesses.
+- **Every title proposal records which student sent it** (`title_submissions.submitted_by`, shown as "Submitted by <name> · <date>, <time>" (Philippine time, `formatDateTime`) to the group, the adviser and the Dean; the adviser's "New title proposal" notice also names the student). Proposals sent before this existed have no name and just say "Sent <date>": nobody guesses.
+- **Title proposal lists are closed rows** (`CollapsibleTitle`: title, "Submitted by <name> · date, time", status, "Open ▼"), for the student, the adviser (the Approve / Request revision / Reject buttons sit inside the opened row) and the Dean (both the endorsement list and the project's title list). A group with many revisions or rejections must stay short: never show every proposal's content open at once.
 - **A title proposal is written in a simple text editor** (`ProposalEditor`, TipTap: bold, italic, underline, bullet and numbered lists only; a Title box above it). The student writes
   everything in it (context, target audience, technology stack...): there are no separate fields, and nothing is pre-filled. It is stored as editor JSON in
   `title_submissions.proposal_content` (never HTML), checked by the manuscript whitelist (`ManuscriptContent::check`, max 200 KB), with its plain text copied to
@@ -109,6 +110,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Dean's Secretary (the database rol
   adviser decides on them inside the Requirements page (`StudentTitleProposals`, `AdviserTitleReview`). The Module 2 rules
   above still apply unchanged. It cannot be deleted; the adviser may only edit its instructions, due date and sections. The
   Dean's Requirements list leaves it out (the Dean uses the endorsement queue).
+- **Who sent a submission and when is always shown, with the time:** "Submitted by <name> · Nov 23, 2026, 2:15 PM" (`formatDateTime`, Philippine time) on the student's Requirements page, the adviser/Dean group rows (visible without opening the row), every line of the version history (`RequirementSubmissionVersion::shape` returns `submitted_by`) and the Documents page for every role. Use `formatDateTime`, not `formatDate`, for moments people sent or saved something; `formatDate` is for due dates.
 - **Instructions:** every assignment has "Instructions for students" (`requirements.description`), shown to students as "From <adviser>".
 - **Sections:** an assignment can be limited to chosen sections (`requirements.sections`, labels like "BSIT 4A", NULL = all of the
   adviser's groups). The dropdown lists the sections the adviser actually advises. `Requirement::appliesTo` enforces it.
