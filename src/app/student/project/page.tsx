@@ -221,15 +221,11 @@ export default function ProjectPage() {
             <div className="mt-6 border-t border-[#edf2ec] pt-5">
               <h4 className="text-sm font-semibold text-[#203028]">Leave this group</h4>
 
-              {endorsed ? (
-                <p className="mt-2 text-xs leading-5 text-[#7b877f]">
-                  The Dean already endorsed your group&apos;s titles, so membership is locked. If you have a genuine
-                  emergency, ask the Dean&apos;s office.
-                </p>
-              ) : leaving ? (
+              {leaving ? (
                 <div className="mt-3 space-y-3">
                   <p className="text-xs text-[#59645d]">
                     You will be removed from {group.group_name}. If you were the leader, the next member becomes leader.
+                    {endorsed ? " The Dean already endorsed your group's titles; that stays as it is. Your adviser and your groupmates are told that you left." : ""}
                   </p>
                   <input
                     value={leaveReason}

@@ -66,7 +66,7 @@ Dean, Student, Adviser, Panelist, Grammarian, Dean's Secretary (the database rol
 - **Leaving / removal:** a student can leave; the Adviser or Dean can remove one, but a reason category is required and goes
   to the audit log. Leaving moves the person to `group_member_exits` (history kept). If the leader leaves, the member who
   joined earliest becomes leader. If nobody is left the group becomes 'Pending Closure' until the Adviser/Dean confirms; it is
-  never deleted. After the Dean's endorsement membership is locked; only the Dean's separate exception removal (reason +
+  never deleted. After the Dean's endorsement the Adviser's and Dean's normal Remove is locked, but **a student can always leave on their own (the Leave button stays open, the endorsement stays); only the Dean's separate exception removal (reason +
   details, Critical audit entry) can change it.
 - **Closing a group:** a student is in at most one group that is not `Closed` (`Project::currentFor` is the one "current project" rule).
   A group that lost every member is confirmed closed by its Adviser or the Dean. The Dean alone can also close a group that still has
