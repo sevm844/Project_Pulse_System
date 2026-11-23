@@ -112,7 +112,7 @@ export default function StudentDashboardPage() {
   } else if (stage === "Dean's Endorsement") {
     nextStep = {
       heading: "Waiting for the Dean",
-      text: "Your adviser sent your approved titles to the Dean. The Dean will review them with your group and sign off.",
+      text: "Your adviser sent your approved titles to the Dean. The Dean will review them with your group and approve.",
       action: "View Requirements",
       href: "/student/requirements",
     };

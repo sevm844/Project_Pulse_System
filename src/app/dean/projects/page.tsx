@@ -134,7 +134,7 @@ export default function DeanProjectsPage() {
           <div className="flex min-w-[640px] divide-x divide-[#cfe8c8]">
             {[
               ["Total Projects", projects.length, "Registered groups"],
-              ["Awaiting Endorsement", awaiting.length, "Needs your sign-off"],
+              ["Awaiting Endorsement", awaiting.length, "Needs your approval"],
               ["Ready for Defense", ready, "Proposal Defense next"],
               ["Advisers", advisers.length, "With assigned groups"],
             ].map(([label, value, caption]) => (

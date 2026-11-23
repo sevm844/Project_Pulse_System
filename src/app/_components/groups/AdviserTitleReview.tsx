@@ -287,7 +287,7 @@ export default function AdviserTitleReview({
 
               {stage === "Dean's Endorsement" && (
                 <p className="mt-4 rounded-lg bg-[#f8faf7] p-3 text-sm text-[#59645d]">
-                  Waiting for the Dean to review the approved titles, talk with the group and sign off.
+                  Waiting for the Dean to review the approved titles, talk with the group and approve.
                 </p>
               )}
 

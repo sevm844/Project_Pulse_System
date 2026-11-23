@@ -253,7 +253,7 @@ export default function DeanProjectProfilePage() {
             <h3 className="text-lg font-semibold text-[#203028]">Endorse this group&apos;s titles</h3>
             <p className="mt-2 text-sm text-[#59645d]">
               The adviser approved the titles below and sent the group to you. Review them, discuss them with the
-              group, then sign off. Signing off moves the group to Client Consultation. The group picks its single
+              group, then approve. Approving moves the group to Client Consultation. The group picks its single
               title later, after the client consultation.
             </p>
 
@@ -272,7 +272,7 @@ export default function DeanProjectProfilePage() {
             </ul>
 
             <p className="mt-4 text-xs text-[#59645d]">
-              The group brings its letter for interview (the form from the Forms tab) to your office. The real sign-off is on the paper.
+              The group brings its letter for interview (the form from the Forms tab) to your office. The real signature is on the paper.
             </p>
 
             <label className="mt-4 block text-xs font-semibold text-[#203028]">
@@ -292,12 +292,12 @@ export default function DeanProjectProfilePage() {
               onClick={() =>
                 void run(
                   () => endorseGroup(group.group_id, notes.trim()),
-                  "Signed off. The group is now at Client Consultation.",
+                  "Approved. The group is now at Client Consultation.",
                 )
               }
               className="mt-4 rounded-full bg-[#123f2b] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60"
             >
-              {busy ? "Signing off..." : "Sign off and endorse"}
+              {busy ? "Approving..." : "Approve"}
             </button>
 
             <div className="mt-6 border-t border-[#edf2ec] pt-5">
@@ -360,7 +360,7 @@ export default function DeanProjectProfilePage() {
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Dean&apos;s endorsement</h3>
             <p className="mt-2 text-xs text-[#7b877f]">
-              Signed by {project.endorsement.signed_by || "the Dean"} on {formatDate(project.endorsement.signed_at)}
+              Approved by {project.endorsement.signed_by || "the Dean"} on {formatDate(project.endorsement.signed_at)}
             </p>
             <ul className="mt-3 space-y-1 text-sm text-[#203028]">
               {project.endorsement.titles.map((item) => (
