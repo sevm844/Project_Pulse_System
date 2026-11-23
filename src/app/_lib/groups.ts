@@ -159,3 +159,8 @@ export const reopenGroup = (groupId: number, reason: string) => post(`/groups/${
 export function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;
 }
+
+// The letter for interview is a form on the Forms shelf. The adviser only reminds the group to do it.
+export function remindGroupAboutLetter(groupId: number) {
+  return apiFetch<{ reminded: boolean; students: number }>(`/groups/${groupId}/letter-reminder`, { method: "POST" });
+}

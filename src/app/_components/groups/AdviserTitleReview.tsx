@@ -8,14 +8,13 @@ import {
   errorMessage,
   isGroupConfirmed,
   NO_TITLE_YET,
+  remindGroupAboutLetter,
   sendGroupToDean,
   type ApiGroup,
   type ApiTitleSubmission,
 } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
-import { fetchInterviewLetter, giveInterviewLetter, type InterviewLetterState } from "../../_lib/interviewLetter";
 import GroupFilterBar, { NO_GROUP_FILTER, matchesGroupFilter, type GroupFacts, type GroupFilter } from "../requirements/GroupFilterBar";
-import LetterViewer from "./LetterViewer";
 import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
@@ -54,8 +53,6 @@ export default function AdviserTitleReview({
   const [deciding, setDeciding] = useState<{ id: number; status: Exclude<Decision, "Approved"> } | null>(null);
   const [remarks, setRemarks] = useState("");
   const [chosen, setChosen] = useState<Record<number, number>>({});
-  // Each group's letter for interview (given or not). The Send to Dean button waits for it.
-  const [letters, setLetters] = useState<Record<number, InterviewLetterState>>({});
 
   const [filter, setFilter] = useState<GroupFilter>(NO_GROUP_FILTER);
   const visibleItems = items.filter((item) => matchesGroupFilter(titleFacts(item), filter));
@@ -83,11 +80,6 @@ export default function AdviserTitleReview({
         })),
       );
 
-      const letterRows = await Promise.all(
-        groups.map(async (group) => [group.group_id, group.project ? await fetchInterviewLetter(group.group_id).catch(() => undefined) : undefined] as const),
-      );
-
-      setLetters(Object.fromEntries(letterRows.filter((row): row is readonly [number, InterviewLetterState] => row[1] !== undefined)));
       setItems(loaded);
       setError("");
     } catch (err) {
@@ -196,7 +188,6 @@ export default function AdviserTitleReview({
         const busy = savingId === group.group_id;
         const endorsed = group.project?.endorsement?.titles ?? [];
         const pick = chosen[group.group_id];
-        const letter = letters[group.group_id];
         const expanded = openGroups.includes(group.group_id);
         const status = titleStatus(titles);
 
@@ -206,9 +197,7 @@ export default function AdviserTitleReview({
             ? "Decide on every pending title first."
             : !confirmed
               ? "Every member must accept the group invitation first."
-              : letter && !letter.given
-                ? "Give the group its letter for interview first."
-                : "";
+              : "";
 
         return (
           <section key={group.group_id} className="rounded-xl border border-[#edf2ec] bg-white p-4">
@@ -266,31 +255,17 @@ export default function AdviserTitleReview({
                   </p>
                   <div className="mt-3 border-t border-[#e6eee6] pt-3">
                     <p className="text-sm font-semibold text-[#203028]">Letter for interview</p>
-                    {letter?.given ? (
-                      <>
-                        <p className="mt-1 text-xs text-[#59645d]">
-                          Given to the group on {formatDate(letter.given_at)}.{" "}
-                          {letter.edited_at ? `The group saved its changes on ${formatDate(letter.edited_at)}.` : "The group has not edited it yet."}
-                        </p>
-                        <div className="mt-2">
-                          <LetterViewer groupId={group.group_id} groupName={group.group_name} />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mt-1 text-xs text-[#59645d]">
-                          Give the group the school&apos;s sample letter. The students rewrite it for their project and print it before you send them to the Dean.
-                        </p>
-                        <button
-                          type="button"
-                          disabled={busy || approved.length === 0}
-                          onClick={() => void stageAction(group, () => giveInterviewLetter(group.group_id), `${group.group_name} was given its letter for interview.`)}
-                          className="mt-2 rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-40"
-                        >
-                          Give letter to group
-                        </button>
-                      </>
-                    )}
+                    <p className="mt-1 text-xs text-[#59645d]">
+                      The letter is a form in the Forms tab. Remind the students to do it now, before you send them to the Dean.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={busy || approved.length === 0}
+                      onClick={() => void stageAction(group, () => remindGroupAboutLetter(group.group_id), `${group.group_name} was reminded about its letter for interview.`)}
+                      className="mt-2 rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-40"
+                    >
+                      Remind the group
+                    </button>
                   </div>
 
                   {blocker && <p className="mt-3 text-xs text-[#7b877f]">{blocker}</p>}

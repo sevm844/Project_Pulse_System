@@ -34,15 +34,16 @@ Emails: `uat-student1@uat.test` (Alpha leader), `uat-student4@uat.test` (Beta), 
 | 13 | (Student 1) Press the **Versions** button at the top of the manuscript. Open **Comments** on Version 1, read your adviser's comments and reply to one. Press **Compare** to see what changed between your two versions. | | |
 | 14 | (Student 1) Press **Submit version**, add a note, and see it join the list. | | |
 | 15 | (Student 1) Press **Export PDF / Word**: keep the title page, table of contents and page numbers, then download **both** files and open them. Are the title page and numbers right? | | |
-| 16 | (Student 1) After your adviser gives the **Letter for interview** (under **Requirements, Title Proposal**): replace the [square brackets] with your own details, press **Save letter**, then **Download PDF** and open it. Does it look like a letter you could print and sign? | | |
+| 16 | (Student 1) Once a title of yours is approved, read the **Next step** line under **Requirements, Title Proposal**, and open the **Forms** tab: is the letter for interview there to download? Did you get a notice if your adviser reminded you? | | |
 | 17 | (Student 7) After the Grammarian has issued the certificate, open **My Project → Overview**: find the **Certificate of Editing/Originality**, press **View**, then download it as **PDF**. (Student 1 has none yet: the card should not appear.) | | |
 | 18 | (Student 1) After the Dean uploads a similarity report for UAT Alpha, open **Manuscript**. Press **Versions**; the report is at the top of that panel. View it and download it. Is it clear what to do next? | | |
 | 19 | Open **Requirements** and press the **Forms** tab. Read who each form is from, then download one and open it. You should see the Dean's forms and your own adviser's forms, and no Upload button. | | |
 | 20 | (Student 1) Open **Manuscript**, press **Blank document**, change its name and type a few lines. Press **← All documents** and find it in the list. | | |
 | 21 | (Students 1 and 2 at the same time, on two computers) Open the same blank document and type together. Do you see each other's coloured cursor and the line "<name> is also editing now"? Is all the text kept on both screens? | | |
 | 22 | In that document press **Share** and tick your adviser. Ask the adviser to find it (Manuscripts → Show versions → **Other documents shared with you**). Then untick it. | | |
-| 23 | In the official manuscript try the **zoom** box and **Full screen** under the page (press Esc to leave). Does the page count stay the same? | | |
-| 24 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
+| 23 | Share a document with your adviser, then press **Reviews → Send for review** (add a note). Keep typing, then press **Reviews** again: Copy 1 should be what you had when you sent it. When your adviser has commented, press **Open comments** and reply. Do you also see the decision (Approved / Needs changes) and its note? | | |
+| 24 | In the official manuscript try the **zoom** box and **Full screen** under the page (press Esc to leave). Does the page count stay the same? | | |
+| 25 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 
 ---
 
@@ -54,7 +55,7 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 |---|---|---|---|
 | 1 | Log in. On the dashboard, see where each of your groups is. | | |
 | 2 | Open **Requirements → Title Proposal**. (Adviser 1) Approve one title, ask for changes on another, reject a third. | | |
-| 3 | (Adviser 1) In **Title Proposal**, approve the title of **UAT Alpha**, then press **Give letter to group** (the **Send to Dean** button stays off until you do). Press **View letter** to read it. UAT Beta is already with the Dean: see where that shows. | | |
+| 3 | (Adviser 1) In **Title Proposal**, approve the title of **UAT Alpha**, then press **Remind the group** under **Letter for interview** (it only sends the students a reminder to do the letter from the **Forms** tab; nothing is attached). Press it again right away: it should say you already reminded the group. UAT Beta is already with the Dean: see where that shows. | | |
 | 4 | Edit the Title Proposal: write your own instructions and choose which sections it is for. | | |
 | 5 | Create a **new requirement**: give it a title, instructions, a due date and one section only. | | |
 | 6 | In the same form, limit the file types to PDF only, set a size limit and attach a template file. | | |
@@ -70,7 +71,8 @@ Emails: `uat-adviser1@uat.test` (groups Alpha and Beta), `uat-adviser2@uat.test`
 | 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 | 17 | (Adviser who has UAT Gamma) Open **Defenses**. After the panelists evaluate UAT Gamma, record the Proposal Defense result yourself. | | |
 | 18 | Open **Requirements → Forms**, press **Upload a form** and put up a form for your students (for example the letter for interview). A student of yours should see it; a student of another adviser should not. | | |
-| 19 | Open **Manuscripts → Show versions** on a group. If its students shared a document with you, find **Other documents shared with you** and press **Read** (it is read only). | | |
+| 19 | Open **Manuscripts → Show versions** on a group. If its students shared a document with you, find **Other documents shared with you** and press **Read now** (read only). | | |
+| 20 | On a document a group shared with you press **Reviews → Open and review** on its copy. Select words and press **+ Comment**; try **Decide → Needs changes** without a note (it should refuse) and then with one; later choose **Approve**. Mark a comment **Resolved**, then reopen it. | | |
 
 ---
 
@@ -81,7 +83,7 @@ Email: `uat-dean@uat.test`
 | # | Task | Result | Notes |
 |---|---|---|---|
 | 1 | Log in. On **Projects**, find what needs your attention. | | |
-| 2 | Open **UAT Beta**. Read the approved titles and press **View letter** to read its letter for interview (the real sign-off is on the printed paper). Then sign off with notes, or **return it to the adviser** with a note. | | |
+| 2 | Open **UAT Beta**. Read the approved titles (the group brings its letter for interview, from the Forms tab, to your office: the real sign-off is on the printed paper). Then sign off with notes, or **return it to the adviser** with a note. | | |
 | 3 | On a project's page, find the overall progress through all phases. | | |
 | 4 | Open **Defenses** and open **UAT Gamma**. It is a Proposal Defense, so its adviser records the result (the group stays with the adviser until then); you should see a note saying so, not a form. | | |
 | 5 | Open **Requirements** and **Documents** and look through what groups submitted. | | |
@@ -97,6 +99,7 @@ Email: `uat-dean@uat.test`
 | 15 | Open **Defenses → Schedule defense** and read the note about the order. Try to schedule an **Alpha Defense** for UAT Gamma before its Proposal Defense is passed: it should be refused with a clear message. | | |
 | 16 | Press **Feedback** and send one message. Then answer **Rate the system**. | | |
 | 17 | Open **Requirements → Forms**, press **Upload a form** and put up a form for every student (for example the milestone monitoring form). Check that a student can download it, then remove it. | | |
+| 18 | Open **Manuscripts → Show versions** on a group. If its students shared a document with the Dean and sent a copy, press **Reviews → Open and review** and write a comment. You can comment but there is no **Decide** button (only the adviser decides). | | |
 
 ---
 

@@ -6,7 +6,6 @@ import { apiFetch } from "../../_lib/api";
 import { errorMessage, type ApiGroup, type ApiTitleSubmission } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import type { JSONContent } from "@tiptap/react";
-import InterviewLetter from "./InterviewLetter";
 import ProposalEditor from "./ProposalEditor";
 import ProposalView from "./ProposalView";
 
@@ -181,7 +180,11 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
         </ul>
       </div>
 
-      <InterviewLetter groupId={group.group_id} groupName={group.group_name} />
+      {titles.some((item) => item.title_status === "Approved") && (
+        <p className="rounded-lg bg-[#f8faf7] p-3 text-xs leading-5 text-[#59645d]">
+          <span className="font-semibold text-[#203028]">Next step:</span> do your letter for interview. Download the form from the Forms tab at the top of this page, fill it in, and have it ready before you go to the Dean.
+        </p>
+      )}
     </div>
   );
 }

@@ -32,7 +32,6 @@ import {
   type RemovalReason,
 } from "../../../_lib/groups";
 import { formatDate } from "../../../_lib/requirements";
-import LetterViewer from "../../../_components/groups/LetterViewer";
 import ProposalView from "../../../_components/groups/ProposalView";
 import DescriptionText from "../../../_components/groups/DescriptionText";
 
@@ -268,15 +267,9 @@ export default function DeanProjectProfilePage() {
               ))}
             </ul>
 
-            <div className="mt-4 rounded-lg border border-[#edf2ec] bg-white p-3">
-              <p className="text-xs font-semibold text-[#203028]">Letter for interview</p>
-              <p className="mt-1 text-xs text-[#59645d]">
-                The group prints this letter and brings it to your office. The real sign-off is on the paper; read the same letter here to check it.
-              </p>
-              <div className="mt-2">
-                <LetterViewer groupId={group.group_id} groupName={group.group_name} />
-              </div>
-            </div>
+            <p className="mt-4 text-xs text-[#59645d]">
+              The group brings its letter for interview (the form from the Forms tab) to your office. The real sign-off is on the paper.
+            </p>
 
             <label className="mt-4 block text-xs font-semibold text-[#203028]">
               Notes from your discussion with the group (optional)
