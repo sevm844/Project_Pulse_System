@@ -15,6 +15,7 @@ import {
 } from "../../_lib/groups";
 import { formatDateTime } from "../../_lib/requirements";
 import GroupFilterBar, { NO_GROUP_FILTER, matchesGroupFilter, type GroupFacts, type GroupFilter } from "../requirements/GroupFilterBar";
+import RowToggle from "../RowToggle";
 import CollapsibleTitle from "./CollapsibleTitle";
 import ProposalView from "./ProposalView";
 
@@ -206,9 +207,9 @@ export default function AdviserTitleReview({
               type="button"
               onClick={() => toggleGroup(group.group_id)}
               aria-expanded={expanded}
-              className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
+              className="group flex w-full items-center gap-4 text-left"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#203028]">
                   {group.group_name}
                   <GroupStatusNote status={group.group_status} />
@@ -219,12 +220,13 @@ export default function AdviserTitleReview({
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <p className="text-xs font-semibold text-[#59645d]">
-                  Chosen title: {group.project?.project_title || NO_TITLE_YET}
-                </p>
-                <span className="text-xs font-semibold text-[#4f8f58]">{expanded ? "Hide ▲" : "Open ▼"}</span>
-              </div>
+              <p
+                title={group.project?.project_title || NO_TITLE_YET}
+                className="hidden w-56 shrink-0 truncate text-xs font-semibold text-[#59645d] md:block"
+              >
+                Chosen title: {group.project?.project_title || NO_TITLE_YET}
+              </p>
+              <RowToggle open={expanded} />
             </button>
 
             {expanded && (

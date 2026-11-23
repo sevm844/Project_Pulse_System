@@ -19,6 +19,8 @@ export type ApiFinalOutput = {
   has_file: boolean;
   link_url: string | null;
   submitted_at: string | null;
+  // The student who sent it (null when nothing is sent yet).
+  submitted_by: string | null;
   received_at: string | null;
 };
 

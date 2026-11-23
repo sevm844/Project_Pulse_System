@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiFetch, downloadSubmission, previewSubmission } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
+import RowToggle from "../RowToggle";
 import VersionHistory from "./VersionHistory";
 import {
   describeStatus,
@@ -161,9 +162,9 @@ export default function SubmissionRow({
         type="button"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
-        className="flex w-full flex-wrap items-center justify-between gap-3 text-left"
+        className="group flex w-full items-center gap-4 text-left"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#203028]">
             {row.group_name}
           </p>
@@ -176,19 +177,15 @@ export default function SubmissionRow({
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <span
+          className={`flex w-32 shrink-0 items-center gap-2 text-xs ${overdue ? "text-[#b42318]" : "text-[#59645d]"}`}
+        >
           <span
-            className={`flex items-center gap-2 text-xs ${overdue ? "text-[#b42318]" : "text-[#59645d]"}`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${overdue ? "bg-rose-500" : toneDot[status.tone]}`}
-            />
-            {overdue ? "Overdue" : status.label}
-          </span>
-          <span className="text-xs font-semibold text-[#4f8f58]">
-            {expanded ? "Hide ▲" : "Open ▼"}
-          </span>
-        </div>
+            className={`h-2 w-2 shrink-0 rounded-full ${overdue ? "bg-rose-500" : toneDot[status.tone]}`}
+          />
+          {overdue ? "Overdue" : status.label}
+        </span>
+        <RowToggle open={expanded} />
       </button>
 
       {expanded && (

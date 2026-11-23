@@ -17,6 +17,7 @@ import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
 import RequirementDialog from "./RequirementDialog";
 import FormsShelf from "./FormsShelf";
 import RequirementsExplorer from "./RequirementsExplorer";
+import RowToggle from "../RowToggle";
 import SubmissionRow, { filterRows, rowFacts } from "./SubmissionRow";
 import GroupFilterBar, {
   NO_GROUP_FILTER,
@@ -237,7 +238,7 @@ function FlatRequirements({ role }: { role: StaffRole }) {
                 type="button"
                 onClick={() => toggle(requirement.requirement_id)}
                 aria-expanded={open}
-                className="flex w-full items-center justify-between gap-6 py-4 text-left"
+                className="group flex w-full items-center justify-between gap-6 py-4 text-left"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[#203028]">
@@ -274,6 +275,8 @@ function FlatRequirements({ role }: { role: StaffRole }) {
                       </p>
                     </div>
                   )}
+
+                  <RowToggle open={open} />
                 </div>
               </button>
 

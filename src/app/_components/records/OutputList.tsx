@@ -4,7 +4,7 @@ import { useState } from "react";
 import { apiFetch, downloadSubmission } from "../../_lib/api";
 import { outputDot, type ApiFinalOutput } from "../../_lib/finalOutputs";
 import { errorMessage } from "../../_lib/groups";
-import { formatDate } from "../../_lib/requirements";
+import { formatDate, formatDateTime } from "../../_lib/requirements";
 
 // The final outputs of one group. With onReceived, ready outputs can be marked received on the spot.
 export default function OutputList({
@@ -59,6 +59,12 @@ export default function OutputList({
               {output.received_at ? ` · ${formatDate(output.received_at)}` : ""}
               {output.version_no && output.version_no > 1 ? ` · version ${output.version_no}` : ""}
             </p>
+            {output.submitted_at && (
+              <p className="mt-0.5 text-[11px] text-[#9aa59e]">
+                {output.submitted_by ? `Submitted by ${output.submitted_by} · ` : "Submitted "}
+                {formatDateTime(output.submitted_at)}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-4 font-semibold">

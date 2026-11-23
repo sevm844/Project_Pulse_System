@@ -20,6 +20,7 @@ import {
   type ApiSubmission,
 } from "../../_lib/requirements";
 import { REQUIREMENT_STAGES } from "../../_utils/projectWorkflow";
+import RowToggle from "../../_components/RowToggle";
 
 type Tab = "todo" | "review" | "done";
 
@@ -254,9 +255,9 @@ function RequirementRow({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-[#fbfdfb]"
+        className="group flex w-full items-center gap-4 px-4 py-3.5 text-left transition hover:bg-[#fbfdfb]"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-[#203028]">{requirement.title}</p>
           <p className={`mt-0.5 text-xs ${overdue ? "text-[#b42318]" : "text-[#7b877f]"}`}>
             {requirement.due_date ? `Due ${formatDate(requirement.due_date)}` : "No due date"}
@@ -265,10 +266,11 @@ function RequirementRow({
           </p>
         </div>
 
-        <span className="flex shrink-0 items-center gap-2 text-xs text-[#59645d]">
-          <span className={`h-2 w-2 rounded-full ${toneDot[status.tone]}`} />
+        <span className="flex w-32 shrink-0 items-center gap-2 text-xs text-[#59645d]">
+          <span className={`h-2 w-2 shrink-0 rounded-full ${toneDot[status.tone]}`} />
           {status.label}
         </span>
+        <RowToggle open={open} />
       </button>
 
       {open && (
