@@ -92,7 +92,7 @@ export default function StudentRequirementsPage() {
 
   return (
     <StudentShell title="Requirements">
-      <div className="mx-auto max-w-3xl">
+      <div className="w-full">
         <p className="text-sm text-[#7b877f]">
           Everything your adviser and the department need from your group.
         </p>
@@ -163,7 +163,7 @@ export default function StudentRequirementsPage() {
               {section.stage}
             </h2>
 
-            <ul className="mt-3 divide-y divide-[#edf2ec] rounded-xl border border-[#edf2ec]">
+            <ul className="mt-3 space-y-3">
               {section.items.map((requirement) => (
                 <RequirementRow
                   key={requirement.requirement_id}
@@ -250,7 +250,7 @@ function RequirementRow({
   }
 
   return (
-    <li>
+    <li className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
       <button
         type="button"
         onClick={onToggle}
