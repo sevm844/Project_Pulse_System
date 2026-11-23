@@ -98,7 +98,7 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
       )}
 
       {canPropose && inPlay < 3 && (
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-3 rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
           <p className="text-xs font-semibold text-[#203028]">Propose a title ({3 - inPlay} left)</p>
 
           <input
@@ -145,7 +145,7 @@ export default function StudentTitleProposals({ group, onChanged }: { group: Api
         </p>
       )}
 
-      <div>
+      <div className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
         <p className="text-xs font-semibold text-[#203028]">Your proposals</p>
 
         {titles.length === 0 && <p className="mt-2 text-xs text-[#9aa59e]">You have not proposed a title yet.</p>}

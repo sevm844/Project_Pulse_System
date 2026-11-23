@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { apiFetch, downloadSharedForm } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import DashboardCard from "../DashboardCard";
 
 type SharedForm = {
   form_id: number;
@@ -92,7 +93,7 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <DashboardCard className="mx-auto max-w-3xl p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
           {role !== "Adviser" && role !== "Dean"
@@ -113,7 +114,7 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
       </div>
 
       {adding && (
-        <form onSubmit={save} className="mt-5 space-y-3 rounded-xl border border-[#edf2ec] p-4">
+        <form onSubmit={save} className="mt-5 space-y-4 rounded-xl border border-[#dfe8df] bg-[#f8faf7] p-5">
           <label className="block text-xs font-semibold text-[#203028]">
             Name of the form
             <input
@@ -221,6 +222,6 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
           ))}
         </ul>
       )}
-    </div>
+    </DashboardCard>
   );
 }
