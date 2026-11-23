@@ -47,6 +47,8 @@ export type ApiRequirement = {
   // What students may upload for it.
   allowed_types: string[];
   max_file_mb: number;
+  // How many times a group may send this assignment (1 to 5).
+  max_attempts: number;
   allow_resubmission: boolean;
   // Template or guide files (up to 3) from the adviser or the Dean that students can download.
   attachments: { attachment_id: number; name: string; size: number }[];
@@ -138,13 +140,15 @@ export function describeTitleProposal(summary: TitleSummary | undefined): {
 export const FILE_TYPES = ["pdf", "doc", "docx", "ppt", "pptx", "zip", "png", "jpg", "jpeg"];
 
 // "PDF, DOCX · up to 5 MB" (every type is shown as "Any file type").
-export function describeFileRules(requirement: Pick<ApiRequirement, "allowed_types" | "max_file_mb">) {
+export function describeFileRules(requirement: Pick<ApiRequirement, "allowed_types" | "max_file_mb"> & { max_attempts?: number }) {
   const types =
     requirement.allowed_types.length >= FILE_TYPES.length
       ? "Any file type"
       : requirement.allowed_types.map((type) => type.toUpperCase()).join(", ");
 
-  return `${types} · up to ${requirement.max_file_mb} MB`;
+  const attempts = requirement.max_attempts ? ` · ${requirement.max_attempts} ${requirement.max_attempts === 1 ? "attempt" : "attempts"}` : "";
+
+  return `${types} · up to ${requirement.max_file_mb} MB${attempts}`;
 }
 
 // "BSIT 4A, BSIT 4B" or "All sections".

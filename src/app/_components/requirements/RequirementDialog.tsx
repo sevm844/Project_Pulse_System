@@ -72,6 +72,7 @@ function SectionPicker({
 
 const SIZES = [5, 10, 25, 50, 100];
 const ATTACHMENT_LIMIT = 3;
+const ATTEMPTS = [1, 2, 3, 4, 5];
 
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2.5 text-sm font-normal text-[#203028] outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]";
@@ -100,6 +101,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const [sections, setSections] = useState<string[]>(requirement?.sections ?? []);
   const [allowedTypes, setAllowedTypes] = useState<string[]>(requirement?.allowed_types ?? FILE_TYPES);
   const [maxMb, setMaxMb] = useState(requirement?.max_file_mb ?? 25);
+  const [attempts, setAttempts] = useState(requirement?.max_attempts ?? 5);
   const [resubmit, setResubmit] = useState(requirement?.allow_resubmission ?? true);
   // Up to 3 template or guide files: the ones already saved (some may be marked for removal) and the ones just chosen.
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -155,6 +157,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             sections: role === "Adviser" && sections.length > 0 ? sections : null,
             allowed_types: allowedTypes.length === FILE_TYPES.length ? null : allowedTypes,
             max_file_mb: maxMb,
+            max_attempts: attempts,
             allow_resubmission: resubmit,
           }),
         },
@@ -224,7 +227,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
             <label className={labelClass}>
               Instructions for students
               <textarea
-                rows={isTitle ? 5 : 6}
+                rows={isTitle ? 5 : 3}
                 maxLength={2000}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -272,6 +275,29 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
                   ))}
                 </select>
               </label>
+            )}
+            {!isTitle && (
+              <div>
+                <p className={labelClass}>
+                  Attempts allowed
+                  <span className={hintClass}>Each new version counts as one. The most is 5.</span>
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {ATTEMPTS.map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      aria-pressed={attempts === count}
+                      onClick={() => setAttempts(count)}
+                      className={`w-11 rounded-lg border py-1.5 text-xs font-semibold transition ${
+                        attempts === count ? "border-[#123f2b] bg-[#123f2b] text-white" : "border-[#dfe8df] bg-white text-[#59645d] hover:bg-[#f3f7f1]"
+                      }`}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </section>
 

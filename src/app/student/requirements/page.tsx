@@ -207,6 +207,9 @@ function RequirementRow({
   const locked = submission?.status === "Approved";
   // Some assignments take one file at a time: no replacing while it waits for review.
   const held = !requirement.allow_resubmission && submission?.status === "Submitted";
+  // Every submission (the first and each new version) is one attempt, up to what the adviser or the Dean allowed.
+  const attemptsUsed = submission?.version_no ?? 0;
+  const outOfAttempts = !isTitle && !locked && attemptsUsed >= requirement.max_attempts;
 
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
@@ -350,7 +353,11 @@ function RequirementRow({
             </div>
           )}
 
-          {isTitle ? null : held ? (
+          {isTitle ? null : outOfAttempts ? (
+            <p className="text-xs text-[#7b877f]">
+              You have used all {requirement.max_attempts} attempts for this assignment. Ask your adviser if you need another.
+            </p>
+          ) : held ? (
             <p className="text-xs text-[#7b877f]">
               Your file is waiting for review. You can send a new version if your adviser asks for changes.
             </p>
@@ -360,6 +367,9 @@ function RequirementRow({
             <form onSubmit={submit} className="space-y-3">
               <p className="text-xs font-semibold text-[#203028]">
                 {submission ? "Send a new version" : "Submit"}
+                <span className="ml-2 font-normal text-[#7b877f]">
+                  Attempt {attemptsUsed + 1} of {requirement.max_attempts}
+                </span>
               </p>
 
               {requirement.submission_type === "File" ? (
