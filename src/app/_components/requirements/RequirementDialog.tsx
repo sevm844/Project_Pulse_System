@@ -185,29 +185,40 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
   const fileRules = !isTitle && type === "File";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1f2a24]/40 p-3 sm:p-6">
+    <div className="fixed inset-0 z-[60] bg-white">
       <form
         onSubmit={save}
         role="dialog"
         aria-modal="true"
         aria-labelledby="requirement-dialog-title"
-        className={`flex max-h-[96dvh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_rgba(31,42,36,0.22)] ${isTitle ? "max-w-2xl" : role === "Dean" ? "max-w-7xl" : "max-w-6xl"}`}
+        className="flex h-full w-full flex-col bg-white"
       >
-        <header className="shrink-0 border-b border-[#edf2ec] px-6 py-3 sm:px-8">
-          <h2 id="requirement-dialog-title" className="text-xl font-semibold text-[#203028]">
-            {isTitle ? "Title Proposal" : requirement ? "Edit assignment" : "New assignment"}
-          </h2>
-          <p className="mt-1 text-sm text-[#7b877f]">
-            {isTitle
-              ? "This is every group's first assignment. Add your directions for the title proposal."
-              : role === "Adviser"
-                ? "Students in the sections you pick will see this in their Requirements."
-                : "Students will see this in their Requirements."}
-          </p>
+        <header className="flex shrink-0 items-center gap-5 border-b border-[#edf2ec] px-6 py-3 sm:px-8">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="shrink-0 rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
+          >
+            ← Back
+          </button>
+          <div className="min-w-0">
+            <h2 id="requirement-dialog-title" className="text-xl font-semibold text-[#203028]">
+              {isTitle ? "Title Proposal" : requirement ? "Edit assignment" : "New assignment"}
+            </h2>
+            <p className="mt-0.5 text-sm text-[#7b877f]">
+              {isTitle
+                ? "This is every group's first assignment. Add your directions for the title proposal."
+                : role === "Adviser"
+                  ? "Students in the sections you pick will see this in their Requirements."
+                  : "Students will see this in their Requirements."}
+            </p>
+          </div>
         </header>
 
-        <div className={`grid min-h-0 flex-1 gap-5 overflow-y-auto bg-[#f8faf7] p-5 sm:p-6 ${isTitle ? "" : role === "Dean" ? "lg:grid-cols-2 xl:grid-cols-[1fr_1.3fr_0.85fr]" : "lg:grid-cols-2"}`}>
-          <section className={`${cardClass} space-y-4`}>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f8faf7]">
+        <div className={`mx-auto grid min-h-full gap-5 p-5 sm:p-6 ${isTitle ? "max-w-3xl grid-rows-1" : role === "Dean" ? "max-w-[1700px] lg:grid-cols-2 xl:grid-cols-[1.5fr_1.1fr_0.75fr] xl:grid-rows-1" : "max-w-[1700px] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-1"}`}>
+          <section className={`${cardClass} flex flex-col gap-4`}>
             <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9aa59e]">{isTitle ? "Directions" : "1 · About the assignment"}</h3>
 
             {!isTitle && (
@@ -224,16 +235,16 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
               </label>
             )}
 
-            <label className={labelClass}>
+            <label className={`${labelClass} flex min-h-[200px] flex-1 flex-col`}>
               Instructions for students
               <textarea
-                rows={isTitle ? 5 : 3}
                 maxLength={2000}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Tell your students what to prepare, what format you expect, and what you will look for."
-                className={`${fieldClass} resize-none leading-6`}
+                className={`${fieldClass} min-h-[160px] flex-1 resize-none leading-7`}
               />
+              <span className={hintClass}>{description.length} of 2000 characters</span>
             </label>
 
             <div className={isTitle ? "" : "grid gap-4 sm:grid-cols-2"}>
@@ -455,6 +466,7 @@ export default function RequirementDialog({ role, requirement, onClose, onSaved 
               </div>
             </section>
           )}
+        </div>
         </div>
 
         <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-[#edf2ec] px-6 py-3 sm:px-8">
