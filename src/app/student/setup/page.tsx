@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch, logoutFromApi } from "../../_lib/api";
+import { apiFetch } from "../../_lib/api";
+import { requestLogout } from "../../_components/SessionGuard";
 import {
   errorMessage,
   fetchMyGroup,
@@ -65,11 +66,6 @@ export default function StudentSetupPage() {
 
     return () => window.clearInterval(timer);
   }, [loadGroup]);
-
-  async function handleLogout() {
-    await logoutFromApi();
-    router.push("/login");
-  }
 
   async function handleAcceptInvitation() {
     if (!group) return;
@@ -185,7 +181,7 @@ export default function StudentSetupPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handleLogout()}
+                  onClick={requestLogout}
                   className="mt-3 w-full rounded-lg border border-[#dfe3eb] py-3 text-sm font-semibold text-[#4d5751] transition hover:bg-[#f3f7f1]"
                 >
                   Log out

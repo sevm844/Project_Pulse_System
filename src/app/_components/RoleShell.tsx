@@ -9,7 +9,8 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from "react";
-import { apiFetch, logoutFromApi, toAppRole } from "../_lib/api";
+import { apiFetch, toAppRole } from "../_lib/api";
+import { requestLogout } from "./SessionGuard";
 import { roleHomePath } from "../_lib/roleHome";
 import type { UserRole } from "../_lib/types";
 import {
@@ -120,11 +121,6 @@ export default function RoleShell({
     if (file) void changePhoto(file);
   }
 
-  async function handleLogout() {
-    await logoutFromApi();
-    router.push("/login");
-  }
-
   if (checkingAccess) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white text-[#1f2a24]">
@@ -211,7 +207,7 @@ export default function RoleShell({
 
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={requestLogout}
             title="Log out"
             className={`mt-auto flex w-full items-center rounded-lg text-[12px] text-[#59645d] transition hover:bg-[#edf9e9] hover:text-[#203028] ${
               sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-2 px-3 py-2"

@@ -39,8 +39,12 @@ export default function LoginPage() {
   // Someone who pressed the browser's Back button lands here while still signed in. Say so, and let them choose.
   const [signedIn, setSignedIn] = useState<{ name: string; home: string } | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
+    // The automatic sign out after a long time with no activity sends people here with ?expired=1.
+    if (new URLSearchParams(window.location.search).get("expired")) queueMicrotask(() => setExpired(true));
+
     const role = getStoredUserRole();
 
     if (getStoredToken() && role) {
@@ -188,6 +192,12 @@ export default function LoginPage() {
               Sign in using your UB account.
             </p>
 
+            {expired && !signedIn && (
+              <div role="status" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+                You were logged out because the page was left alone for a while. Please sign in again.
+              </div>
+            )}
+
             {error && (
               <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
                 {error}
@@ -201,6 +211,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="email"
+                  autoComplete="username"
                   placeholder="1234567@ub.edu.ph"
                   className={input}
                   value={email}
@@ -214,6 +225,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
                     placeholder="Your password"
                     className={`${input} pr-16`}
                     value={password}
