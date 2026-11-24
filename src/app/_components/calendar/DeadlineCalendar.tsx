@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCalendarEvents, type CalendarEvent } from "../../_lib/calendarEvents";
 import { errorMessage } from "../../_lib/groups";
 import { addCalendarNote, removeCalendarNote, type CalendarNote } from "../../_lib/profile";
+import CardHeading from "../CardHeading";
 import { loadCalendarNotes } from "../StakeholderCalendar";
 
 // The student's dashboard is about DEADLINES (the user's decision, 2026-11-24): a big month calendar that shows what is due on each day, and a "Coming up" list
@@ -210,17 +211,14 @@ export default function DeadlineCalendar() {
 
       <div className="order-1 space-y-5 lg:order-2">
         <div className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Coming up</h2>
-            {!loading && dueThisWeek > 0 && <span className="text-xs font-semibold text-[#2f6b3c]">{dueThisWeek} due this week</span>}
-          </div>
+          <CardHeading title="Coming up" tone="lime" right={!loading && dueThisWeek > 0 ? <span className="text-xs font-semibold text-[#2f6b3c]">{dueThisWeek} due this week</span> : undefined} />
 
           {loading ? (
-            <p className="mt-3 text-sm text-[#7b877f]">Loading your deadlines...</p>
+            <p className="text-sm text-[#7b877f]">Loading your deadlines...</p>
           ) : comingUp.length === 0 ? (
-            <p className="mt-3 text-sm leading-6 text-[#7b877f]">{failed ? "Some dates could not be loaded." : "Nothing is due. Your deadlines and defenses will appear here."}</p>
+            <p className="text-sm leading-6 text-[#7b877f]">{failed ? "Some dates could not be loaded." : "Nothing is due. Your deadlines and defenses will appear here."}</p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="space-y-2">
               {comingUp.map((event) => {
                 const when = countdown(event.date, todayKey);
                 const late = event.date < todayKey;
@@ -251,9 +249,9 @@ export default function DeadlineCalendar() {
         </div>
 
         <div className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-          <h3 className="text-sm font-semibold text-[#203028]">{dayLabel(selected)}</h3>
+          <CardHeading title={dayLabel(selected)} tone="aqua" />
 
-          <div className="mt-3 space-y-2">
+          <div className="space-y-2">
             {selectedEvents.map((event) => (
               <Link key={event.id} href={event.href} className="block rounded-xl bg-[#f3f8f4] px-3 py-2.5 hover:bg-[#e8f1ea]">
                 <span className={`block text-sm font-semibold ${event.done ? "text-[#9aa59e] line-through" : "text-[#203028]"}`}>{event.title}</span>

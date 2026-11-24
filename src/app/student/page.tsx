@@ -7,6 +7,7 @@ import StudentShell from "./_components/StudentShell";
 import DeadlineCalendar from "../_components/calendar/DeadlineCalendar";
 import TimelineStrip from "../_components/health/TimelineStrip";
 import Card from "./_components/Card";
+import CardHeading from "../_components/CardHeading";
 import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
 import { getStoredUserName } from "../_utils/authStorage";
 import { ProgressTracker } from "../_components/progress/ProgressViews";
@@ -200,10 +201,8 @@ export default function StudentDashboardPage() {
 
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
             <Card className={emptyCardClass}>
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Next Step
-              </h2>
-              <p className="mt-4 text-sm font-semibold text-[#203028]">
+              <CardHeading title="Next Step" tone="lime" />
+              <p className="text-sm font-semibold text-[#203028]">
                 {nextStep.heading}
               </p>
               <p className="mt-2 text-sm leading-6 text-[#59645d]">
@@ -218,15 +217,9 @@ export default function StudentDashboardPage() {
             </Card>
 
             <Card className={emptyCardClass}>
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-                Group Members
-              </h2>
+              <CardHeading title="Group Members" tone="aqua" />
 
-              <p className="mt-1 text-sm text-[#7b877f]">
-                Project team and assigned roles
-              </p>
-
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 {group.members.map((member) => (
                   <div
                     key={member.member_id}
@@ -248,8 +241,8 @@ export default function StudentDashboardPage() {
 
           {progress && (
             <Card className={emptyCardClass}>
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Project Progress</h2>
-              <div className="mt-4">
+              <CardHeading title="Project Progress" tone="mint" />
+              <div>
                 <ProgressTracker progress={progress} />
               </div>
             </Card>

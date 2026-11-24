@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CardHeading from "../CardHeading";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import type { ApiTimelineEvent } from "../../_lib/health";
@@ -62,25 +63,28 @@ export default function TimelineStrip({ groupId, title = "Capstone timeline", mo
 
   return (
     <section className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]" aria-label={title}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-[#203028]">{title}</h2>
-        {moreHref && (
-          <Link href={moreHref} className="text-xs font-semibold text-[#2f6b3c] underline">
-            {moreLabel}
-          </Link>
-        )}
-      </div>
+      <CardHeading
+        title={title}
+        tone="mint"
+        right={
+          moreHref ? (
+            <Link href={moreHref} className="text-xs font-semibold text-[#2f6b3c] underline">
+              {moreLabel}
+            </Link>
+          ) : undefined
+        }
+      />
 
       {error && (
-        <p role="alert" className="mt-3 text-sm text-[#b42318]">
+        <p role="alert" className="text-sm text-[#b42318]">
           {error}
         </p>
       )}
-      {!events && !error && <p className="mt-3 text-sm text-[#7b877f]">Loading your timeline...</p>}
-      {events && items.before.length + items.after.length === 0 && <p className="mt-3 text-sm text-[#7b877f]">No dated milestones yet. They appear here as your capstone moves forward.</p>}
+      {!events && !error && <p className="text-sm text-[#7b877f]">Loading your timeline...</p>}
+      {events && items.before.length + items.after.length === 0 && <p className="text-sm text-[#7b877f]">No dated milestones yet. They appear here as your capstone moves forward.</p>}
 
       {events && items.before.length + items.after.length > 0 && (
-        <div className="mt-5 overflow-x-auto pb-2">
+        <div className="overflow-x-auto pb-2 pt-1">
           <ol className="relative flex min-w-max items-start">
             {items.before.map((event, index) => (
               <Node key={`b-${index}-${event.title}`} event={event} past />
