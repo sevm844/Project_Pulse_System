@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import HeroShowcase from "./_components/landing/HeroShowcase";
 
 const navLinks = [
   ["About", "#about"],
@@ -242,21 +243,6 @@ function EditorPreview() {
   );
 }
 
-function PulseMark() {
-  return (
-    <div
-      className="mx-auto mb-5 grid h-20 w-20 grid-cols-2 gap-2"
-      aria-label="Project Pulse logo mark"
-      role="img"
-    >
-      <span className="rounded-full bg-[#4ac214] shadow-[inset_-8px_-10px_18px_rgba(58,127,53,0.28)]" />
-      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
-      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
-      <span className="rounded-full bg-[#252827] shadow-[inset_-8px_-10px_18px_rgba(0,0,0,0.2)]" />
-    </div>
-  );
-}
-
 function Journey() {
   const [active, setActive] = useState(0);
   const step = journey[active];
@@ -409,86 +395,79 @@ export default function Home() {
         @media (prefers-reduced-motion: reduce) { .landing-float, .landing-float-slow { animation: none; } }
       `}</style>
 
-      {/* The top of the page is a soft pastel band (the user's choice, 2026-11-24): pale mint with a fresh lime glow along the very top edge (not in the middle of the hero), fading to white. A fine grain
-          makes it feel soft like paper, and the rounded corners frame it like a card. Nothing here can be clicked. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-2 top-2 z-0 h-[780px] overflow-hidden rounded-t-[28px] sm:inset-x-3 sm:top-3">
-        {/* The colours of the user's picture, sampled from it (2026-11-24): a cool mint wash (#e1f8f4) over the centre of the hero, a pale green (#dbf8e5) under the heading
-            and a soft lime glow (#d0eec0) around the button, all melting into white at the edges. */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 640px 300px at 50% 650px, rgba(208,238,192,0.95) 0%, rgba(213,241,206,0.6) 45%, rgba(213,241,206,0) 100%), radial-gradient(ellipse 600px 280px at 50% 500px, rgba(219,248,229,0.95) 0%, rgba(219,248,229,0) 100%), radial-gradient(ellipse 820px 520px at 50% 300px, rgba(225,248,244,1) 0%, rgba(229,247,246,0.75) 55%, rgba(236,248,249,0) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.15] mix-blend-soft-light [mask-image:linear-gradient(180deg,#000_0%,#000_45%,transparent_85%)]"
-          style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }}
-        />
+      {/* Announcement bar, then the navigation, then the big rounded panels: the layout of a modern scheduling site (the user's choice, 2026-11-24), in the system's greens. */}
+      <div className="relative z-50 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-[#d7f7d8] px-4 py-2 text-center text-xs font-semibold text-[#123f2b]">
+        <span>Introducing Project Pulse: one place for the whole capstone journey, from proposal to final archive.</span>
+        <a href="#about" className="rounded-md border border-[#123f2b]/25 bg-white/70 px-2 py-0.5 text-[11px] transition hover:bg-white">
+          Learn more
+        </a>
       </div>
 
-      {/* Fixed at the top while scrolling: a small white card with a soft glow, centred, with room around it. */}
-      <header className="sticky top-0 z-50 px-4 pt-5 sm:px-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 rounded-xl bg-white px-4 py-2.5 shadow-[0_0_40px_rgba(220,255,225,0.35),0_10px_28px_rgba(10,60,35,0.2)] sm:px-5">
-          <a href="#" className="flex shrink-0 items-center gap-2.5">
-            <Image src="/logotop.png" alt="Project Pulse" width={30} height={30} className="rounded-md" priority />
-            <span className="whitespace-nowrap text-base font-bold tracking-tight text-[#123f2b] sm:text-lg">
-              Project <span className="text-[#3f9f1a]">Pulse</span>
-            </span>
-          </a>
+      <header className="sticky top-0 z-50 border-b border-[#e3eadd] bg-white/92 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-8">
+            <a href="#" className="flex shrink-0 items-center gap-2.5">
+              <Image src="/logotop.png" alt="Project Pulse" width={30} height={30} className="rounded-md" priority />
+              <span className="whitespace-nowrap text-base font-bold tracking-tight text-[#123f2b] sm:text-lg">
+                Project <span className="text-[#3f9f1a]">Pulse</span>
+              </span>
+            </a>
 
-          <nav className="hidden items-center gap-7 text-sm font-semibold text-[#2b3a31] md:flex">
-            {navLinks.map(([label, href]) => (
-              <a key={href} href={href} className="transition hover:text-[#3f9f1a]">
-                {label}
-              </a>
-            ))}
-          </nav>
+            <nav className="hidden items-center gap-6 text-sm font-semibold text-[#2b3a31] md:flex">
+              {navLinks.map(([label, href]) => (
+                <a key={href} href={href} className="transition hover:text-[#3f9f1a]">
+                  {label}
+                </a>
+              ))}
+            </nav>
+          </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            <a href="/login" className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-[#2b3a31] transition hover:bg-[#f1f5f1] sm:inline-flex">
+          <div className="flex items-center gap-2">
+            <a href="/login" className="rounded-lg border border-[#123f2b] px-4 py-2 text-xs font-semibold text-[#123f2b] transition hover:bg-[#f3f8f4] sm:text-sm">
               Log in
             </a>
-            <a
-              href="/register"
-              className="whitespace-nowrap rounded-lg bg-[#123f2b] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#0f3324] sm:px-5 sm:text-sm"
-            >
+            <a href="/register" className="whitespace-nowrap rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324] sm:text-sm">
               Create Account
             </a>
           </div>
         </div>
       </header>
 
-      <section
-        className="relative z-10 overflow-hidden px-5 pb-28 pt-40 text-center lg:px-8 lg:pb-36 lg:pt-44"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(#d3e3d0_1px,transparent_1px)] opacity-45 [background-size:24px_24px] [mask-image:linear-gradient(180deg,transparent_0%,transparent_30%,#000_65%)]" />
-
-        <div className="relative z-10 mx-auto max-w-5xl">
-          <PulseMark />
-
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold leading-tight md:text-6xl">
-            Unified Capstone Lifecycle Management
+      <section className="relative z-10 mx-3 mt-3 overflow-hidden rounded-[28px] bg-[#f3f8f4] px-5 pb-16 pt-16 text-center sm:mx-5 lg:pb-20 lg:pt-24">
+        <div className="relative z-10 mx-auto max-w-4xl">
+          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] md:text-6xl">
+            All the work around your capstone, handled.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#4d5751]">
-            Streamlining your entire capstone journey from proposal to final
-            archiving.
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[#59645d] md:text-lg md:leading-8">
+            From your title proposal to the final archive: write your manuscript together, hand in requirements, hear back from your advisers and know your defense schedule,
+            with fewer tools and less paper.
           </p>
 
-          <div className="relative z-30 mt-10">
+          <div className="relative z-30 mt-9 flex flex-wrap items-center justify-center gap-3">
             <a
               href="/login"
-              className="relative z-30 inline-flex rounded-lg bg-[#123f2b] px-7 py-3.5 text-sm font-bold text-white shadow-[0_16px_40px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+              className="inline-flex items-center gap-2.5 rounded-xl bg-[#123f2b] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
             >
-              Access Your Dashboard
+              <Image src="/logotop.png" alt="" width={20} height={20} className="rounded bg-white p-0.5" />
+              Log in to your dashboard
+            </a>
+            <a
+              href="/register"
+              className="inline-flex items-center rounded-xl bg-[#123f2b] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+            >
+              Create your account
             </a>
           </div>
+
+          <p className="mt-5 text-xs text-[#7b877f]">Students sign up with their UB e-mail · Advisers and staff get their invitation by e-mail</p>
         </div>
       </section>
 
+      <HeroShowcase />
+
       {/* Facts */}
-      <section className="pointer-events-none relative z-20 -mt-32 bg-gradient-to-b from-white/0 via-white/85 to-white px-5 pb-10 pt-36 lg:-mt-40 lg:px-8 lg:pt-44">
+      <section className="relative z-20 bg-white px-5 pb-10 pt-14 lg:px-8">
         <div className="mx-auto max-w-5xl text-center">
           <p className="text-sm font-semibold text-[#4d5751]">Made around how our department really works</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
