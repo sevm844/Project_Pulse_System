@@ -9,7 +9,6 @@ import StatusBadge from "../_components/StatusBadge";
 import { HeroCard } from "../../_components/DashboardCard";
 import StudentImportDialog from "../../_components/students/StudentImportDialog";
 import GroupAdvisers from "../../_components/groups/GroupAdvisers";
-import HandledGroups from "../../_components/groups/HandledGroups";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
 import GroupTimeline from "../../_components/health/GroupTimeline";
@@ -50,7 +49,6 @@ export default function AssignedGroupsPage() {
   const [stage, setStage] = useState("All");
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [groupsError, setGroupsError] = useState("");
-  const [handoffKey, setHandoffKey] = useState(0);
   const [groupName, setGroupName] = useState("");
   const [schoolYear, setSchoolYear] = useState("");
   const [createCourse, setCreateCourse] = useState<CourseCode>("BSIT");
@@ -624,20 +622,32 @@ export default function AssignedGroupsPage() {
             {groups.map((group) => {
               const confirmed = isGroupConfirmed(group);
               const accepted = group.members.filter((member) => member.accepted_at).length;
+              const access = group.my_access;
+              // She manages (adds, removes, closes, names advisers) only the groups where she is the working AppDev adviser; every other group is read only for her.
+              const canManage = !access || (access.roles.includes("AppDev") && access.level === "full");
               return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><h3 className="font-semibold text-[#203028]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-1 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
                   <span className={`text-xs font-semibold ${confirmed ?"text-[#123f2b]" : " text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
+                {access && (
+                  <p className={`mt-3 text-xs font-semibold ${access.level === "proposal" ? "text-[#7b877f]" : "text-[#2f6b3c]"}`}>
+                    Your role: {access.label}
+                    {access.level === "proposal" && <span className="block font-normal">This group moved on to its Capstone and Technical advisers. It stays here as your record: you can read its Proposal stage, not act on it.</span>}
+                    {access.level === "full" && !canManage && (
+                      <span className="block font-normal">You read everything about this group and write your comments on its manuscript (<Link href="/adviser/manuscripts" className="underline">Manuscripts</Link>). The decisions stay with the Dean.</span>
+                    )}
+                  </p>
+                )}
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
-                <button
+                {access?.level !== "proposal" && <button
                   type="button"
                   onClick={() => setTimelineOpen(timelineOpen === group.group_id ? null : group.group_id)}
                   aria-expanded={timelineOpen === group.group_id}
                   className="mt-3 text-xs font-semibold text-[#4f8f58] hover:underline"
                 >
                   {timelineOpen === group.group_id ? "Hide capstone timeline" : "Show capstone timeline"}
-                </button>
+                </button>}
                 {timelineOpen === group.group_id && (
                   <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
                     <TimelineStrip groupId={group.group_id} title="Capstone timeline" />
@@ -646,18 +656,16 @@ export default function AssignedGroupsPage() {
                 )}
 
                 <ul className="mt-3 divide-y divide-[#edf2ec]">
-                  {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className="flex flex-wrap items-center gap-2"><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span>{group.group_status === "Active" && member.role_in_group !== "Leader" && <button type="button" disabled={actionBusy} onClick={() => void groupAction(() => setGroupLeader(group.group_id, member.user_id), `${member.name} is now the leader of ${group.group_name}.`)} className="rounded-full border border-[#dfe8df] px-3 py-1 text-[11px] font-semibold hover:bg-[#edf9e9] disabled:opacity-60">Make leader</button>}{group.group_status === "Active" && !group.project?.endorsement && <button type="button" disabled={actionBusy} onClick={() => { setRemoveError(""); setRemoving({ group, member }); }} className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">Remove</button>}</span></li>)}
+                  {group.members.map((member) => <li key={member.member_id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{member.name} <span className="text-xs text-[#7b877f]">({member.role_in_group})</span></span><span className="flex flex-wrap items-center gap-2"><span className={member.accepted_at ? "text-[#4f8f58]" : "text-amber-700"}>{member.accepted_at ? "Accepted" : "Pending acceptance"}</span>{canManage && group.group_status === "Active" && member.role_in_group !== "Leader" && <button type="button" disabled={actionBusy} onClick={() => void groupAction(() => setGroupLeader(group.group_id, member.user_id), `${member.name} is now the leader of ${group.group_name}.`)} className="rounded-full border border-[#dfe8df] px-3 py-1 text-[11px] font-semibold hover:bg-[#edf9e9] disabled:opacity-60">Make leader</button>}{canManage && group.group_status === "Active" && !group.project?.endorsement && <button type="button" disabled={actionBusy} onClick={() => { setRemoveError(""); setRemoving({ group, member }); }} className="rounded-full border border-red-200 px-3 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">Remove</button>}</span></li>)}
                   {group.members.length === 0 && <li className="py-2 text-sm text-[#7b877f]">No members left.</li>}
                 </ul>
-                <GroupAdvisers group={group} canAssign={group.group_status === "Active"} onChanged={() => { void loadGroups(); setHandoffKey((key) => key + 1); }} />
+                <GroupAdvisers group={group} canAssign={canManage && group.group_status === "Active"} onChanged={() => { void loadGroups(); }} />
                 {group.project && group.project.proposal_stage !== "Title Proposal" && group.group_status === "Active" && <p className="mt-2 text-[11px] text-[#7b877f]">Membership is locked once the titles are settled. Only the Dean&apos;s office can make an exception.</p>}
-                {group.group_status === "Pending Closure" && <div className="mt-3 flex flex-wrap items-center gap-3"><p className="text-xs text-amber-700">Every member left. Confirm to close this group; its history is kept.</p><button type="button" disabled={actionBusy} onClick={() => void groupAction(() => closeGroup(group.group_id), `${group.group_name} was closed. Its history is kept.`)} className="rounded-full bg-[#123f2b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">Confirm closure</button></div>}
+                {canManage && group.group_status === "Pending Closure" && <div className="mt-3 flex flex-wrap items-center gap-3"><p className="text-xs text-amber-700">Every member left. Confirm to close this group; its history is kept.</p><button type="button" disabled={actionBusy} onClick={() => void groupAction(() => closeGroup(group.group_id), `${group.group_name} was closed. Its history is kept.`)} className="rounded-full bg-[#123f2b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">Confirm closure</button></div>}
               </div>;
             })}
           </div>
         </Card>
-
-        <HandledGroups reloadKey={handoffKey} />
 
         {/* Groups table */}
         <Card className="overflow-hidden">
@@ -710,6 +718,9 @@ export default function AssignedGroupsPage() {
                       <StatusBadge status="Active" />
                     </td>
                     <td className="px-5 py-4">
+                      {group.my_access && !(group.my_access.roles.includes("AppDev") && group.my_access.level === "full") ? (
+                        <span className="text-xs font-semibold text-[#59645d]">{group.my_access.label}</span>
+                      ) : (
                       <div className="flex flex-wrap gap-2">
                         <Link
                           href="/adviser/requirements"
@@ -724,6 +735,7 @@ export default function AssignedGroupsPage() {
                           Chat
                         </Link>
                       </div>
+                      )}
                     </td>
                   </tr>
                 ))}

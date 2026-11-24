@@ -33,6 +33,8 @@ export type ApiEvaluation = {
 export type ApiDefense = {
   defense_id: number;
   project_id: number;
+  // false when this person only READS the defense (an adviser who is not the working AppDev adviser of the group).
+  actionable?: boolean;
   group_name: string;
   course: string;
   section: string;

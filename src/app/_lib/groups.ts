@@ -27,6 +27,8 @@ export type ApiGroup = {
   created_at: string | null;
   adviser: { user_id: number; name: string } | null;
   // The Capstone and Technical advisers named after the Proposal Defense (null until then).
+  // For an adviser: what she may do on THIS group (one list, every group she holds a role on).
+  my_access?: { level: "full" | "proposal"; label: string; roles: string[] };
   capstone_adviser?: { user_id: number; name: string } | null;
   technical_adviser?: { user_id: number; name: string } | null;
   proposal_passed?: boolean;

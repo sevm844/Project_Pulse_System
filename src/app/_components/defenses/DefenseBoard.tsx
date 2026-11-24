@@ -163,7 +163,7 @@ function DefenseRow({
   const [busy, setBusy] = useState(false);
   // The adviser records the Proposal Defense (the group is still hers); the Dean records every later defense.
   const isProposal = defense.defense_type === "Proposal Defense";
-  const canRecord = isProposal ? role === "Adviser" || (role === "Dean" && !defense.adviser) : role === "Dean";
+  const canRecord = defense.actionable !== false && (isProposal ? role === "Adviser" || (role === "Dean" && !defense.adviser) : role === "Dean");
   const [viewing, setViewing] = useState<{ id: number; name: string } | null>(null);
 
   const state = defenseState(defense);
@@ -332,14 +332,14 @@ function DefenseRow({
                 </div>
               )}
 
-              <div className="flex gap-4 text-xs font-semibold">
+              {defense.actionable !== false && <div className="flex gap-4 text-xs font-semibold">
                 <button type="button" onClick={onEdit} className="text-[#4f8f58] hover:underline">
                   Reschedule or change panel
                 </button>
                 <button type="button" disabled={busy} onClick={cancel} className="text-[#b42318] hover:underline">
                   Cancel defense
                 </button>
-              </div>
+              </div>}
             </div>
           )}
         </div>
