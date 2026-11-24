@@ -13,7 +13,6 @@ import {
 } from "../../_lib/groups";
 import { getStoredToken, getStoredUserEmail } from "../../_utils/authStorage";
 import Card from "../_components/Card";
-import SubjectCards from "../../_components/classes/SubjectCards";
 
 const cardClass =
   "border-[#dfe3eb] bg-white/86 p-6 shadow-[0_20px_55px_rgba(23,28,25,0.08)] backdrop-blur-xl";
@@ -113,10 +112,6 @@ export default function StudentSetupPage() {
             </div>
           </div>
 
-          <div className="mb-10">
-            <SubjectCards />
-          </div>
-
           <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3a7f35]">
@@ -126,10 +121,10 @@ export default function StudentSetupPage() {
                 Your capstone group starts with your adviser.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-8 text-[#4d5751]">
-                First enroll in your subjects with the codes from your adviser
-                (AppDev) and from the Dean (CAP101-2). Then your adviser adds
-                you to a group, your invitation appears here, and your
-                dashboard opens after you accept it.
+                Group creation is handled by the adviser during the AppDev
+                proposal phase. Once your adviser adds you to a group, your
+                invitation will appear here and your dashboard will open after
+                confirmation.
               </p>
             </div>
 

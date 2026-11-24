@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import RoleCalendar from "../_components/RoleCalendar";
-import SubjectCards from "../_components/classes/SubjectCards";
 import Card from "./_components/Card";
 import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
 import { getStoredUserName } from "../_utils/authStorage";
@@ -218,8 +217,6 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           </HeroCard>
-
-          <SubjectCards />
 
           {progress && (
             <Card className={emptyCardClass}>

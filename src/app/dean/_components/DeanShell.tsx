@@ -7,7 +7,6 @@ import RoleShell, {
 
 const navItems: NavItem[] = [
   { label: "Dashboard", icon: "/nav/dashboard.png", href: "/dean" },
-  { label: "Classes", icon: "/nav/archive-records.png", href: "/dean/classes" },
   { label: "Projects", icon: "/nav/projects.png", href: "/dean/projects", matches: ["/dean/projects", "/dean/assigned-groups"] },
   { label: "Defenses", icon: "/nav/defense.png", href: "/dean/defense" },
   { label: "Requirements", icon: "/nav/requirements.png", href: "/dean/requirements" },
