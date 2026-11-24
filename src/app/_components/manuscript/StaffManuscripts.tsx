@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { describeLastActive } from "./ManuscriptActivity";
 import ManuscriptHistory from "./ManuscriptHistory";
+import MonitoringForms from "../groups/MonitoringForms";
 import RowToggle from "../RowToggle";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
@@ -55,7 +56,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
     <div className="mx-auto max-w-4xl space-y-5">
       <p className="max-w-2xl text-sm leading-6 text-[#7b877f]">
         {role === "Adviser"
-          ? "The manuscripts your groups have submitted and the documents they shared with you. Open a group to read a version or a shared document, compare two versions, and comment on the exact words."
+          ? "The groups you are the Capstone adviser or the Technical adviser of. Open a group to read the versions it submitted, compare two versions, write your comments and recommendations on the exact words, and see its scanned Capstone Monitoring Form. You read and comment only."
           : role === "Panelist"
             ? "The manuscripts of the groups you will panel. Open a group to read the versions it submitted and compare them before the defense."
             : "The manuscripts submitted by every group and the documents they shared with you. Open a group to read a version or a shared document, compare two versions, and comment on the exact words."}
@@ -101,7 +102,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
               ? "No group yet. A group appears here once you are put on the panel of its defense."
               : role === "Dean"
                 ? "No group yet. The manuscript is your subject from the Alpha stage: a group appears here once it passes its Proposal Defense."
-                : "No groups yet."
+                : "No group yet. A group appears here once its AppDev adviser names you its Capstone or Technical adviser."
             : groups.every(isEmptyGroup) && !showEmpty
               ? "No group has submitted a manuscript version or shared a document yet. They appear here as soon as a group does."
               : "No group matches."}
@@ -174,10 +175,16 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                     projectId={group.project_id}
                     canReview={role !== "Panelist"}
                     canDecide={role === "Dean"}
-                    showActivity={role !== "Panelist"}
+                    showActivity={role === "Dean"}
                     plainDownload
                     reloadKey={reloadKey}
                   />
+                  {role !== "Panelist" && (
+                    <div className="mt-6 border-t border-[#edf2ec] pt-4">
+                      <h4 className="mb-2 text-sm font-semibold text-[#203028]">Capstone Monitoring Form</h4>
+                      <MonitoringForms projectId={group.project_id} />
+                    </div>
+                  )}
                 </div>
               )}
             </li>

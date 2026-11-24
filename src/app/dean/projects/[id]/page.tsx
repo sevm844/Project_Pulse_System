@@ -10,6 +10,8 @@ import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
 import CertificateList from "../../../_components/certificates/CertificateList";
+import GroupAdvisers from "../../../_components/groups/GroupAdvisers";
+import MonitoringForms from "../../../_components/groups/MonitoringForms";
 import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
 import SimilarityReports from "../../../_components/manuscript/SimilarityReports";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
@@ -198,6 +200,16 @@ export default function DeanProjectProfilePage() {
             <h3 className="text-lg font-semibold text-[#203028]">Capstone Progress</h3>
             <div className="mt-4">
               <ProgressTracker progress={overall} />
+            </div>
+          </Card>
+        )}
+
+        {group.proposal_passed && group.project && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Advisers and Capstone Monitoring Form</h3>
+            <GroupAdvisers group={group} canAssign={group.group_status !== "Closed"} onChanged={() => window.location.reload()} />
+            <div className="mt-5">
+              <MonitoringForms projectId={group.project.project_id} />
             </div>
           </Card>
         )}

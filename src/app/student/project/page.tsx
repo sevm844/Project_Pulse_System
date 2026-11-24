@@ -7,6 +7,8 @@ import StudentShell from "../_components/StudentShell";
 import Card from "../_components/Card";
 import CertificateList from "../../_components/certificates/CertificateList";
 import DescriptionText from "../../_components/groups/DescriptionText";
+import GroupAdvisers from "../../_components/groups/GroupAdvisers";
+import MonitoringForms from "../../_components/groups/MonitoringForms";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { StageSteps } from "../../_components/ProposalStage";
 import {
@@ -17,12 +19,13 @@ import {
   type ApiGroup,
 } from "../../_lib/groups";
 
-type ProjectTab = "overview" | "timeline" | "team";
+type ProjectTab = "overview" | "timeline" | "team" | "monitoring";
 
 const tabs: Array<[ProjectTab, string]> = [
   ["overview", "Overview"],
   ["timeline", "Timeline"],
   ["team", "Team"],
+  ["monitoring", "Capstone Monitoring Form"],
 ];
 
 const inputClass =
@@ -123,7 +126,7 @@ export default function ProjectPage() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {tabs.map(([id, label]) => (
+            {tabs.filter(([id]) => id !== "monitoring" || group.proposal_passed).map(([id, label]) => (
               <button
                 key={id}
                 type="button"
@@ -178,11 +181,22 @@ export default function ProjectPage() {
               ))}
             </div>
 
+            <GroupAdvisers group={group} />
+
             {group.project && (
               <div className="mt-6">
                 <CertificateList projectId={group.project.project_id} heading="Certificate of Editing/Originality" hideWhenEmpty />
               </div>
             )}
+          </Card>
+        )}
+
+        {tab === "monitoring" && group.project && (
+          <Card className="p-5">
+            <h3 className="text-lg font-semibold text-[#203028]">Capstone Monitoring Form</h3>
+            <div className="mt-2">
+              <MonitoringForms projectId={group.project.project_id} canUpload />
+            </div>
           </Card>
         )}
 

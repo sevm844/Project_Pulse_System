@@ -102,7 +102,14 @@ export default function StudentDashboardPage() {
     href: "/student/requirements",
   };
 
-  if (stage === "Client Consultation") {
+  if (group.proposal_passed && !(group.capstone_adviser && group.technical_adviser)) {
+    nextStep = {
+      heading: "Wait for your Capstone and Technical advisers",
+      text: "You passed your Proposal Defense. Your AppDev adviser now assigns your Capstone adviser and your Technical adviser. You will be told as soon as they are named.",
+      action: "View My Project",
+      href: "/student/project",
+    };
+  } else if (stage === "Client Consultation") {
     nextStep = {
       heading: "Client consultation",
       text: "Your titles are approved. Meet your client, and the Dean for his signature, then your adviser confirms the one title you will defend.",

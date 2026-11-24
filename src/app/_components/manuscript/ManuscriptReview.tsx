@@ -371,7 +371,7 @@ function CommentCard({
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <p className="text-xs text-[#59645d]">
             <span className="font-semibold text-[#203028]">{comment.author}</span>
-            {comment.author_role && <span className="ml-1 text-[11px] font-normal text-[#7b877f]">· {comment.author_role}</span>}
+            {(comment.author_label ?? comment.author_role) && <span className="ml-1 text-[11px] font-normal text-[#7b877f]">· {comment.author_label ?? comment.author_role}</span>}
           </p>
           <span className={`text-[10px] font-bold uppercase tracking-wide ${resolved ?"text-emerald-700" : " text-amber-700"}`}>{comment.status}</span>
         </div>
@@ -385,7 +385,7 @@ function CommentCard({
             <li key={reply.reply_id} className="text-xs">
               <p className="text-[#59645d]">
                 <span className="font-semibold text-[#203028]">{reply.author}</span>
-                {reply.author_role && <span className="ml-1 text-[10px] text-[#7b877f]">{reply.author_role}</span>}
+                {(reply.author_label ?? reply.author_role) && <span className="ml-1 text-[10px] text-[#7b877f]">{reply.author_label ?? reply.author_role}</span>}
                 <span className="ml-1 text-[10px] text-[#7b877f]">· {formatDateTime(reply.created_at)}</span>
               </p>
               <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-[#203028]">{reply.body}</p>

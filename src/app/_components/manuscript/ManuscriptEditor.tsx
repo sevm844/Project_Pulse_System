@@ -19,6 +19,7 @@ import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
 import { CollabProvider, cursorColor, type CollabStatus } from "../../_lib/collab";
 import { getStoredUserName, getStoredUserUid } from "../../_utils/authStorage";
+import { shareManuscriptWithAdvisers } from "../../_lib/advisers";
 import { errorMessage } from "../../_lib/groups";
 import { importWordFile } from "../../_lib/manuscriptImport";
 import { fetchMyManuscript, saveManuscriptSnapshot, submitManuscriptVersion, type DroppedContent, type ManuscriptReviewResult } from "../../_lib/manuscript";
@@ -68,6 +69,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
   const [submitOpen, setSubmitOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [shareNote, setShareNote] = useState<{ text: string; ok: boolean } | null>(null);
   const [toolbarError, setToolbarError] = useState("");
   const [loadError, setLoadError] = useState("");
   const [pages, setPages] = useState(1);
@@ -420,6 +422,22 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
         </button>
         <button
           type="button"
+          disabled={state === "loading"}
+          onClick={async () => {
+            try {
+              const result = await shareManuscriptWithAdvisers();
+              setShareNote({ ok: true, text: "Your Capstone and Technical advisers were told to read Version " + result.version_no + "." });
+            } catch (err) {
+              setShareNote({ ok: false, text: errorMessage(err, "Could not share with your advisers.") });
+            }
+          }}
+          title="Tell your Capstone adviser and your Technical adviser to read your latest submitted version and comment on it"
+          className="rounded-full border border-[#cfe0d3] bg-white px-4 py-2.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-50"
+        >
+          Share with my advisers
+        </button>
+        <button
+          type="button"
           disabled={state === "loading" || !(info.unsubmitted || state === "dirty" || state === "saving")}
           onClick={() => {
             setSubmitError("");
@@ -431,6 +449,11 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
         </button>
         </div>
       </div>
+      {shareNote && (
+        <p role="status" className={`mt-2 text-xs font-semibold ${shareNote.ok ? "text-[#2f6b3c]" : "text-[#b42318]"}`}>
+          {shareNote.text}
+        </p>
+      )}
 
       {historyOpen && projectId !== null && (
         <ManuscriptTimeline projectId={projectId} onClose={() => setHistoryOpen(false)} onRestore={useVersionAsDraft} />

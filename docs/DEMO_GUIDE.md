@@ -22,6 +22,7 @@ Open a different team to see a different stage. The students are named by their 
 |---|---|---|---|
 | Dean | Dean Reyes | uat-dean@uat.test | Teaches **CAP101-2**. Manuscripts, Alpha to Final defenses, his assignments, similarity, certificates |
 | Adviser | Adviser Santos | uat-adviser-santos@uat.test | Teaches **AppDev BSIT 4A**: Teams 1 and 2 |
+| Adviser | Adviser Mendoza | uat-adviser-mendoza@uat.test | Technical adviser of Teams 4 and 5: reads their manuscript and the scanned monitoring form, comments |
 | Adviser | Adviser Cruz | uat-adviser-cruz@uat.test | Teaches **AppDev BSIT 4B**: Teams 3, 4 and 5 |
 | Dean's Secretary | Secretary Lopez | uat-secretary@uat.test | Receives the final outputs, archives |
 | Grammarian | Grammarian Diaz | uat-grammarian@uat.test | Checks Team 5's manuscript, issues the certificate |
@@ -40,3 +41,10 @@ Open a different team to see a different stage. The students are named by their 
 - **Dean Reyes:** *Manuscripts* (Team 4 only: the others have not reached his stage), *Defenses*, *Certificates*.
 - **A student:** the dashboard, then Requirements (Assignments, Pending, Completed, Forms), My Project, Defense.
 - **Panelists, Grammarian, Secretary:** their own pages; their work belongs to the Dean's lane.
+
+## Capstone and Technical advisers (after the Proposal Defense)
+
+- Team 4 passed its Proposal Defense: **Cruz** (AppDev) named **Santos** as its Capstone adviser and **Mendoza** as its Technical adviser. Team 4 left Cruz's list and sits under *Handled in AppDev* on her Assigned Groups page.
+- Team 5: Cruz named herself Capstone adviser and Mendoza Technical adviser, so Team 5 stays in her list.
+- Santos and Mendoza have **Manuscripts** in their sidebar: they read Team 4's versions, write comments (labelled Capstone adviser / Technical adviser) and open the scanned Capstone Monitoring Form.
+- Felix or Gina (Team 4): *My Project > Capstone Monitoring Form* to hand in the scans; *Manuscript > Share with my advisers*.

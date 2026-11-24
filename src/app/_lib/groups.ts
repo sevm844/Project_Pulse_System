@@ -26,6 +26,10 @@ export type ApiGroup = {
   closed_reason: string | null;
   created_at: string | null;
   adviser: { user_id: number; name: string } | null;
+  // The Capstone and Technical advisers named after the Proposal Defense (null until then).
+  capstone_adviser?: { user_id: number; name: string } | null;
+  technical_adviser?: { user_id: number; name: string } | null;
+  proposal_passed?: boolean;
   project: {
     project_id: number;
     project_title: string | null;

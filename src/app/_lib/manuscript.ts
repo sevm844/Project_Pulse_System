@@ -116,7 +116,7 @@ export const fetchManuscriptVersion = (projectId: number, versionNo: number) =>
 // Review comments on a frozen version. The adviser and the Dean write them (on words inside one paragraph, or on the
 // whole version) and decide when one is Resolved; the students reply. `block_index` counts the readable blocks of that
 // version (see toBlocks in manuscriptDiff.ts) and the offsets count characters of that block's text.
-export type CommentReply = { reply_id: number; body: string; author: string; author_role: string | null; created_at: string | null };
+export type CommentReply = { reply_id: number; body: string; author: string; author_role: string | null; author_label?: string | null; created_at: string | null };
 
 export type ManuscriptComment = {
   comment_id: number;
@@ -131,6 +131,8 @@ export type ManuscriptComment = {
   can_resolve: boolean;
   author: string;
   author_role: string | null;
+  // "Capstone adviser" / "Technical adviser" for an adviser (what they are to this group).
+  author_label?: string | null;
   created_at: string | null;
   resolved_by: string | null;
   resolved_at: string | null;
