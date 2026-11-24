@@ -8,8 +8,8 @@ import { errorMessage } from "../../_lib/groups";
 import { formatDateTime } from "../../_lib/requirements";
 
 function sharedText(adviser: boolean, dean: boolean, adviserName: string | null) {
-  if (adviser && dean) return "Shared with your adviser and the Dean";
-  if (adviser) return `Shared with ${adviserName ?? "your adviser"}`;
+  void adviser;
+  void adviserName;
   if (dean) return "Shared with the Dean";
 
   return "Only your group";
@@ -106,7 +106,7 @@ export default function ManuscriptHome() {
             <span className="mt-0.5 block text-xs text-[#7b877f]">
               {official.saved_at ? `Edited ${formatDateTime(official.saved_at)}${official.saved_by ? ` · ${official.saved_by}` : ""}` : "Not started"}
             </span>
-            <span className="mt-0.5 block text-xs text-[#7b877f]">Your adviser and the Dean can always read it</span>
+            <span className="mt-0.5 block text-xs text-[#7b877f]">The Dean reads it from the Alpha stage</span>
           </span>
         </Link>
       </div>
@@ -119,7 +119,7 @@ export default function ManuscriptHome() {
           {home.documents.map((doc) => (
             <div key={doc.document_id} className="relative">
               <Link href={`/student/manuscript/${doc.document_id}`} className={`${cardClass} h-full`}>
-                <span className={`pr-14 text-xs font-semibold ${doc.share_adviser || doc.share_dean ? "text-[#1f7a4a]" : "text-[#7b877f]"}`}>
+                <span className={`pr-14 text-xs font-semibold ${doc.share_dean ? "text-[#1f7a4a]" : "text-[#7b877f]"}`}>
                   {sharedText(doc.share_adviser, doc.share_dean, home.adviser_name)}
                 </span>
                 <span>

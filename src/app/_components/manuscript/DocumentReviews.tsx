@@ -134,7 +134,7 @@ export default function DocumentReviews({
                 <h3 className="truncate text-base font-semibold text-[#203028]">Reviews of &quot;{title}&quot;</h3>
                 <p className="text-xs text-[#7b877f]">
                   {role === "Student"
-                    ? "Send a copy to your adviser or the Dean. They comment on the copy, and you keep writing in the document."
+                    ? "Send a copy to the Dean. He comments on the copy, and you keep writing in the document."
                     : "Each copy is frozen when the students send it. Comment on the copy; the students reply."}
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default function DocumentReviews({
                       </button>
                     </>
                   ) : (
-                    <p className="text-xs text-[#59645d]">To send this document for review, press Share first and choose your adviser and/or the Dean.</p>
+                    <p className="text-xs text-[#59645d]">To send this document for review, press Share first and choose the Dean.</p>
                   )}
                 </div>
               )}

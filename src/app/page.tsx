@@ -15,17 +15,12 @@ const navLinks = [
 const journey = [
   {
     name: "Title Proposal",
-    text: "Write up to three title ideas in a simple editor. Your adviser reads each one and approves it, asks for changes, or turns it down.",
+    text: "Write up to three title ideas in a simple editor. Your adviser reads each one and approves it, asks for changes, or turns it down. She also reminds you about the letter for the client interview.",
     who: "You and your adviser",
   },
   {
-    name: "Dean's Endorsement",
-    text: "Your adviser gives your group the letter for the client interview, then sends you to the Dean. The Dean endorses your titles, or sends the group back with a note.",
-    who: "Adviser and Dean",
-  },
-  {
     name: "Client Consultation",
-    text: "Your adviser chooses the one title the Dean endorsed, and you go meet your client. After that you are ready for your first defense.",
+    text: "Your adviser starts the client consultation. You meet your client, and the Dean for his signature on paper. Then your adviser confirms the one title you will defend, and you are ready for your first defense.",
     who: "You, your adviser and your client",
   },
   {
@@ -114,7 +109,7 @@ const roles = [
     name: "Dean",
     lead: "The whole department at a glance.",
     points: [
-      "Endorse titles and watch every group's progress",
+      "Watch every group's progress from title to archive",
       "Schedule many defenses at once on a sheet",
       "Spot groups at risk before they fall behind",
       "Read the audit log of what happened and who did it",
@@ -522,7 +517,7 @@ export default function Home() {
       <section id="workflow" className="scroll-mt-28 px-5 py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Eyebrow>The journey</Eyebrow>
-          <h2 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Seven steps. We keep track of every one.</h2>
+          <h2 className="mt-3 max-w-2xl text-4xl font-extrabold leading-tight text-[#123f2b] md:text-5xl">Six steps. We keep track of every one.</h2>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[#4d5751]">Follows the way our department already works. Tap a step to see what happens and who is involved.</p>
           <Journey />
         </div>

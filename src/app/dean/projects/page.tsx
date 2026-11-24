@@ -89,12 +89,10 @@ export default function DeanProjectsPage() {
     });
   }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter, term]);
 
-  const awaiting = projects.filter((project) => project.stage === "Dean's Endorsement" && project.group_status === "Active");
   const ready = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
 
-  // What the Dean can act on: endorsements first, then groups with nobody left, then groups with no adviser.
+  // What the Dean can act on: groups with nobody left, then groups with no adviser.
   const needsAttention = [
-    ...awaiting.map((project) => ({ project, reason: "Waiting for your endorsement" })),
     ...projects
       .filter((project) => project.group_status === "Pending Closure")
       .map((project) => ({ project, reason: "Every member left - confirm closure" })),
@@ -134,7 +132,6 @@ export default function DeanProjectsPage() {
           <div className="flex min-w-[640px] divide-x divide-[#cfe8c8]">
             {[
               ["Total Projects", projects.length, "Registered groups"],
-              ["Awaiting Endorsement", awaiting.length, "Needs your approval"],
               ["Ready for Defense", ready, "Proposal Defense next"],
               ["Advisers", advisers.length, "With assigned groups"],
             ].map(([label, value, caption]) => (

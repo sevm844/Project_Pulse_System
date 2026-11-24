@@ -399,7 +399,7 @@ export default function ScheduleSheet({ role }: { role: Role }) {
           <label className="block text-xs font-semibold text-[#59645d]">
             Defense
             <select value={type} onChange={(event) => setType(event.target.value)} className={`${field} min-w-48`}>
-              {DEFENSE_TYPES.map((item) => (
+              {(role === "Adviser" ? DEFENSE_TYPES.slice(0, 1) : DEFENSE_TYPES).map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>

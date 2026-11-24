@@ -126,7 +126,6 @@ export function describeTitleProposal(summary: TitleSummary | undefined): {
   if (!summary || summary.total === 0) return { label: "Not started", tone: "idle", tab: "todo" };
 
   if (summary.stage === "Ready for Proposal Defense") return { label: "Done", tone: "done", tab: "done" };
-  if (summary.stage === "Dean's Endorsement") return { label: "With the Dean", tone: "waiting", tab: "review" };
   if (summary.stage === "Client Consultation") return { label: "Client consultation", tone: "waiting", tab: "review" };
 
   if (summary.returned) return { label: "Returned by the Dean", tone: "problem", tab: "todo" };

@@ -123,12 +123,8 @@ export async function fetchMyGroup(): Promise<ApiGroup | null> {
 const post = (path: string, body?: unknown) =>
   apiFetch<ApiGroup>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 
-// Adviser: Title Proposal -> Dean's Endorsement.
-export const sendGroupToDean = (groupId: number) => post(`/groups/${groupId}/send-to-dean`);
-// Dean: the sign-off moves the group to Client Consultation.
-export const endorseGroup = (groupId: number, notes: string) => post(`/groups/${groupId}/endorse`, { notes });
-// Dean: not satisfied yet. The group goes back to its adviser (Title Proposal) with a required note.
-export const returnGroupToAdviser = (groupId: number, note: string) => post(`/groups/${groupId}/return-to-adviser`, { note });
+// Adviser: Title Proposal -> Client Consultation (the Dean has no step: he signs on paper when the group meets him).
+export const startConsultation = (groupId: number) => post(`/groups/${groupId}/start-consultation`);
 // Adviser: Client Consultation -> Ready for Proposal Defense, with the one title the group will defend.
 export const chooseGroupTitle = (groupId: number, titleId: number) => post(`/groups/${groupId}/choose-title`, { title_id: titleId });
 

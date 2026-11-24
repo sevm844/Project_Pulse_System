@@ -104,7 +104,7 @@ export default function ProjectPage() {
 
   const approvedTitle = group.project?.project_title || null;
   const stage = group.project?.proposal_stage ?? "Title Proposal";
-  const endorsed = Boolean(group.project?.endorsement);
+  const settled = stage !== "Title Proposal";
 
   return (
     <StudentShell title="My Project">
@@ -225,7 +225,7 @@ export default function ProjectPage() {
                 <div className="mt-3 space-y-3">
                   <p className="text-xs text-[#59645d]">
                     You will be removed from {group.group_name}. If you were the leader, the next member becomes leader.
-                    {endorsed ? " The Dean already endorsed your group's titles; that stays as it is. Your adviser and your groupmates are told that you left." : ""}
+                    {settled ? " Your titles are already settled; that stays as it is. Your adviser and your groupmates are told that you left." : ""}
                   </p>
                   <input
                     value={leaveReason}

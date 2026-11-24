@@ -16,7 +16,6 @@ import { createManuscriptExtensions } from "./extensions";
 import { CollabProvider, cursorColor, type CollabStatus } from "../../_lib/collab";
 import {
   fetchGroupDocument,
-  fetchManuscriptHome,
   renameGroupDocument,
   saveGroupDocumentSnapshot,
   shareGroupDocument,
@@ -77,7 +76,6 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
   const [savedBy, setSavedBy] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-  const [adviserName, setAdviserName] = useState<string | null>(null);
   const [shared, setShared] = useState({ adviser: false, dean: false });
   const [importing, setImporting] = useState(false);
   const [removedNote, setRemovedNote] = useState("");
@@ -196,7 +194,7 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
 
     (async () => {
       try {
-        const [loaded, home] = await Promise.all([fetchGroupDocument(documentId), fetchManuscriptHome().catch(() => null)]);
+        const loaded = await fetchGroupDocument(documentId);
         if (cancelled) return;
 
         await provider.start(() => Y.encodeStateAsUpdate(prosemirrorJSONToYDoc(editor.schema, loaded.content, "default")));
@@ -208,7 +206,6 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
         setSavedAt(loaded.saved_at);
         setSavedBy(loaded.saved_by);
         setShared({ adviser: loaded.share_adviser, dean: loaded.share_dean });
-        setAdviserName(home?.adviser_name ?? null);
         setState("saved");
       } catch (err) {
         if (!cancelled) setLoadError(errorMessage(err, "Unable to open this document."));
@@ -311,9 +308,9 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
     setShared(next);
 
     try {
-      // The adviser reads the saved copy: save everything typed so far first, so what they open is what the group sees now.
-      if (next.adviser || next.dean) await flush();
-      await shareGroupDocument(documentId, next.adviser, next.dean);
+      // The Dean reads the saved copy: save everything typed so far first, so what he opens is what the group sees now.
+      if (next.dean) await flush();
+      await shareGroupDocument(documentId, false, next.dean);
     } catch (err) {
       setShared(before);
       setToolbarError(errorMessage(err, "Unable to change who can read this document."));
@@ -354,7 +351,7 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
     state === "error" ? "Not saved" :
     savedAt ? `All changes saved · ${savedBy ?? "someone"}, ${formatDateTime(savedAt)}` : "Nothing typed yet";
 
-  const sharedLabel = shared.adviser && shared.dean ? "Shared with adviser and Dean" : shared.adviser ? "Shared with your adviser" : shared.dean ? "Shared with the Dean" : "Share";
+  const sharedLabel = shared.dean ? "Shared with the Dean" : "Share";
 
   return (
     <div className="space-y-4">
@@ -377,13 +374,13 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <DocumentReviews documentId={documentId} title={title || "Untitled document"} role="Student" canSend={shared.adviser || shared.dean} beforeSend={flush} />
+          <DocumentReviews documentId={documentId} title={title || "Untitled document"} role="Student" canSend={shared.dean} beforeSend={flush} />
           <button
             type="button"
             disabled={state === "loading"}
             onClick={() => setShareOpen(true)}
             className={`rounded-full px-5 py-2.5 text-xs font-semibold disabled:opacity-50 ${
-              shared.adviser || shared.dean ? "border border-[#cfe0d3] bg-[#f3f8f4] text-[#123f2b] hover:bg-[#e8f1ea]" : "bg-[#123f2b] text-white hover:bg-[#0f3324]"
+              shared.dean ? "border border-[#cfe0d3] bg-[#f3f8f4] text-[#123f2b] hover:bg-[#e8f1ea]" : "bg-[#123f2b] text-white hover:bg-[#0f3324]"
             }`}
           >
             {sharedLabel}
@@ -492,23 +489,16 @@ function DocumentEditorBody({ documentId, provider, collabStatus, fromFormId }: 
           <div role="dialog" aria-modal="true" aria-label="Share this document" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-[#203028]">Share &quot;{title || "this document"}&quot;</h3>
             <p className="mt-2 text-sm text-[#59645d]">
-              Your group can always open and edit it together. Choose who else may read it. They can read but not change it, and you can take it back any time.
+              Your group can always open and edit it together. Choose whether the Dean may read it (from the Alpha stage, after your Proposal Defense). He can read but not change it, and you can take it back any time.
             </p>
             <label className="mt-4 flex items-center gap-3 rounded-lg border border-[#dfe8df] px-3 py-3 text-sm text-[#203028]">
-              <input type="checkbox" checked={shared.adviser} onChange={(event) => void changeSharing({ ...shared, adviser: event.target.checked })} className="h-4 w-4" />
-              <span>
-                <span className="block font-semibold">{adviserName ? `${adviserName} (your adviser)` : "Your adviser"}</span>
-                <span className="block text-xs text-[#7b877f]">Can read this document</span>
-              </span>
-            </label>
-            <label className="mt-2 flex items-center gap-3 rounded-lg border border-[#dfe8df] px-3 py-3 text-sm text-[#203028]">
               <input type="checkbox" checked={shared.dean} onChange={(event) => void changeSharing({ ...shared, dean: event.target.checked })} className="h-4 w-4" />
               <span>
                 <span className="block font-semibold">The Dean</span>
                 <span className="block text-xs text-[#7b877f]">Can read this document</span>
               </span>
             </label>
-            <p className="mt-3 text-xs text-[#7b877f]">Your official manuscript is not part of this choice: your adviser and the Dean can always read it.</p>
+            <p className="mt-3 text-xs text-[#7b877f]">Your official manuscript is not part of this choice: the Dean reads it from the Alpha stage.</p>
             <div className="mt-5 flex justify-end">
               <button type="button" onClick={() => setShareOpen(false)} className="rounded-full bg-[#123f2b] px-5 py-2 text-xs font-semibold text-white hover:bg-[#0f3324]">
                 Done

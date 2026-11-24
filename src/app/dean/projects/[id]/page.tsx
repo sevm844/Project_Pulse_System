@@ -18,12 +18,10 @@ import { apiFetch } from "../../../_lib/api";
 import {
   closeGroup,
   reopenGroup,
-  endorseGroup,
   errorMessage,
   NO_ADVISER_YET,
   NO_TITLE_YET,
   removeGroupMember,
-  returnGroupToAdviser,
   setGroupLeader,
   type ApiGroup,
   type ApiGroupMember,
@@ -31,7 +29,7 @@ import {
   type CloseReason,
   type RemovalReason,
 } from "../../../_lib/groups";
-import { formatDate, formatDateTime } from "../../../_lib/requirements";
+import { formatDateTime } from "../../../_lib/requirements";
 import CollapsibleTitle from "../../../_components/groups/CollapsibleTitle";
 import ProposalView from "../../../_components/groups/ProposalView";
 import DescriptionText from "../../../_components/groups/DescriptionText";
@@ -44,7 +42,8 @@ export default function DeanProjectProfilePage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const overall = useProgress().items.find((item) => String(item.group_id) === id);
-  const [notes, setNotes] = useState("");
+  // The manuscript is the Dean's subject from the Alpha stage: it opens once the group has passed its Proposal Defense.
+  const manuscriptOpen = overall?.phases.find((phase) => phase.key === "proposal-defense")?.state === "done";
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState<ApiGroupMember | null>(null);
   const [removeError, setRemoveError] = useState("");
@@ -83,8 +82,6 @@ export default function DeanProjectProfilePage() {
   }, [id]);
 
   // Runs one action and swaps the returned group in; shows its error if the server refuses.
-  const [returning, setReturning] = useState(false);
-  const [returnNote, setReturnNote] = useState("");
 
   async function run(action: () => Promise<ApiGroup>, message: string) {
     setBusy(true);
@@ -108,7 +105,7 @@ export default function DeanProjectProfilePage() {
     setRemoveError("");
 
     try {
-      const exception = Boolean(group.project?.endorsement);
+      const exception = group.project?.proposal_stage !== "Title Proposal";
       setGroup(await removeGroupMember(group.group_id, removing.user_id, category, details, exception));
       setNotice(`${removing.name} was removed. The reason was saved to the audit log.`);
       setRemoving(null);
@@ -150,10 +147,7 @@ export default function DeanProjectProfilePage() {
 
   const project = group.project;
   const title = project?.project_title || null;
-  const endorsed = Boolean(project?.endorsement);
-  const approved = titles.filter((item) => item.title_status === "Approved");
-  const awaitingEndorsement =
-    project?.proposal_stage === "Dean's Endorsement" && group.group_status === "Active";
+  const endorsed = project?.proposal_stage !== "Title Proposal";
 
   return (
     <DeanShell title="Project Profile">
@@ -219,11 +213,19 @@ export default function DeanProjectProfilePage() {
         {group.project && (
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Manuscript</h3>
-            <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
-            <div className="mt-4 space-y-4">
-              <SimilarityReports projectId={group.project.project_id} canUpload />
-              <ManuscriptHistory projectId={group.project.project_id} canReview showActivity plainDownload group={group} />
-            </div>
+            {manuscriptOpen ? (
+              <>
+                <p className="mt-1 text-sm text-[#7b877f]">Each version the group submitted, with who saved it and when. Drafts stay private until submitted.</p>
+                <div className="mt-4 space-y-4">
+                  <SimilarityReports projectId={group.project.project_id} canUpload />
+                  <ManuscriptHistory projectId={group.project.project_id} canReview showActivity plainDownload group={group} />
+                </div>
+              </>
+            ) : (
+              <p className="mt-1 text-sm leading-6 text-[#7b877f]">
+                The manuscript is your subject from the Alpha stage. You will see it here, with the similarity report, once the group passes its Proposal Defense. Until then the progress above shows where the group stands.
+              </p>
+            )}
           </Card>
         )}
 
@@ -246,140 +248,6 @@ export default function DeanProjectProfilePage() {
           <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {notice}
           </p>
-        )}
-
-        {awaitingEndorsement && (
-          <Card className="border-[#123f2b] p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">Endorse this group&apos;s titles</h3>
-            <p className="mt-2 text-sm text-[#59645d]">
-              The adviser approved the titles below and sent the group to you. Review them, discuss them with the
-              group, then approve. Approving moves the group to Client Consultation. The group picks its single
-              title later, after the client consultation.
-            </p>
-
-            <ul className="mt-4 space-y-2">
-              {approved.map((item) => (
-                <li key={item.title_id} className="rounded-lg bg-[#f8faf7] px-4 py-3">
-                  <CollapsibleTitle
-                    title={item.proposed_title}
-                    meta={`${item.submitted_by ? `Submitted by ${item.submitted_by.name} · ` : "Submitted "}${formatDateTime(item.submitted_at)}`}
-                    status={item.title_status}
-                  >
-                    <ProposalView item={item} />
-                  </CollapsibleTitle>
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-4 text-xs text-[#59645d]">
-              The group brings its letter for interview (the form from the Forms tab) to your office. The real signature is on the paper.
-            </p>
-
-            <label className="mt-4 block text-xs font-semibold text-[#203028]">
-              Notes from your discussion with the group (optional)
-              <textarea
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                rows={3}
-                maxLength={2000}
-                className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]"
-              />
-            </label>
-
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() =>
-                void run(
-                  () => endorseGroup(group.group_id, notes.trim()),
-                  "Approved. The group is now at Client Consultation.",
-                )
-              }
-              className="mt-4 rounded-full bg-[#123f2b] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60"
-            >
-              {busy ? "Approving..." : "Approve"}
-            </button>
-
-            <div className="mt-6 border-t border-[#edf2ec] pt-5">
-              {returning ? (
-                <div className="space-y-3">
-                  <label className="block text-xs font-semibold text-[#203028]">
-                    What should the adviser look at again?
-                    <textarea
-                      value={returnNote}
-                      onChange={(event) => setReturnNote(event.target.value)}
-                      rows={3}
-                      maxLength={2000}
-                      placeholder="For example: the second title is too broad. Please narrow it down."
-                      className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm font-normal outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]"
-                    />
-                  </label>
-                  <p className="text-xs text-[#7b877f]">
-                    The group goes back to the Title Proposal stage. Your adviser and the group see your note. You do not decide on titles; the adviser does.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={busy || returnNote.trim().length < 5}
-                      onClick={() =>
-                        void run(async () => {
-                          const updated = await returnGroupToAdviser(group.group_id, returnNote.trim());
-                          setReturning(false);
-                          setReturnNote("");
-                          return updated;
-                        }, "The group was returned to its adviser with your note.")
-                      }
-                      className="rounded-full border border-amber-300 bg-amber-50 px-5 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      Return to adviser
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setReturning(false)}
-                      className="rounded-full border border-[#dfe8df] px-5 py-2 text-xs font-semibold text-[#59645d] hover:bg-[#f3f7f1]"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => setReturning(true)}
-                  className="text-xs font-semibold text-[#7b877f] underline-offset-2 hover:text-[#203028] hover:underline"
-                >
-                  Not ready? Return to adviser with a note
-                </button>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {project?.endorsement && (
-          <Card className="p-5">
-            <h3 className="text-lg font-semibold text-[#203028]">Dean&apos;s endorsement</h3>
-            <p className="mt-2 text-xs text-[#7b877f]">
-              Approved by {project.endorsement.signed_by || "the Dean"} on {formatDate(project.endorsement.signed_at)}
-            </p>
-            <ul className="mt-3 space-y-1 text-sm text-[#203028]">
-              {project.endorsement.titles.map((item) => (
-                <li key={item.title_id}>
-                  • {item.proposed_title}
-                  {project.chosen_title_id === item.title_id && (
-                    <span className="ml-2 text-[10px] font-semibold text-emerald-700">
-                      Chosen
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {project.endorsement.notes && (
-              <p className="mt-3 rounded-lg bg-[#f8faf7] p-3 text-xs leading-5 text-[#59645d]">
-                Notes: {project.endorsement.notes}
-              </p>
-            )}
-          </Card>
         )}
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -407,7 +275,7 @@ export default function DeanProjectProfilePage() {
             <h3 className="text-lg font-semibold text-[#203028]">
               Title Proposals
             </h3>
-            <p className="mt-1 text-xs text-[#7b877f]">The adviser decides on titles. You endorse the approved ones.</p>
+            <p className="mt-1 text-xs text-[#7b877f]">The adviser decides on titles. The Dean signs on paper when the group meets him.</p>
 
             <div className="mt-4 space-y-3">
               {titles.length === 0 && (
@@ -485,7 +353,7 @@ export default function DeanProjectProfilePage() {
 
               {endorsed && (
                 <p className="text-[11px] leading-4 text-[#7b877f]">
-                  Membership is locked after your endorsement. Removal is only available as a recorded exception.
+                  Membership is locked once the titles are settled. Removal is only available as a recorded exception.
                 </p>
               )}
 

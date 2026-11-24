@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import RoleCalendar from "../_components/RoleCalendar";
+import SubjectCards from "../_components/classes/SubjectCards";
 import Card from "./_components/Card";
 import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
 import { getStoredUserName } from "../_utils/authStorage";
@@ -97,29 +98,15 @@ export default function StudentDashboardPage() {
 
   let nextStep = {
     heading: "Submit your title proposal",
-    text: "Your adviser decides on each title you propose. Send up to 3 and she will pick the ones that go to the Dean.",
+    text: "Your adviser decides on each title you propose. Send up to 3 and she approves the ones you can defend.",
     action: "Submit Title Proposal",
     href: "/student/requirements",
   };
 
-  if (group.project?.dean_return && stage === "Title Proposal") {
-    nextStep = {
-      heading: "The Dean returned your group to your adviser",
-      text: group.project.dean_return.note,
-      action: "View Requirements",
-      href: "/student/requirements",
-    };
-  } else if (stage === "Dean's Endorsement") {
-    nextStep = {
-      heading: "Waiting for the Dean",
-      text: "Your adviser sent your approved titles to the Dean. The Dean will review them with your group and approve.",
-      action: "View Requirements",
-      href: "/student/requirements",
-    };
-  } else if (stage === "Client Consultation") {
+  if (stage === "Client Consultation") {
     nextStep = {
       heading: "Client consultation",
-      text: "The Dean endorsed your titles. Talk with your client and your adviser, then your adviser confirms the one title you will defend.",
+      text: "Your titles are approved. Meet your client, and the Dean for his signature, then your adviser confirms the one title you will defend.",
       action: "View Requirements",
       href: "/student/requirements",
     };
@@ -231,6 +218,8 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           </HeroCard>
+
+          <SubjectCards />
 
           {progress && (
             <Card className={emptyCardClass}>

@@ -99,7 +99,9 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
           {groups.length === 0
             ? role === "Panelist"
               ? "No group yet. A group appears here once you are put on the panel of its defense."
-              : "No groups yet."
+              : role === "Dean"
+                ? "No group yet. The manuscript is your subject from the Alpha stage: a group appears here once it passes its Proposal Defense."
+                : "No groups yet."
             : groups.every(isEmptyGroup) && !showEmpty
               ? "No group has submitted a manuscript version or shared a document yet. They appear here as soon as a group does."
               : "No group matches."}
@@ -171,7 +173,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                   <ManuscriptHistory
                     projectId={group.project_id}
                     canReview={role !== "Panelist"}
-                    canDecide={role === "Adviser"}
+                    canDecide={role === "Dean"}
                     showActivity={role !== "Panelist"}
                     plainDownload
                     reloadKey={reloadKey}

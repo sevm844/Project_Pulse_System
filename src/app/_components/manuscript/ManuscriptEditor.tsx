@@ -379,20 +379,20 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
           {state !== "loading" && (
             <p className={`mt-0.5 text-xs font-semibold ${latestVersion === 0 || hasNewerChanges || latestReview?.decision === "Needs Changes" ? "text-amber-700" : "text-[#1f7a4a]"}`}>
               {latestVersion === 0
-                ? "Draft · nothing submitted to your adviser yet"
+                ? "Draft · nothing submitted to the Dean yet"
                 : `Version ${latestVersion} ${
                     latestReview?.decision === "Approved"
-                      ? "approved by your adviser"
+                      ? "approved by the Dean"
                       : latestReview?.decision === "Needs Changes"
-                        ? "needs changes: see your adviser's note in Versions"
-                        : "submitted, waiting for your adviser"
-                  }${hasNewerChanges ? " · your draft has newer changes your adviser cannot see yet" : ""}`}
+                        ? "needs changes: see the Dean's note in Versions"
+                        : "submitted, waiting for the Dean"
+                  }${hasNewerChanges ? " · your draft has newer changes the Dean cannot see yet" : ""}`}
             </p>
           )}
           <p role="status" className={`mt-0.5 text-xs ${state === "error" ? "text-red-600" : collabStatus === "offline" ? "text-amber-700" : "text-[#7b877f]"}`}>
             {status}
           </p>
-          <p className="mt-0.5 text-[11px] text-[#9aa59e]">Everyone in your group, your adviser and the Dean can see when each member works on the manuscript.</p>
+          <p className="mt-0.5 text-[11px] text-[#9aa59e]">Everyone in your group and the Dean can see when each member works on the manuscript.</p>
           {others.length > 0 && (
             <p className="mt-0.5 text-xs font-semibold text-[#1f7a4a]">
               {others.join(", ")} {others.length === 1 ? "is" : "are"} also editing now
@@ -559,7 +559,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
               {projectId !== null && <SimilarityReports projectId={projectId} reloadKey={reloadKey} />}
               <h3 className="text-base font-semibold text-[#203028]">Versions</h3>
               <p className="mb-3 mt-1 text-xs text-[#7b877f]">
-                Each version is frozen when you submit it. Your adviser and the Dean read these, not your draft.
+                Each version is frozen when you submit it. The Dean reads these, not your draft.
               </p>
               {projectId !== null && <ManuscriptHistory projectId={projectId} reloadKey={reloadKey} onUseAsDraft={useVersionAsDraft} />}
             </aside>
@@ -585,7 +585,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
                 onChange={(event) => setNote(event.target.value)}
                 rows={3}
                 maxLength={300}
-                placeholder="For example: Revised Chapter 2 based on the adviser's comments"
+                placeholder="For example: Revised Chapter 2 based on the Dean's comments"
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] px-3 py-2.5 text-sm outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]"
               />
             </label>

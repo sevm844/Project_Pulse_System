@@ -61,9 +61,6 @@ export default function DeanDashboardPage() {
     };
   }, []);
 
-  const awaitingEndorsement = projects.filter(
-    (project) => project.stage === "Dean's Endorsement" && project.group_status === "Active",
-  ).length;
   const readyForDefense = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
   const withoutAdviser = projects.filter((project) => !project.adviser).length;
 
@@ -92,9 +89,7 @@ export default function DeanDashboardPage() {
               <p className={heroTextClass}>
                 {loading
                   ? "Checking the projects..."
-                  : awaitingEndorsement > 0
-                    ? `${awaitingEndorsement} group${awaitingEndorsement === 1 ? " is" : "s are"} waiting for your endorsement.`
-                    : "No group is waiting for your endorsement right now."}
+                  : `${projects.length} group${projects.length === 1 ? "" : "s"} in the program. The manuscripts and the defenses after the Proposal Defense are yours.`}
               </p>
             </div>
           </HeroCard>
@@ -109,7 +104,6 @@ export default function DeanDashboardPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["Total Projects", projects.length, "/dean/projects"],
-              ["Awaiting Your Endorsement", awaitingEndorsement, "/dean/projects"],
               ["Ready for Proposal Defense", readyForDefense, "/dean/projects"],
               [
                 "Without Adviser",

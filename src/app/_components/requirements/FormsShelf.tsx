@@ -51,7 +51,7 @@ function sizeText(bytes: number) {
 }
 
 // The shelf of forms on the Requirements page: the Dean and advisers put a file up once, students download it.
-export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "Dean" | "Panelist" | "Grammarian" | "Secretary" }) {
+export default function FormsShelf({ role, from }: { role: "Student" | "Adviser" | "Dean" | "Panelist" | "Grammarian" | "Secretary"; from?: "Adviser" | "Dean" }) {
   const [forms, setForms] = useState<SharedForm[] | null>(null);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
@@ -66,12 +66,14 @@ export default function FormsShelf({ role }: { role: "Student" | "Adviser" | "De
 
   const load = useCallback(async () => {
     try {
-      setForms(await apiFetch<SharedForm[]>("/forms"));
+      // From a subject card, only that teacher's forms (AppDev = the adviser's, CAP101-2 = the Dean's).
+      const all = await apiFetch<SharedForm[]>("/forms");
+      setForms(from ? all.filter((form) => form.from_role === from) : all);
       setError("");
     } catch (err) {
       setError(errorMessage(err, "Unable to load the forms."));
     }
-  }, []);
+  }, [from]);
 
   useEffect(() => {
     queueMicrotask(() => void load());

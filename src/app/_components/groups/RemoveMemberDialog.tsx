@@ -6,7 +6,7 @@ import { REMOVAL_REASONS, type RemovalReason } from "../../_lib/groups";
 const fieldClass =
   "mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2.5 text-sm text-[#203028] outline-none focus:border-[#123f2b] focus:ring-2 focus:ring-[#d7f7d8]";
 
-// Removing someone always needs a stated reason; it is saved to the audit log. After the Dean's endorsement the
+// Removing someone always needs a stated reason; it is saved to the audit log. Once the group is past the Title Proposal stage the
 // normal removal is blocked, so the Dean uses `exception`, which asks for written details as well.
 export default function RemoveMemberDialog({
   memberName,
@@ -43,7 +43,7 @@ export default function RemoveMemberDialog({
 
         {exception && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            The Dean already endorsed this group&apos;s titles, so membership is normally locked. Use this only for a
+            The titles of this group are settled, so membership is normally locked. Use this only for a
             genuine emergency, such as someone dropping out mid-process. It is recorded as a critical entry.
           </p>
         )}

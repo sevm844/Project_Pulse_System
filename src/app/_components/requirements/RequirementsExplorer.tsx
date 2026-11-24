@@ -20,8 +20,8 @@ import SubmissionRow, { filterRows, rowFacts } from "./SubmissionRow";
 type Nav = { course?: string; section?: string; requirementId?: number };
 
 const blurb = {
-  Adviser: "Ask your groups for chapters, forms or links, then review what they send.",
-  Dean: "Set requirements for every group or one course, and watch progress across the program.",
+  Adviser: "Your assignments for your groups: ask for chapters, forms or files, then review what they send. The Dean's own assignments are handled by the Dean.",
+  Dean: "Your own assignments, for every group or one course (final outputs, forms for the program). Advisers manage the assignments of their own classes.",
 };
 
 const sectionLabel = (course: string, section: string) => `${course} ${section}`;
@@ -286,7 +286,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
                   onOpen={() => go({ ...nav, requirementId: item.requirement_id })}
                 >
                   {isTitle ? (
-                    <p className="border-t border-[#edf2ec] pt-3 text-xs font-semibold text-[#203028]">Titles and the Dean&apos;s endorsement</p>
+                    <p className="border-t border-[#edf2ec] pt-3 text-xs font-semibold text-[#203028]">Titles</p>
                   ) : (
                     <Progress done={rows.filter((row) => row.submission).length} total={rows.length} />
                   )}

@@ -2,6 +2,8 @@
 
 Thank you for testing the system. It takes about 20 to 30 minutes.
 
+> **Note:** the demo data and the process changed (classes with join codes, the Dean has his own subject, no Dean endorsement step). The demo now has five teams named by their stage: see `docs/DEMO_GUIDE.md`. The tasks below still use the older demo and are being rewritten.
+
 **How to test**
 
 1. Log in with the email for your role (below) and the password your facilitator gave you.

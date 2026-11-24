@@ -105,7 +105,7 @@ export default function SimilarityReports({
           <h4 className="text-sm font-semibold text-[#203028]">Similarity report</h4>
           <p className="mt-0.5 max-w-xl text-xs leading-5 text-[#7b877f]">
             {canUpload
-              ? "Check the latest manuscript in Turnitin, then upload the report (PDF) here. The group and its adviser can read it."
+              ? "Check the latest manuscript in Turnitin, then upload the report (PDF) here. The group can read it."
               : "The Dean checked your manuscript for similarity. Read the report, fix the flagged parts in your manuscript, then submit a new version."}
           </p>
         </div>

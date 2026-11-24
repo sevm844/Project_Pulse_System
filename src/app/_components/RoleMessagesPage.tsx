@@ -20,6 +20,8 @@ import { announceNotificationsChanged } from "../_lib/notifications";
 type Props = {
   subtitle?: string;
   fitViewport?: boolean;
+  /** Only the conversations that pass this test are listed (a subject card shows only its own chats). */
+  only?: (conversation: ApiConversation) => boolean;
   shell: (children: ReactNode) => ReactNode;
 };
 
@@ -29,6 +31,7 @@ const THREAD_REFRESH_MS = 5000;
 export default function RoleMessagesPage({
   subtitle = "Communication center",
   fitViewport = false,
+  only,
   shell,
 }: Props) {
   const [conversations, setConversations] = useState<ApiConversation[]>([]);
@@ -57,17 +60,18 @@ export default function RoleMessagesPage({
     () =>
       fetchConversations()
         .then((list) => {
-          setConversations(list.items);
+          const items = only ? list.items.filter(only) : list.items;
+          setConversations(items);
           setWindowInfo(list.window);
           setError("");
           setSelectedId((current) => {
-            if (current && list.items.some((c) => c.conversation_id === current)) return current;
-            return list.items[0]?.conversation_id ?? null;
+            if (current && items.some((c) => c.conversation_id === current)) return current;
+            return items[0]?.conversation_id ?? null;
           });
         })
         .catch((err) => setError(err instanceof Error ? err.message : "Could not load your messages."))
         .finally(() => setLoading(false)),
-    [],
+    [only],
   );
 
   const refreshThread = useCallback(

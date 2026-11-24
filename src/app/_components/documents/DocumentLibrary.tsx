@@ -45,9 +45,9 @@ type ManuscriptHit = {
   snippets: string[];
 };
 
-const OPEN_MANUSCRIPT: Record<Role, (hit: ManuscriptHit) => string> = {
+// An adviser has no manuscript side (the Dean's subject), so there is nothing to open for her.
+const OPEN_MANUSCRIPT: Partial<Record<Role, (hit: ManuscriptHit) => string>> = {
   Student: () => "/student/manuscript",
-  Adviser: () => "/adviser/manuscripts",
   Dean: () => "/dean/manuscripts",
 };
 
@@ -287,7 +287,7 @@ export default function DocumentLibrary({ role }: { role: Role }) {
                       {hit.submitted_at ? ` · ${formatDate(hit.submitted_at)}` : ""}
                     </span>
                   </p>
-                  <Link href={OPEN_MANUSCRIPT[role](hit)} className="text-xs font-semibold text-[#4f8f58] hover:underline">
+                  <Link href={(OPEN_MANUSCRIPT[role] ?? OPEN_MANUSCRIPT.Dean)!(hit)} className="text-xs font-semibold text-[#4f8f58] hover:underline">
                     {role === "Student" ? "Open manuscript" : "Open manuscripts"}
                   </Link>
                 </div>

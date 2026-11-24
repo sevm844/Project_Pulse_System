@@ -18,7 +18,7 @@ import ScheduleDialog from "./ScheduleDialog";
 type Role = "Adviser" | "Dean";
 
 const blurb: Record<Role, string> = {
-  Adviser: "Schedule all your groups' defenses at once, choose the panel, read the evaluations, and record the result of each Proposal Defense.",
+  Adviser: "Schedule the Proposal Defense of all your groups at once, choose the panel, read the evaluations, and record the result. The later defenses are handled by the Dean.",
   Dean: "Schedule defenses for many groups at once, follow the panels' evaluations, and record the result of every defense after the Proposal Defense.",
 };
 

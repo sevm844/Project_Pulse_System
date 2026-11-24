@@ -9,7 +9,7 @@ import {
   isGroupConfirmed,
   NO_TITLE_YET,
   remindGroupAboutLetter,
-  sendGroupToDean,
+  startConsultation,
   type ApiGroup,
   type ApiTitleSubmission,
 } from "../../_lib/groups";
@@ -190,7 +190,7 @@ export default function AdviserTitleReview({
         const hasPending = titles.some((item) => item.title_status === "Pending");
         const confirmed = isGroupConfirmed(group);
         const busy = savingId === group.group_id;
-        const endorsed = group.project?.endorsement?.titles ?? [];
+        const chooseFrom = approved;
         const pick = chosen[group.group_id];
         const expanded = openGroups.includes(group.group_id);
         const status = titleStatus(titles);
@@ -240,18 +240,6 @@ export default function AdviserTitleReview({
                 </div>
               )}
 
-              {open && group.project?.dean_return && (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                  <p className="text-xs font-semibold text-amber-800">
-                    The Dean returned this group{group.project.dean_return.returned_by ? ` (${group.project.dean_return.returned_by})` : ""}
-                  </p>
-                  <p className="mt-1 whitespace-pre-line text-sm text-[#203028]">{group.project.dean_return.note}</p>
-                  <p className="mt-1 text-xs text-[#7b877f]">
-                    Change an approved title if needed, ask for a new one, then send the group to the Dean again.
-                  </p>
-                </div>
-              )}
-
               {open && (
                 <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
                   <p className="text-sm text-[#203028]">
@@ -261,7 +249,7 @@ export default function AdviserTitleReview({
                   <div className="mt-3 border-t border-[#e6eee6] pt-3">
                     <p className="text-sm font-semibold text-[#203028]">Letter for interview</p>
                     <p className="mt-1 text-xs text-[#59645d]">
-                      The letter is a form in the Forms tab. Remind the students to do it now, before you send them to the Dean.
+                      The letter is a form in the Forms tab. Remind the students to do it now, before the client consultation.
                     </p>
                     <button
                       type="button"
@@ -278,35 +266,23 @@ export default function AdviserTitleReview({
                     type="button"
                     disabled={busy || Boolean(blocker)}
                     onClick={() =>
-                      void stageAction(group, () => sendGroupToDean(group.group_id), `${group.group_name} was sent to the Dean for endorsement.`)
+                      void stageAction(group, () => startConsultation(group.group_id), `${group.group_name} is now at Client Consultation.`)
                     }
                     className="mt-3 rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-40"
                   >
-                    {busy ? "Sending..." : "Send to Dean for endorsement"}
+                    {busy ? "Saving..." : "Start the client consultation"}
                   </button>
                 </div>
               )}
 
-              {stage === "Dean's Endorsement" && (
-                <p className="mt-4 rounded-lg bg-[#f8faf7] p-3 text-sm text-[#59645d]">
-                  Waiting for the Dean to review the approved titles, talk with the group and approve.
-                </p>
-              )}
-
               {stage === "Client Consultation" && group.group_status === "Active" && (
                 <div className="mt-4 rounded-lg bg-[#f8faf7] p-3">
-                  <p className="text-sm font-semibold text-[#203028]">The Dean signed off. Pick the title to defend.</p>
+                  <p className="text-sm font-semibold text-[#203028]">Client consultation. Pick the title to defend.</p>
                   <p className="mt-1 text-xs text-[#7b877f]">
-                    After the client consultations, confirm with the group which single endorsed title they will defend.
+                    After the client consultation (and the Dean&apos;s signature on paper), confirm with the group which single approved title they will defend.
                   </p>
-                  {group.project?.endorsement?.notes && (
-                    <p className="mt-2 rounded-lg bg-white p-3 text-xs text-[#59645d]">
-                      Dean&apos;s notes: {group.project.endorsement.notes}
-                    </p>
-                  )}
-
                   <div className="mt-3 space-y-2">
-                    {endorsed.map((item) => (
+                    {chooseFrom.map((item) => (
                       <label key={item.title_id} className="flex items-center gap-2 text-sm text-[#203028]">
                         <input
                           type="radio"

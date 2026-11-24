@@ -1,11 +1,9 @@
 // Module 2 (Groups / Title Proposals) stages, in order. A group moves through them only by explicit actions:
-//   Title Proposal -> Dean's Endorsement      the Adviser sends the group to the Dean
-//   Dean's Endorsement -> Client Consultation the Dean's sign-off
+//   Title Proposal -> Client Consultation               the Adviser starts the consultation (the Dean has no step: he signs on paper)
 //   Client Consultation -> Ready for Proposal Defense   the Adviser picks the single title
 // Later phases belong to other modules (Defenses, Requirements, Records) and are tracked there.
 export const PROPOSAL_STAGES = [
   "Title Proposal",
-  "Dean's Endorsement",
   "Client Consultation",
   "Ready for Proposal Defense",
 ] as const;

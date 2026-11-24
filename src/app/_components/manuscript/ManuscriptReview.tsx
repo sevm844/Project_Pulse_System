@@ -190,7 +190,7 @@ export default function ManuscriptReview({
               {api.subtitle ?? (version ? `Saved by ${version.saved_by ?? "Unknown"} · ${formatDateTime(version.saved_at)} · ${version.word_count.toLocaleString("en-PH")} words` : "")}
             </p>
             <p className="mt-1 text-xs text-[#7b877f]">
-              {canComment ? "Select any words in the paper to leave a comment on them." : "Your adviser's and the Dean's comments appear here. Reply to tell them what you changed."}
+              {canComment ? "Select any words in the paper to leave a comment on them." : "The Dean's comments appear here. Reply to tell them what you changed."}
             </p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
