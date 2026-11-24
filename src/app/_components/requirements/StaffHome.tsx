@@ -6,6 +6,7 @@ import { apiFetch } from "../../_lib/api";
 import type { ApiGroup } from "../../_lib/groups";
 import { errorMessage } from "../../_lib/groups";
 import DashboardCard, { DashboardHeader } from "../DashboardCard";
+import CardHeading from "../CardHeading";
 import RoleCalendar from "../RoleCalendar";
 import RiskList from "../health/RiskList";
 import { useRisks } from "../health/useRisks";
@@ -100,22 +101,22 @@ export default function StaffHome({ role }: { role: HomeRole }) {
         )}
 
         <DashboardCard className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Needs your attention</h2>
-            <Link
-              href={copy[role].href}
-              className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
-            >
-              Open requirements
-            </Link>
-          </div>
+          <CardHeading
+            title="Needs your attention"
+            tone="lime"
+            right={
+              <Link href={copy[role].href} className="rounded-lg border border-[#cfe0d3] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
+                Open requirements
+              </Link>
+            }
+          />
 
           {loading ? (
-            <p className="mt-4 text-sm text-[#7b877f]">Loading...</p>
+            <p className="text-sm text-[#7b877f]">Loading...</p>
           ) : waiting.length === 0 ? (
-            <p className="mt-4 rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">{copy[role].idle}</p>
+            <p className="rounded-xl bg-[#f8faf7] p-4 text-sm text-[#7b877f]">{copy[role].idle}</p>
           ) : (
-            <ul className="mt-4 divide-y divide-[#edf2ec] rounded-xl border border-[#edf2ec] bg-white">
+            <ul className="divide-y divide-[#edf2ec] rounded-xl border border-[#edf2ec] bg-white">
               {waiting.map(({ requirement, count }) => (
                 <li key={requirement.requirement_id}>
                   <Link
@@ -127,7 +128,7 @@ export default function StaffHome({ role }: { role: HomeRole }) {
                       <span className="mt-0.5 block text-xs text-[#7b877f]">{requirement.stage}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2 text-xs text-[#59645d]">
-                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      <span className="h-2 w-2 rounded-full bg-[#3a7f35]" />
                       {attentionLabel(role, count)}
                     </span>
                   </Link>
@@ -139,11 +140,9 @@ export default function StaffHome({ role }: { role: HomeRole }) {
 
         {role === "Adviser" && risks.length > 0 && (
           <DashboardCard className="p-5">
-            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-              Groups that need attention <span className="text-sm font-normal text-[#9aa59e]">· {risks.length}</span>
-            </h2>
-            <p className="mt-1 text-sm text-[#7b877f]">Late, stuck or waiting too long. Most serious first.</p>
-            <div className="mt-4">
+            <CardHeading title={`Groups that need attention · ${risks.length}`} tone="mint" />
+            <p className="text-sm text-[#7b877f]">Late, stuck or waiting too long. Most serious first.</p>
+            <div className="mt-3">
               <RiskList items={risks} href={() => "/adviser/assigned-groups"} />
             </div>
           </DashboardCard>
@@ -151,9 +150,9 @@ export default function StaffHome({ role }: { role: HomeRole }) {
 
         {role === "Adviser" && progress.length > 0 && (
           <DashboardCard className="p-5">
-            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Where your groups are</h2>
-            <p className="mt-1 text-sm text-[#7b877f]">Each group&apos;s progress through the capstone.</p>
-            <div className="mt-4">
+            <CardHeading title="Where your groups are" tone="aqua" />
+            <p className="text-sm text-[#7b877f]">Each group&apos;s progress through the capstone.</p>
+            <div className="mt-3">
               <ProgressList items={progress} href="/adviser/assigned-groups" />
             </div>
           </DashboardCard>

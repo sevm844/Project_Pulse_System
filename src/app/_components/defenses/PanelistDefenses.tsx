@@ -14,6 +14,7 @@ import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import { hasRubric } from "../../_lib/rubric";
 import DashboardCard from "../DashboardCard";
+import CardHeading from "../CardHeading";
 import PanelistHero from "./PanelistHero";
 import DefenseDocuments from "./DefenseDocuments";
 
@@ -60,6 +61,7 @@ export default function PanelistDefenses() {
       />
 
       <DashboardCard className="p-5">
+      <CardHeading title="Your defenses" tone="aqua" />
       <div id="defense-list" className="-mt-2 scroll-mt-6" />
       <div className="flex gap-5 border-b border-[#edf2ec] text-xs font-semibold">
         {(

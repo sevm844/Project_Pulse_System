@@ -7,6 +7,7 @@ import { formatDate } from "../../_lib/requirements";
 import { hasRubric } from "../../_lib/rubric";
 import { getStoredUserName } from "../../_utils/authStorage";
 import DashboardCard, { HeroCard, heroEyebrowClass, heroTextClass, heroTitleClass } from "../DashboardCard";
+import CardHeading from "../CardHeading";
 
 // The panelist's landing page, made to feel alive but still plain to read: a greeting with the next defense counting down, rings
 // that show how far along the panelist is, and a timeline of today. Everything is worked out from the defenses the panelist is on.
@@ -227,17 +228,14 @@ export default function PanelistHero({ defenses, loading, onOpen }: { defenses: 
 
       {/* today as a timeline */}
       <DashboardCard className="p-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Today</h2>
-          <span className="text-xs text-[#7b877f]">{formatDate(today)}</span>
-        </div>
+        <CardHeading title="Today" tone="mint" right={<span className="text-xs text-[#4d5751]">{formatDate(today)}</span>} />
 
         {todays.length === 0 ? (
-          <p className="mt-4 rounded-xl bg-[#f8faf7] p-4 text-sm leading-6 text-[#7b877f]">
+          <p className="rounded-xl bg-[#f8faf7] p-4 text-sm leading-6 text-[#7b877f]">
             {loading ? "Loading..." : next ? `No defense today. Enjoy the quiet: your next one is the ${next.defense_type} of ${next.group_name} on ${formatDate(next.defense_date)}.` : "No defense today."}
           </p>
         ) : (
-          <ol className="mt-4">
+          <ol>
             {todays.map((d, index) => {
               const isLive = now >= startOf(d) && now < endOf(d) && d.status === "Scheduled";
               const finished = d.status === "Completed" || submitted(d);

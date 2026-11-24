@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import DeanShell from "./_components/DeanShell";
 import RoleCalendar from "../_components/RoleCalendar";
 import Card, { HeroCard, greetingFor, heroEyebrowClass, heroTextClass, heroTitleClass } from "../_components/DashboardCard";
+import CardHeading from "../_components/CardHeading";
 import { getStoredUserName } from "../_utils/authStorage";
 import RiskList from "../_components/health/RiskList";
 import { useRisks } from "../_components/health/useRisks";
@@ -124,11 +125,9 @@ export default function DeanDashboardPage() {
 
           {risks.length > 0 && (
             <Card className="p-5">
-              <h2 className="text-lg font-semibold text-[#203028]">
-                Groups at Risk <span className="text-sm font-normal text-[#9aa59e]">· {risks.length}</span>
-              </h2>
-              <p className="mt-1 text-sm text-[#7b877f]">Late, stuck or waiting too long. Most serious first.</p>
-              <div className="mt-4">
+              <CardHeading title={`Groups at Risk · ${risks.length}`} tone="lime" />
+              <p className="text-sm text-[#7b877f]">Late, stuck or waiting too long. Most serious first.</p>
+              <div className="mt-3">
                 <RiskList items={risks.slice(0, 8)} href={(risk) => `/dean/projects/${risk.group_id}`} showAdviser />
               </div>
               {risks.length > 8 && <p className="mt-3 text-xs text-[#7b877f]">Showing the 8 most serious of {risks.length}.</p>}
@@ -136,25 +135,18 @@ export default function DeanDashboardPage() {
           )}
 
           <Card className="p-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-[#203028]">
-                  Administration Shortcuts
-                </h2>
-                <p className="mt-1 text-sm text-[#7b877f]">
-                  Highest-authority controls are grouped in one place.
-                </p>
-              </div>
+            <CardHeading
+              title="Administration Shortcuts"
+              tone="mint"
+              right={
+                <Link href="/dean/administration" className="rounded-lg border border-[#cfe0d3] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
+                  Open Administration
+                </Link>
+              }
+            />
+            <p className="text-sm text-[#7b877f]">Highest-authority controls are grouped in one place.</p>
 
-              <Link
-                href="/dean/administration"
-                className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold shadow-[0_1px_2px_rgba(31,42,36,0.04)] hover:bg-[#f3f7f1]"
-              >
-                Open Administration
-              </Link>
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {administrationActions.map(([title, description, href]) => (
                 <Link key={href} href={href}>
                   <div className="h-full rounded-lg border border-[#dfe8df] bg-white p-4 transition hover:bg-[#fbfdfb]">
@@ -171,20 +163,13 @@ export default function DeanDashboardPage() {
           </Card>
 
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#edf2ec] bg-white p-5">
+            <div className="flex items-center justify-between gap-3 bg-[#e0f3f0] px-5 py-3">
               <div>
-                <h2 className="text-lg font-semibold text-[#203028]">
-                  Project Monitoring
-                </h2>
-                <p className="mt-1 text-sm text-[#7b877f]">
-                  Overview of all capstone groups.
-                </p>
+                <h2 className="text-base font-semibold tracking-tight text-[#123f2b]">Project Monitoring</h2>
+                <p className="text-xs text-[#4d5751]">Overview of all capstone groups.</p>
               </div>
 
-              <Link
-                href="/dean/projects"
-                className="rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold shadow-[0_1px_2px_rgba(31,42,36,0.04)] hover:bg-[#f3f7f1]"
-              >
+              <Link href="/dean/projects" className="rounded-lg border border-[#cfe0d3] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">
                 View All
               </Link>
             </div>
@@ -232,11 +217,9 @@ export default function DeanDashboardPage() {
 
           {/* Adviser workloads */}
           <Card className="p-5">
-            <h2 className="text-lg font-semibold text-[#203028]">
-              Adviser Workloads
-            </h2>
+            <CardHeading title="Adviser Workloads" tone="lime" />
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               {adviserLoads.map(([name, groups]) => (
                 <div
                   key={name}
