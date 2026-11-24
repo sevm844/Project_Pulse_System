@@ -11,6 +11,7 @@ import HandledGroups from "../../_components/groups/HandledGroups";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageBadge } from "../../_components/ProposalStage";
 import GroupTimeline from "../../_components/health/GroupTimeline";
+import TimelineStrip from "../../_components/health/TimelineStrip";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
@@ -571,11 +572,12 @@ export default function AssignedGroupsPage() {
                   aria-expanded={timelineOpen === group.group_id}
                   className="mt-3 text-xs font-semibold text-[#4f8f58] hover:underline"
                 >
-                  {timelineOpen === group.group_id ? "Hide timeline" : "Show timeline"}
+                  {timelineOpen === group.group_id ? "Hide capstone timeline" : "Show capstone timeline"}
                 </button>
                 {timelineOpen === group.group_id && (
                   <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
-                    <GroupTimeline groupId={group.group_id} />
+                    <TimelineStrip groupId={group.group_id} title="Capstone timeline" />
+                    <div className="mt-5"><GroupTimeline groupId={group.group_id} /></div>
                   </div>
                 )}
 

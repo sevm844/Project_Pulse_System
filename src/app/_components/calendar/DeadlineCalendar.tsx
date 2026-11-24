@@ -129,20 +129,20 @@ export default function DeadlineCalendar() {
   };
 
   return (
-    <section className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_340px]" aria-label="Deadlines and calendar">
+    <section className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label="Deadlines and calendar">
       <div className="order-2 overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)] lg:order-1">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf2ec] px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf2ec] px-4 py-3">
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Previous month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
+            <button type="button" aria-label="Previous month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
               ‹
             </button>
-            <h2 className="min-w-[10.5rem] text-center text-xl font-semibold tracking-tight text-[#203028]">
+            <h2 className="min-w-[9rem] text-center text-base font-semibold tracking-tight text-[#203028]">
               {month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </h2>
-            <button type="button" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
+            <button type="button" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
               ›
             </button>
-            <button type="button" onClick={() => show(todayKey)} className="ml-1 rounded-lg border border-[#dfe8df] px-3 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
+            <button type="button" onClick={() => show(todayKey)} className="ml-1 rounded-lg border border-[#dfe8df] px-2.5 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
               Today
             </button>
           </div>
@@ -154,7 +154,7 @@ export default function DeadlineCalendar() {
           </p>
         </div>
 
-        <div className="p-3 sm:p-4">
+        <div className="p-2.5 sm:p-3">
           <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]">
             {WEEK_DAYS.map((name) => (
               <span key={name} className="py-1">{name}</span>
@@ -172,13 +172,13 @@ export default function DeadlineCalendar() {
                   key={item.key}
                   type="button"
                   onClick={() => setSelected(item.key)}
-                  className={`flex min-h-[58px] flex-col items-stretch rounded-xl border p-1.5 text-left align-top transition sm:min-h-[96px] ${
+                  className={`flex min-h-[50px] flex-col items-stretch rounded-lg border p-1 text-left align-top transition sm:min-h-[72px] ${
                     isSelected ? "border-[#123f2b] bg-[#f3f8f4]" : item.inMonth ? "border-[#edf2ec] bg-white hover:bg-[#fbfdfb]" : "border-transparent bg-[#fafbfa]"
                   }`}
                 >
                   <span className="flex items-center justify-between">
                     <span
-                      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-semibold ${
+                      className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
                         isToday ? "bg-[#123f2b] text-white" : item.inMonth ? "text-[#203028]" : "text-[#b9c0bb]"
                       }`}
                     >
@@ -188,9 +188,9 @@ export default function DeadlineCalendar() {
                   </span>
 
                   {/* On a phone only small marks show (the list beside the calendar has the words); from tablet size each deadline shows its title. */}
-                  <span className="mt-1 hidden flex-1 flex-col gap-1 sm:flex">
+                  <span className="mt-0.5 hidden flex-1 flex-col gap-0.5 sm:flex">
                     {list.slice(0, 2).map((event) => (
-                      <span key={event.id} className={`truncate rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${chip(event, item.key)}`}>
+                      <span key={event.id} className={`truncate rounded px-1.5 py-px text-[10px] font-semibold leading-4 ${chip(event, item.key)}`}>
                         {shortTitle(event)}
                       </span>
                     ))}

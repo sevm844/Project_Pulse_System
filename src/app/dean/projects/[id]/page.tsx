@@ -9,6 +9,7 @@ import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
 import { GroupStatusNote, StageSteps } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
+import TimelineStrip from "../../../_components/health/TimelineStrip";
 import CertificateList from "../../../_components/certificates/CertificateList";
 import GroupAdvisers from "../../../_components/groups/GroupAdvisers";
 import MonitoringForms from "../../../_components/groups/MonitoringForms";
@@ -194,6 +195,8 @@ export default function DeanProjectProfilePage() {
             </div>
           )}
         </Card>
+
+        <TimelineStrip groupId={group.group_id} title="Capstone timeline" />
 
         {overall && (
           <Card className="p-5">

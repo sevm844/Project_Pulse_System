@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
 import DeadlineCalendar from "../_components/calendar/DeadlineCalendar";
+import TimelineStrip from "../_components/health/TimelineStrip";
 import Card from "./_components/Card";
 import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
 import { getStoredUserName } from "../_utils/authStorage";
@@ -190,6 +191,8 @@ export default function StudentDashboardPage() {
               </dl>
             </div>
           </HeroCard>
+
+          <TimelineStrip groupId={group.group_id} title="Your capstone timeline" moreHref="/student/project" />
 
           <DeadlineCalendar />
 
