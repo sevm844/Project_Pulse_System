@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
+import { HeroCard } from "../../_components/DashboardCard";
 import GroupAdvisers from "../../_components/groups/GroupAdvisers";
 import HandledGroups from "../../_components/groups/HandledGroups";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
@@ -197,6 +198,24 @@ export default function AssignedGroupsPage() {
     return () => { cancelled = true; };
   }, [showCreateWizard, studentLoadAttempt, activeSchoolYear, semester]);
 
+  const [waitingStudents, setWaitingStudents] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch<unknown[]>("/students/available")
+      .then((list) => {
+        if (!cancelled) setWaitingStudents(list.length);
+      })
+      .catch(() => {
+        if (!cancelled) setWaitingStudents(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [groups.length]);
+
   const confirmedGroups = useMemo(() => groups.filter(isGroupConfirmed), [groups]);
 
   const filteredGroups = useMemo(() => {
@@ -257,6 +276,52 @@ export default function AssignedGroupsPage() {
     <AdviserShell title="Assigned Groups">
       <div className="space-y-5">
         {/* Filters */}
+        {/* The first thing on the page: a dark green banner with one big button (the user's choice, 2026-11-24, so an adviser never has to hunt for Create Group). */}
+        <HeroCard tone="green">
+          <div className="flex flex-col gap-6 p-6 sm:p-7 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a8e87a]">Title proposal phase</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">Form your next group</h2>
+
+              <ol className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-white/90">
+                {["Choose the leader", "Add up to 2 members", "Send the invitation"].map((step, index) => (
+                  <li key={step} className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[11px] font-bold text-white">{index + 1}</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+
+              <p className="mt-3 text-xs text-white/70">A group has 1 to 3 students: the leader plus up to 2 members, chosen from registered student accounts.</p>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-start gap-3 md:items-end">
+              {waitingStudents !== null && (
+                <p className="text-sm font-semibold text-white">
+                  {waitingStudents === 0 ? "Every student already has a group" : `${waitingStudents} ${waitingStudents === 1 ? "student is" : "students are"} waiting for a group`}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateMessage("");
+                  setCreateMessageType("");
+                  setShowCreateWizard(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-base font-bold text-[#123f2b] shadow-[0_16px_40px_rgba(0,0,0,0.25)] transition hover:bg-[#d7f7d8]"
+              >
+                <span aria-hidden className="flex h-6 w-6 items-center justify-center rounded-full bg-[#123f2b] text-lg leading-none text-white">+</span>
+                Create Group
+              </button>
+            </div>
+          </div>
+
+          {createMessage && createMessageType === "success" && (
+            <p className="mx-6 mb-6 -mt-1 rounded-lg bg-white/12 px-4 py-3 text-xs font-semibold text-white sm:mx-7">
+              {createMessage}
+            </p>
+          )}
+        </HeroCard>
         <Card className="p-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
@@ -307,41 +372,6 @@ export default function AssignedGroupsPage() {
               </select>
             </div>
           </div>
-        </Card>
-        <Card className="border-[#dfe8df] bg-white/88 p-5 shadow-[0_18px_48px_rgba(32,48,40,0.06)]">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f8f58]">
-                Title proposal phase
-              </p>
-              <h2 className="mt-2 text-lg font-semibold text-[#203028]">
-                Adviser-managed group creation
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-[#7b877f]">
-                A group has 1 to 3 students: the leader plus up to 2 members, chosen from registered student accounts.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setCreateMessage("");
-                setCreateMessageType("");
-                setShowCreateWizard(true);
-              }}
-              className="rounded-lg bg-[#123f2b] px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(32,40,35,0.16)] transition hover:bg-[#0f3324]"
-            >
-              Create Group
-            </button>
-            </div>
-          </div>
-
-          {createMessage && createMessageType === "success" && (
-            <p className="mt-4 rounded-lg border border-[#dfe8df] bg-[#fbfdfb] px-4 py-3 text-xs font-semibold text-[#4f8f58]">
-              {createMessage}
-            </p>
-          )}
         </Card>
 
         {showCreateWizard && createPortal(
