@@ -151,29 +151,31 @@ export default function HeroShowcase() {
       className="mx-4 mt-6 rounded-[28px] px-4 pb-8 pt-6 sm:mx-auto sm:max-w-4xl sm:px-10 sm:pb-12 sm:pt-8"
       style={{
         backgroundImage:
-          "radial-gradient(ellipse 55% 70% at 85% 15%, rgba(168,232,122,0.75) 0%, rgba(168,232,122,0) 100%), radial-gradient(ellipse 50% 70% at 10% 90%, rgba(74,194,20,0.35) 0%, rgba(74,194,20,0) 100%), radial-gradient(ellipse 45% 55% at 50% 100%, rgba(58,127,53,0.3) 0%, rgba(58,127,53,0) 100%), linear-gradient(135deg, #d7f7d8 0%, #c4ecd3 50%, #b8e6c4 100%)",
+          "radial-gradient(ellipse 38% 48% at 82% 14%, rgba(190,236,120,0.95) 0%, rgba(190,236,120,0) 100%), radial-gradient(ellipse 36% 50% at 14% 38%, rgba(150,232,176,0.9) 0%, rgba(150,232,176,0) 100%), radial-gradient(ellipse 40% 45% at 22% 96%, rgba(166,226,226,0.95) 0%, rgba(166,226,226,0) 100%), radial-gradient(ellipse 36% 42% at 86% 92%, rgba(120,210,170,0.85) 0%, rgba(120,210,170,0) 100%), radial-gradient(ellipse 50% 40% at 50% 50%, rgba(230,250,238,0.9) 0%, rgba(230,250,238,0) 100%), linear-gradient(135deg, #cdeedd 0%, #c3ebd2 50%, #cfeed6 100%)",
       }}
     >
       <div role="tablist" aria-label="What Project Pulse covers" className="flex items-center justify-center gap-3">
         {TABS.map((item, index) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={index === active}
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => setActive(index)}
-            className={`flex h-12 w-12 items-center justify-center rounded-full border transition ${
-              index === active ? "border-white bg-white text-[#123f2b] shadow-[0_8px_24px_rgba(18,63,43,0.2)]" : "border-white/60 bg-white/45 text-[#2f6b3c] hover:bg-white/70"
-            }`}
-          >
-            {item.icon}
-          </button>
+          <div key={item.key} className="relative">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={index === active}
+              aria-label={item.label}
+              title={item.label}
+              onClick={() => setActive(index)}
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition ${
+                index === active ? "border-[#123f2b] bg-[#123f2b] text-white shadow-[0_8px_22px_rgba(18,63,43,0.35)]" : "border-white/70 bg-white/55 text-[#2f6b3c] hover:bg-white/80"
+              }`}
+            >
+              {item.icon}
+            </button>
+            {index === active && <span aria-hidden className="absolute left-1/2 top-full h-4 w-6 -translate-x-1/2 bg-[#fcfdfc]" />}
+          </div>
         ))}
       </div>
 
-      <div className="mt-5 grid items-center gap-8 rounded-3xl bg-white p-6 shadow-[0_24px_60px_rgba(18,63,43,0.14)] md:grid-cols-2 md:p-8">
+      <div className="mt-4 grid items-center gap-8 rounded-3xl bg-[#fcfdfc] p-6 shadow-[0_24px_60px_rgba(18,63,43,0.16)] md:grid-cols-2 md:p-8">
         <div>
           <p className="flex items-center gap-2 text-sm font-bold text-[#123f2b]">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#d7f7d8] text-[#123f2b] [&>svg]:h-4 [&>svg]:w-4">{tab.icon}</span>

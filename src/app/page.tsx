@@ -433,15 +433,14 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="relative z-10 mx-3 mt-3 overflow-hidden rounded-[28px] bg-[#f3f8f4] px-5 pb-16 pt-16 text-center sm:mx-5 lg:pb-20 lg:pt-24">
+      <section className="relative z-10 mx-3 mt-3 overflow-hidden rounded-[28px] border border-[#e4e8e2] bg-[#f1f3f0] px-5 pb-16 pt-16 text-center sm:mx-5 lg:pb-20 lg:pt-24">
         <div className="relative z-10 mx-auto max-w-4xl">
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] md:text-6xl">
-            All the work around your capstone, handled.
+            Unified Capstone Lifecycle Management
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[#59645d] md:text-lg md:leading-8">
-            From your title proposal to the final archive: write your manuscript together, hand in requirements, hear back from your advisers and know your defense schedule,
-            with fewer tools and less paper.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#4d5751]">
+            Streamlining your entire capstone journey from proposal to final archiving.
           </p>
 
           <div className="relative z-30 mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -450,7 +449,7 @@ export default function Home() {
               className="inline-flex items-center gap-2.5 rounded-xl bg-[#123f2b] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
             >
               <Image src="/logotop.png" alt="" width={20} height={20} className="rounded bg-white p-0.5" />
-              Log in to your dashboard
+              Access Your Dashboard
             </a>
             <a
               href="/register"
