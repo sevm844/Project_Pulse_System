@@ -409,10 +409,16 @@ export default function Home() {
         @media (prefers-reduced-motion: reduce) { .landing-float, .landing-float-slow { animation: none; } }
       `}</style>
 
-      {/* The top of the page is one smooth fade in a single colour family: a medium emerald edge (not black), a fresh green, then pastel mint and white. A fine grain
+      {/* The top of the page is a soft pastel band (the user's choice, 2026-11-24): pale mint with a fresh lime glow along the very top edge (not in the middle of the hero), fading to white. A fine grain
           makes it feel soft like paper, and the rounded corners frame it like a card. Nothing here can be clicked. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-2 top-2 z-0 h-[580px] overflow-hidden rounded-t-[28px] sm:inset-x-3 sm:top-3">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#0e4330_0%,#15604a_4%,#1d7a58_10%,#2a8c66_17%,#3fa17a_26%,#66bb97_36%,#9fdcbf_48%,#d5f1e3_61%,#eef9f3_76%,rgba(255,255,255,0)_100%)]" />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(196,236,150,0.95) 0%, rgba(196,236,150,0) 100%), radial-gradient(ellipse 38% 42% at 0% 0%, rgba(150,224,170,0.7) 0%, rgba(150,224,170,0) 100%), radial-gradient(ellipse 38% 42% at 100% 0%, rgba(150,224,170,0.7) 0%, rgba(150,224,170,0) 100%), linear-gradient(180deg, #cfeee0 0%, #e3f6ec 38%, #f1fbf6 68%, rgba(255,255,255,0) 100%)",
+          }}
+        />
         <div
           className="absolute inset-0 opacity-[0.5] mix-blend-soft-light [mask-image:linear-gradient(180deg,#000_0%,#000_45%,transparent_85%)]"
           style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.6 -0.3'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }}
