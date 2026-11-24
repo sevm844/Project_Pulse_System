@@ -102,7 +102,8 @@ export const COURSE_NAMES: Record<string, string> = {
   BLIS: "Bachelor of Library and Information Science",
   ACT: "Associate in Computer Technology",
 };
-export const SECTION_OPTIONS = ["4A", "4B", "4C"];
+// The real sections are 4-1 to 4-4 (like the enrolled-student list). Groups made earlier may still say 4A, 4B or 4C.
+export const SECTION_OPTIONS = ["4-1", "4-2", "4-3", "4-4"];
 
 // A group is confirmed once every member has accepted the invitation.
 export function isGroupConfirmed(group: ApiGroup) {

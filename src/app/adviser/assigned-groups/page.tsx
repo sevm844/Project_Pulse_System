@@ -7,6 +7,7 @@ import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
 import StatusBadge from "../_components/StatusBadge";
 import { HeroCard } from "../../_components/DashboardCard";
+import StudentImportDialog from "../../_components/students/StudentImportDialog";
 import GroupAdvisers from "../../_components/groups/GroupAdvisers";
 import HandledGroups from "../../_components/groups/HandledGroups";
 import RemoveMemberDialog from "../../_components/groups/RemoveMemberDialog";
@@ -53,7 +54,7 @@ export default function AssignedGroupsPage() {
   const [groupName, setGroupName] = useState("");
   const [schoolYear, setSchoolYear] = useState("");
   const [createCourse, setCreateCourse] = useState<CourseCode>("BSIT");
-  const [createSection, setCreateSection] = useState("4A");
+  const [createSection, setCreateSection] = useState("4-1");
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
@@ -62,6 +63,8 @@ export default function AssignedGroupsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [leaderUid, setLeaderUid] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
+  const [pickCourse, setPickCourse] = useState("");
+  const [pickSection, setPickSection] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [createMessage, setCreateMessage] = useState("");
   const [createMessageType, setCreateMessageType] = useState<
@@ -92,7 +95,16 @@ export default function AssignedGroupsPage() {
   const chosenIds = leaderUid ? [leaderUid, ...selectedIds.filter((uid) => uid !== leaderUid)] : [];
   const chosenStudents = chosenIds.map((uid) => availableStudents.find((student) => student.uid === uid)).filter((student): student is UserProfile => Boolean(student));
   const searchWords = studentSearch.trim().toLowerCase();
-  const pickable = availableStudents.filter((student) => !chosenIds.includes(student.uid) && (!searchWords || `${student.fullName} ${student.email}`.toLowerCase().includes(searchWords)));
+  const pickable = availableStudents.filter(
+    (student) =>
+      !chosenIds.includes(student.uid) &&
+      (!pickCourse || student.course === pickCourse) &&
+      (!pickSection || student.section === pickSection) &&
+      (!searchWords || `${student.fullName} ${student.email} ${student.studentNumber ?? ""}`.toLowerCase().includes(searchWords)),
+  );
+  // Only the courses and sections that the waiting students really have (from the imported list).
+  const pickCourses = Array.from(new Set(availableStudents.map((student) => student.course).filter((item): item is string => Boolean(item)))).sort();
+  const pickSections = Array.from(new Set(availableStudents.map((student) => student.section).filter((item): item is string => Boolean(item)))).sort();
 
   // The old leader stays in the group as a member.
   function makeLeader(uid: string) {
@@ -175,7 +187,7 @@ export default function AssignedGroupsPage() {
         }
         const query = params.toString();
         const available = await apiFetch<
-          Array<{ user_id: number; fname: string; lname: string; email: string }>
+          Array<{ user_id: number; fname: string; lname: string; email: string; student_number?: string | null; course?: string | null; section?: string | null }>
         >(`/students/available${query ? `?${query}` : ""}`);
         const registeredStudents = available.map((student): UserProfile => ({
           uid: String(student.user_id),
@@ -184,6 +196,9 @@ export default function AssignedGroupsPage() {
           role: "Student",
           status: "Active",
           createdAt: "",
+          course: student.course ?? null,
+          section: student.section ?? null,
+          studentNumber: student.student_number ?? null,
         }));
         if (!cancelled) setStudents(registeredStudents);
       } catch (err) {
@@ -199,6 +214,8 @@ export default function AssignedGroupsPage() {
   }, [showCreateWizard, studentLoadAttempt, activeSchoolYear, semester]);
 
   const [waitingStudents, setWaitingStudents] = useState<number | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importedKey, setImportedKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +231,7 @@ export default function AssignedGroupsPage() {
     return () => {
       cancelled = true;
     };
-  }, [groups.length]);
+  }, [groups.length, importedKey]);
 
   const confirmedGroups = useMemo(() => groups.filter(isGroupConfirmed), [groups]);
 
@@ -313,6 +330,9 @@ export default function AssignedGroupsPage() {
                 <span aria-hidden className="flex h-6 w-6 items-center justify-center rounded-full bg-[#123f2b] text-lg leading-none text-white">+</span>
                 Create Group
               </button>
+              <button type="button" onClick={() => setImportOpen(true)} className="text-sm font-semibold text-white/90 underline underline-offset-4 hover:text-white">
+                Import the student list
+              </button>
             </div>
           </div>
 
@@ -322,6 +342,8 @@ export default function AssignedGroupsPage() {
             </p>
           )}
         </HeroCard>
+
+        {importOpen && <StudentImportDialog onClose={() => setImportOpen(false)} onChanged={() => setImportedKey((key) => key + 1)} />}
         <Card className="p-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
@@ -350,7 +372,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {SECTION_OPTIONS.map((item) => (
+                {Array.from(new Set([...SECTION_OPTIONS, ...groups.map((group) => group.section).filter(Boolean)])).map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -483,6 +505,18 @@ export default function AssignedGroupsPage() {
                     {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this school year and semester are excluded.</p>}
                     <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
                       Add students to the group (1 to {MAX_GROUP_SIZE})
+                      {(pickCourses.length > 0 || pickSections.length > 0) && (
+                        <span className="mt-1 flex gap-2 font-normal">
+                          <select value={pickCourse} onChange={(event) => { setPickCourse(event.target.value); setPickerOpen(true); }} aria-label="Filter by course" className="h-8 flex-1 rounded-md border border-[#dfe8df] bg-white px-2 text-xs">
+                            <option value="">All courses</option>
+                            {pickCourses.map((item) => <option key={item} value={item}>{item}</option>)}
+                          </select>
+                          <select value={pickSection} onChange={(event) => { setPickSection(event.target.value); setPickerOpen(true); }} aria-label="Filter by section" className="h-8 flex-1 rounded-md border border-[#dfe8df] bg-white px-2 text-xs">
+                            <option value="">All sections</option>
+                            {pickSections.map((item) => <option key={item} value={item}>{item}</option>)}
+                          </select>
+                        </span>
+                      )}
                       <input
                         type="search"
                         value={studentSearch}
@@ -490,7 +524,7 @@ export default function AssignedGroupsPage() {
                         onFocus={() => setPickerOpen(true)}
                         onKeyDown={(event) => { if (event.key === "Escape") setPickerOpen(false); }}
                         disabled={studentsLoading || Boolean(studentsError) || chosenIds.length >= MAX_GROUP_SIZE}
-                        placeholder={chosenIds.length >= MAX_GROUP_SIZE ? "The group is full (3 students)" : "Type a name or email to find a student"}
+                        placeholder={chosenIds.length >= MAX_GROUP_SIZE ? "The group is full (3 students)" : "Type a name, student number or email"}
                         className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs font-normal disabled:bg-gray-50"
                       />
                       {pickerOpen && chosenIds.length < MAX_GROUP_SIZE && (
@@ -499,7 +533,7 @@ export default function AssignedGroupsPage() {
                           {pickable.slice(0, PICKER_LIMIT).map((student) => (
                             <li key={student.uid}>
                               <button type="button" onClick={() => { toggleStudent(student.uid); setStudentSearch(""); setPickerOpen(false); }} className="block w-full px-3 py-2 text-left font-normal text-[#203028] hover:bg-[#f2f8f3]">
-                                {student.fullName} <span className="text-[#7b877f]">/ {student.email}</span>
+                                {student.fullName} <span className="text-[#7b877f]">/ {student.email}{student.course ? ` · ${student.course}${student.section ? ` ${student.section}` : ""}` : ""}</span>
                               </button>
                             </li>
                           ))}

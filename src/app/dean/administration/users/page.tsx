@@ -11,6 +11,7 @@ import {
   type ApiUser,
   type ApiUserPage,
 } from "../../../_lib/api";
+import StudentImportDialog from "../../../_components/students/StudentImportDialog";
 import { getStoredUserUid } from "../../../_utils/authStorage";
 
 const PAGE_SIZE = 25;
@@ -93,6 +94,7 @@ export default function DeanUsersPage() {
   const [lastPage, setLastPage] = useState(1);
   const [inactiveTotal, setInactiveTotal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
+  const [importOpen, setImportOpen] = useState(false);
   const myUid = getStoredUserUid();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -256,8 +258,15 @@ export default function DeanUsersPage() {
         </div>
       )}
 
+      {importOpen && <StudentImportDialog onClose={() => setImportOpen(false)} onChanged={() => setReloadKey((key) => key + 1)} />}
+
       <Card className="mb-5 p-5">
-        <h2 className="text-lg font-semibold text-[#203028]">Add User</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[#203028]">Add User</h2>
+          <button type="button" onClick={() => setImportOpen(true)} className="rounded-lg border border-[#cfe0d3] bg-[#f3f8f4] px-4 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea]">
+            Import student list
+          </button>
+        </div>
         <p className="mt-1 text-sm text-[#7b877f]">
           Create an account directly. It is active right away, and the person gets an email to choose their own password. You never set or see a password.
         </p>

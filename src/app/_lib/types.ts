@@ -17,4 +17,8 @@ export type UserProfile = {
   role: UserRole;
   status: UserStatus;
   createdAt: string;
+  // From the imported enrolled-student list (empty for students who registered themselves).
+  course?: string | null;
+  section?: string | null;
+  studentNumber?: string | null;
 };

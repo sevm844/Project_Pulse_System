@@ -317,3 +317,8 @@ export async function postForBlob(path: string): Promise<Blob> {
 
   return response.blob();
 }
+
+// The template of the student list (a CSV with the titles and two made-up rows), saved to the computer.
+export async function downloadStudentListTemplate() {
+  saveBlob(await fetchPrivateFile("/students/import/template"), "student-list-template.csv");
+}
