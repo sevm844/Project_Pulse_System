@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StudentShell from "./_components/StudentShell";
-import RoleCalendar from "../_components/RoleCalendar";
+import DeadlineCalendar from "../_components/calendar/DeadlineCalendar";
 import Card from "./_components/Card";
 import { HeroCard, greetingFor, heroEyebrowClass } from "../_components/DashboardCard";
 import { getStoredUserName } from "../_utils/authStorage";
@@ -161,78 +161,39 @@ export default function StudentDashboardPage() {
 
   return (
     <StudentShell title="Student Overview" subtitle="Student Management">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div>
         <div className="space-y-6">
+          {/* Slim greeting bar: the deadline calendar below is the main thing on a student's dashboard (the user's decision, 2026-11-24). */}
           <HeroCard tone="green">
-            <div className="p-6 sm:p-7">
-              <p className={heroEyebrowClass("green")}>
-                {greetingFor()}, {getStoredUserName() ?? "student"}
-              </p>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <h1
-                  className={`text-3xl font-semibold tracking-tight ${
-                    approvedTitle ? "text-white" : "text-white/60"
-                  }`}
-                >
-                  {approvedTitle || NO_TITLE_YET}
-                </h1>
-
-                <span className="text-sm font-semibold text-white/80">{group.group_name}</span>
-              </div>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/75">
-                {approvedTitle
-                  ? "Track your project status and group details here."
-                  : "Submit your title proposals to your adviser. Approved titles go to the Dean, and you choose the one to defend after the client consultation."}
-              </p>
-
-              <p className="mt-4 text-xs font-semibold text-white/70">
-                Group Code: {group.group_code} · {group.course} {group.section}
-                {group.school_year ? ` · ${group.school_year}${group.semester ? ` / ${group.semester}` : ""}` : ""}
-              </p>
-            </div>
-
-            <div className="mx-4 mb-4 grid divide-y divide-[#edf2ec] overflow-hidden rounded-xl border border-white/70 bg-white shadow-[0_8px_24px_rgba(31,42,36,0.08)] md:grid-cols-4 md:divide-x md:divide-y-0">
-              <div className="p-5">
-                <p className="text-xs font-medium text-[#7b877f]">Adviser</p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {group.adviser?.name || "Not assigned"}
+            <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-4 px-6 py-5 sm:px-7">
+              <div className="min-w-0">
+                <p className={heroEyebrowClass("green")}>
+                  {greetingFor()}, {getStoredUserName() ?? "student"}
+                </p>
+                <h1 className={`mt-1 text-2xl font-semibold tracking-tight ${approvedTitle ? "text-white" : "text-white/60"}`}>{approvedTitle || NO_TITLE_YET}</h1>
+                <p className="mt-1 text-xs font-semibold text-white/75">
+                  {group.group_name} · {group.course} {group.section} · Adviser: {group.adviser?.name || "Not assigned"}
                 </p>
               </div>
 
-              <div className="p-5">
-                <p className="text-xs font-medium text-[#7b877f]">Current Phase</p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">{progress?.current_phase ?? stage}</p>
-              </div>
-
-              <Link
-                href="/student/requirements"
-                className="p-5 transition hover:bg-[#fbfdfb]"
-              >
-                <p className="text-xs font-medium text-[#7b877f]">Title Proposals</p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {titleSummary}
-                </p>
-              </Link>
-
-              <div className="p-5">
-                <p className="text-xs font-medium text-[#7b877f]">Upcoming Defense</p>
-                <p className="mt-2 text-sm font-semibold text-[#203028]">
-                  {scheduledDefense ? `${scheduledDefense.label} · ${scheduledDefense.detail.replace("Scheduled ", "")}` : "Not scheduled yet"}
-                </p>
-              </div>
+              <dl className="flex gap-8 text-white">
+                <div>
+                  <dt className="text-[11px] font-medium text-white/65">Current phase</dt>
+                  <dd className="mt-0.5 text-sm font-semibold">{progress?.current_phase ?? stage}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-medium text-white/65">Upcoming defense</dt>
+                  <dd className="mt-0.5 text-sm font-semibold">
+                    {scheduledDefense ? `${scheduledDefense.label} · ${scheduledDefense.detail.replace("Scheduled ", "")}` : "Not scheduled yet"}
+                  </dd>
+                </div>
+              </dl>
             </div>
           </HeroCard>
 
-          {progress && (
-            <Card className={emptyCardClass}>
-              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Project Progress</h2>
-              <div className="mt-4">
-                <ProgressTracker progress={progress} />
-              </div>
-            </Card>
-          )}
+          <DeadlineCalendar />
+
+
 
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
             <Card className={emptyCardClass}>
@@ -282,20 +243,16 @@ export default function StudentDashboardPage() {
             </Card>
           </div>
 
-          <Card className={emptyCardClass}>
-            <h2 className="text-lg font-semibold tracking-tight text-[#203028]">
-              Deadlines, Defense Schedule and Activity
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[#7b877f]">
-              Nothing here yet. Deadlines, your defense schedule, adviser
-              feedback and recent activity will appear once they are published.
-            </p>
-          </Card>
+          {progress && (
+            <Card className={emptyCardClass}>
+              <h2 className="text-lg font-semibold tracking-tight text-[#203028]">Project Progress</h2>
+              <div className="mt-4">
+                <ProgressTracker progress={progress} />
+              </div>
+            </Card>
+          )}
         </div>
 
-        <div className="xl:sticky xl:top-6 xl:self-start">
-          <RoleCalendar role="Student" />
-        </div>
       </div>
     </StudentShell>
   );

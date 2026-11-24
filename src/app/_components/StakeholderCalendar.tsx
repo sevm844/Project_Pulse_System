@@ -114,6 +114,17 @@ async function loadNotes(storageKey: string): Promise<CalendarNote[]> {
   }
 }
 
+// Shared with the big calendar on the student dashboard: one load at a time per calendar, and the one-time import of old browser notes.
+export function loadCalendarNotes(storageKey: string): Promise<CalendarNote[]> {
+  let pending = loading.get(storageKey);
+  if (!pending) {
+    pending = loadNotes(storageKey).finally(() => loading.delete(storageKey));
+    loading.set(storageKey, pending);
+  }
+
+  return pending;
+}
+
 export default function StakeholderCalendar({
   title,
   storageKey,
@@ -135,11 +146,7 @@ export default function StakeholderCalendar({
   // The notes live on the server, so they follow the person to every device. Notes this browser kept before are sent once.
   useEffect(() => {
     let cancelled = false;
-    let pending = loading.get(storageKey);
-    if (!pending) {
-      pending = loadNotes(storageKey).finally(() => loading.delete(storageKey));
-      loading.set(storageKey, pending);
-    }
+    const pending = loadCalendarNotes(storageKey);
 
     pending
       .then((saved) => !cancelled && setNotes(saved))
