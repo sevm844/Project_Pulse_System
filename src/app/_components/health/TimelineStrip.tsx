@@ -87,7 +87,7 @@ export default function TimelineStrip({ groupId, title = "Capstone timeline", mo
         <div className="overflow-x-auto pb-2 pt-1">
           <ol className="relative flex min-w-max items-start">
             {items.before.map((event, index) => (
-              <Node key={`b-${index}-${event.title}`} event={event} past />
+              <Node key={`b-${index}-${event.title}`} event={event} />
             ))}
 
             <li ref={todayRef} className="relative flex w-24 shrink-0 flex-col items-center">
@@ -106,9 +106,10 @@ export default function TimelineStrip({ groupId, title = "Capstone timeline", mo
   );
 }
 
-function Node({ event, past = false, first = false }: { event: ApiTimelineEvent; past?: boolean; first?: boolean }) {
+function Node({ event, first = false }: { event: ApiTimelineEvent; first?: boolean }) {
   const late = event.state === "overdue" || event.state === "problem";
-  const done = event.state === "done" || past;
+  // The icon follows the STATE only: a finished task is always the green check; a late or problem one is a red "!" (never a check).
+  const done = event.state === "done";
 
   return (
     <li className="relative flex w-40 shrink-0 flex-col items-center px-1.5 text-center">
