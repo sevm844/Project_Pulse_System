@@ -3,10 +3,15 @@
 import { useState, type FormEvent } from "react";
 import { ApiError, apiFetch } from "../_lib/api";
 import { passwordIsStrong } from "../_lib/password";
+import { getStoredUserEmail } from "../_utils/authStorage";
 import PasswordStrength from "./PasswordStrength";
 
-// Every person changes their own password here (current one first). Their other devices are signed out afterwards.
+// Every person changes their own password here. Two real-life cases:
+//  1. They know their current password: type it, then the new one twice. The rules only show (as a short "still needed" line) when the new password is not good enough.
+//  2. They do NOT remember it (the usual reason to change it): "I don't remember my current password" emails them a one-time link (the same link as on the sign-in
+//     page) to choose a new password without the old one. Their other devices are signed out afterwards either way.
 export default function ChangePassword() {
+  const email = getStoredUserEmail() ?? "";
   const [current, setCurrent] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -14,13 +19,17 @@ export default function ChangePassword() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
+  const [forgot, setForgot] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setDone("");
 
-    if (!current) return setError("Enter your current password.");
+    if (!current) return setError("Enter your current password, or use \"I don't remember my current password\" below.");
     if (!passwordIsStrong(password)) return setError("Your new password does not follow all the rules yet.");
     if (password !== confirm) return setError("The two new passwords do not match.");
 
@@ -42,49 +51,125 @@ export default function ChangePassword() {
     setBusy(false);
   }
 
+  async function sendLink() {
+    setLinkBusy(true);
+    setLinkError("");
+
+    try {
+      await apiFetch<{ message: string }>("/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+      setLinkSent(true);
+    } catch (err) {
+      setLinkError(err instanceof ApiError ? err.message : "Unable to send the e-mail. Please try again.");
+    }
+
+    setLinkBusy(false);
+  }
+
   const field = "mt-1 h-9 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
   const type = show ? "text" : "password";
+  const mismatch = confirm.length > 0 && confirm !== password;
 
   return (
     <article className="rounded-xl border border-[#dfe8df] bg-white p-4 shadow-[0_12px_32px_rgba(31,42,36,0.06)]">
       <h3 className="text-sm font-semibold text-[#203028]">Change Password</h3>
       <p className="mt-0.5 text-[11px] text-[#7b877f]">Only you know your password. Nobody, including the Dean, can see or set it.</p>
 
-      <form onSubmit={submit} className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_270px]">
-        <div>
-          <div className="grid gap-3 sm:grid-cols-3">
+      <form onSubmit={submit} className="mt-3">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               Current password
               <input type={type} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={field} />
             </label>
+            <button
+              type="button"
+              onClick={() => {
+                setForgot(!forgot);
+                setLinkSent(false);
+                setLinkError("");
+              }}
+              aria-expanded={forgot}
+              className="mt-1.5 text-[11px] font-semibold text-[#2f6b3c] underline"
+            >
+              I don&apos;t remember my current password
+            </button>
+          </div>
+
+          <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               New password
               <input type={type} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
             </label>
+            <PasswordStrength password={password} hint />
+          </div>
+
+          <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               Confirm new password
               <input type={type} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={field} />
             </label>
+            {mismatch && <p className="mt-1.5 text-[11px] font-semibold text-amber-700">The two passwords are not the same yet.</p>}
           </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <button type="submit" disabled={busy} className="h-9 rounded-full bg-[#123f2b] px-5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">
-              {busy ? "Saving..." : "Change password"}
-            </button>
-            <button type="button" onClick={() => setShow(!show)} className="text-xs font-semibold text-[#59645d] hover:text-[#111]">
-              {show ? "Hide passwords" : "Show passwords"}
-            </button>
-          </div>
-
-          {error && (
-            <p role="alert" className="mt-2 text-xs text-red-600">
-              {error}
-            </p>
-          )}
-          {done && <p className="mt-2 text-xs text-emerald-700">{done}</p>}
         </div>
 
-        <PasswordStrength password={password} compact />
+        {forgot && (
+          <div className="mt-3 rounded-xl border border-[#cfe0d3] bg-[#f3f8f4] p-3">
+            {!linkSent ? (
+              <>
+                <p className="text-xs font-semibold text-[#203028]">No problem. We will e-mail you a link.</p>
+                <p className="mt-1 text-[11px] leading-4 text-[#59645d]">
+                  It goes to <span className="font-semibold text-[#203028]">{email || "your e-mail address"}</span>. Open the link and choose a new password: you will not need the old one.
+                  The link works for 60 minutes. When you finish, you sign in again with the new password.
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void sendLink()}
+                    disabled={linkBusy || !email}
+                    className="h-8 rounded-full bg-[#123f2b] px-4 text-[11px] font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60"
+                  >
+                    {linkBusy ? "Sending..." : "E-mail me the link"}
+                  </button>
+                  <button type="button" onClick={() => setForgot(false)} className="text-[11px] font-semibold text-[#59645d] hover:text-[#111]">
+                    Cancel
+                  </button>
+                </div>
+                {linkError && (
+                  <p role="alert" className="mt-2 text-[11px] text-red-600">
+                    {linkError}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-semibold text-emerald-700">The e-mail is on its way.</p>
+                <p className="mt-1 text-[11px] leading-4 text-[#59645d]">
+                  We sent the link to <span className="font-semibold text-[#203028]">{email}</span>. It can take a few minutes: look in the Spam or Junk folder too.
+                  If nothing arrives, ask the Dean&apos;s office.
+                </p>
+                <button type="button" onClick={() => setForgot(false)} className="mt-2 text-[11px] font-semibold text-[#59645d] hover:text-[#111]">
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <button type="submit" disabled={busy} className="h-9 rounded-full bg-[#123f2b] px-5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">
+            {busy ? "Saving..." : "Change password"}
+          </button>
+          <button type="button" onClick={() => setShow(!show)} className="text-xs font-semibold text-[#59645d] hover:text-[#111]">
+            {show ? "Hide passwords" : "Show passwords"}
+          </button>
+        </div>
+
+        {error && (
+          <p role="alert" className="mt-2 text-xs text-red-600">
+            {error}
+          </p>
+        )}
+        {done && <p className="mt-2 text-xs text-emerald-700">{done}</p>}
       </form>
     </article>
   );

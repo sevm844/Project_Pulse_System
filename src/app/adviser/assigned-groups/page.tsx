@@ -500,21 +500,13 @@ export default function AssignedGroupsPage() {
                     <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use Make leader to change it. A group of 1, 2 or 3 is fine. Enter the school year to hide students who already have a group.</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
+                  <div className="grid grid-cols-2 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
                     <div>
                       <p className="text-[10px] font-semibold text-[#7b877f]">
                         Adviser
                       </p>
                       <p className="mt-0.5 truncate text-xs font-semibold text-[#203028]">
                         {adviserEmail}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#7b877f]">
-                        Stage
-                      </p>
-                      <p className="mt-0.5 truncate text-xs font-semibold text-[#203028]">
-                        Title Proposal
                       </p>
                     </div>
                     <div>
