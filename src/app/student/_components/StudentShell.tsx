@@ -14,7 +14,6 @@ const navItems: NavItem[] = [
   { label: "Defense", icon: "/nav/defense.png", href: "/student/defense" },
   { label: "Chat", icon: "/nav/messages.png", href: "/student/chat" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/student/notifications" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/student/profile" },
 ];
 
 export default function StudentShell(props: RoleShellProps) {

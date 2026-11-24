@@ -5,7 +5,7 @@ import AdviserShell from "../_components/AdviserShell";
 
 export default function AdviserProfilePage() {
   return (
-    <AdviserShell title="Profile" hideContentTitle>
+    <AdviserShell title="Settings" hideContentTitle>
       <RoleProfileContent role="Adviser" slug="adviser" />
     </AdviserShell>
   );

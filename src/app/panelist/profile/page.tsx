@@ -5,7 +5,7 @@ import PanelistShell from "../_components/PanelistShell";
 
 export default function PanelistProfilePage() {
   return (
-    <PanelistShell title="Profile" hideContentTitle>
+    <PanelistShell title="Settings" hideContentTitle>
       <RoleProfileContent role="Panelist" slug="panelist" />
     </PanelistShell>
   );

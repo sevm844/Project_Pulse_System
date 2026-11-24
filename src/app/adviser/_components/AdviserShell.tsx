@@ -14,7 +14,6 @@ const navItems: NavItem[] = [
   { label: "Defense", icon: "/nav/defense.png", href: "/adviser/defense" },
   { label: "Messages", icon: "/nav/messages.png", href: "/adviser/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/adviser/notifications" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/adviser/profile" },
 ];
 
 export default function AdviserShell(props: RoleShellProps) {

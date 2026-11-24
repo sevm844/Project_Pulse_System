@@ -5,7 +5,7 @@ import GrammarianShell from "../_components/GrammarianShell";
 
 export default function GrammarianProfilePage() {
   return (
-    <GrammarianShell title="Profile" hideContentTitle>
+    <GrammarianShell title="Settings" hideContentTitle>
       <RoleProfileContent role="Grammarian" slug="grammarian" />
     </GrammarianShell>
   );

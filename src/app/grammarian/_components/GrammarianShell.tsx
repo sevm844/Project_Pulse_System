@@ -13,7 +13,6 @@ const navItems: NavItem[] = [
   { label: "Forms", icon: "/nav/documents.png", href: "/grammarian/forms" },
   { label: "Messages", icon: "/nav/messages.png", href: "/grammarian/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/grammarian/notifications" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/grammarian/profile" },
 ];
 
 export default function GrammarianShell(props: RoleShellProps) {

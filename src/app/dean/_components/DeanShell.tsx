@@ -17,7 +17,6 @@ const navItems: NavItem[] = [
   { label: "Reports", icon: "/nav/reports.png", href: "/dean/reports" },
   { label: "Feedback", icon: "/nav/feedback.png", href: "/dean/feedback" },
   { label: "Messages", icon: "/nav/messages.png", href: "/dean/messages" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/dean/profile", matches: ["/dean/profile", "/dean/notifications"] },
 ];
 
 export default function DeanShell(props: RoleShellProps) {

@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useState,
-  type ChangeEvent,
   type ReactNode,
 } from "react";
 import { apiFetch, toAppRole } from "../_lib/api";
@@ -25,6 +24,7 @@ import {
 import DashboardSearchIcon from "./DashboardSearchIcon";
 import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
+import ProfileMenu from "./ProfileMenu";
 import ProfileSwitcher from "./ProfileSwitcher";
 import SidebarToggle from "./SidebarToggle";
 import { useProfilePhoto } from "./useProfilePhoto";
@@ -70,7 +70,7 @@ export default function RoleShell({
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [heldRoles, setHeldRoles] = useState<UserRole[]>(() => getStoredUserRoles());
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const { photo: profileImage, change: changePhoto } = useProfilePhoto(slug);
+  const { photo: profileImage } = useProfilePhoto(slug);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -113,12 +113,6 @@ export default function RoleShell({
 
     setSidebarCollapsed(nextValue);
     localStorage.setItem(collapsedKey, String(nextValue));
-  }
-
-  function handleProfileUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) void changePhoto(file);
   }
 
   if (checkingAccess) {
@@ -257,29 +251,7 @@ export default function RoleShell({
                 <div className="flex items-center gap-2 pl-1">
                   <ProfileSwitcher name={displayName} email={displayEmail} image={profileImage} roles={heldRoles} />
 
-                  <label className="group relative cursor-pointer">
-                    <div
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#d7f7d8] bg-cover bg-center text-xs font-semibold text-[#203028]"
-                      style={
-                        profileImage
-                          ? { backgroundImage: `url(${profileImage})` }
-                          : undefined
-                      }
-                    >
-                      {!profileImage && initialsOf(displayName)}
-                    </div>
-
-                    <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/50 text-[9px] text-white group-hover:flex">
-                      Edit
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfileUpload}
-                      className="hidden"
-                    />
-                  </label>
+                  <ProfileMenu name={displayName} email={displayEmail} image={profileImage} initials={initialsOf(displayName)} settingsHref={`${home}/profile`} />
                 </div>
               </div>
             </header>

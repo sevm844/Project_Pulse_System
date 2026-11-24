@@ -5,7 +5,7 @@ import SecretaryShell from "../_components/SecretaryShell";
 
 export default function SecretaryProfilePage() {
   return (
-    <SecretaryShell title="Profile" hideContentTitle>
+    <SecretaryShell title="Settings" hideContentTitle>
       <RoleProfileContent role="Secretary" slug="secretary" />
     </SecretaryShell>
   );

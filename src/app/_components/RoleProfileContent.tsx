@@ -36,7 +36,7 @@ export default function RoleProfileContent({
   return (
     <section className="rounded-2xl border border-[#dfe8df] bg-[#fbfdfb] px-5 py-5 shadow-[0_18px_50px_rgba(32,48,40,0.06)] md:px-8 md:py-7">
       <h2 className="text-xl font-semibold tracking-tight text-[#203028]">
-        Profile
+        Settings
       </h2>
       <p className="mt-2 text-sm text-[#59645d]">
         Your account information and profile picture

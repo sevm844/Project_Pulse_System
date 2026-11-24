@@ -5,7 +5,7 @@ import StudentShell from "../_components/StudentShell";
 
 export default function StudentProfilePage() {
   return (
-    <StudentShell title="Profile" hideContentTitle>
+    <StudentShell title="Settings" hideContentTitle>
       <RoleProfileContent role="Student" slug="student" />
     </StudentShell>
   );

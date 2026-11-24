@@ -11,7 +11,6 @@ const navItems: NavItem[] = [
   { label: "Forms", icon: "/nav/documents.png", href: "/panelist/forms" },
   { label: "Messages", icon: "/nav/messages.png", href: "/panelist/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/panelist/notifications" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/panelist/profile" },
 ];
 
 export default function PanelistShell(props: RoleShellProps) {

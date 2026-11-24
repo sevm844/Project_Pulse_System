@@ -14,7 +14,6 @@ const navItems: NavItem[] = [
   { label: "Forms", icon: "/nav/documents.png", href: "/secretary/forms" },
   { label: "Messages", icon: "/nav/messages.png", href: "/secretary/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/secretary/notifications" },
-  { label: "Profile", icon: "/nav/profile.png", href: "/secretary/profile" },
 ];
 
 export default function SecretaryShell(props: RoleShellProps) {
