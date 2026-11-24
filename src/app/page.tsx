@@ -435,27 +435,22 @@ export default function Home() {
 
       <section className="relative z-10 mx-3 mt-3 overflow-hidden rounded-[28px] border border-[#e4e8e2] bg-[#f1f3f0] px-5 pb-16 pt-16 text-center sm:mx-5 lg:pb-20 lg:pt-24">
         <div className="relative z-10 mx-auto max-w-4xl">
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#123f2b] md:text-6xl">
-            Unified Capstone Lifecycle Management
+          {/* The full title of the thesis paper, word for word (the user's decision, 2026-11-24). "Project Pulse" stays the product name in the top bar. */}
+          <h1 className="mx-auto max-w-3xl text-balance text-3xl font-bold leading-[1.15] tracking-tight text-[#123f2b] sm:text-4xl md:text-5xl lg:text-[3.25rem]">
+            A Unified Capstone Lifecycle Management and <span className="whitespace-nowrap">Stage-Based</span> Monitoring System
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#4d5751]">
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-[#4d5751]">
             Streamlining your entire capstone journey from proposal to final archiving.
           </p>
 
           <div className="relative z-30 mt-9 flex flex-wrap items-center justify-center gap-3">
             <a
               href="/login"
-              className="inline-flex items-center gap-2.5 rounded-xl bg-[#123f2b] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
+              className="inline-flex items-center gap-2.5 rounded-xl bg-[#123f2b] py-2 pl-2.5 pr-5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
             >
-              <Image src="/logotop.png" alt="" width={20} height={20} className="rounded bg-white p-0.5" />
+              <Image src="/logotop.png" alt="" width={28} height={28} className="h-7 w-7 rounded-lg bg-white p-1" />
               Access Your Dashboard
-            </a>
-            <a
-              href="/register"
-              className="inline-flex items-center rounded-xl bg-[#123f2b] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(18,63,43,0.22)] transition hover:bg-[#0f3324]"
-            >
-              Create your account
             </a>
           </div>
 
