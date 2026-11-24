@@ -10,6 +10,7 @@ import ManuscriptCompare from "./ManuscriptCompare";
 import ManuscriptExportDialog from "./ManuscriptExportDialog";
 import ManuscriptReview from "./ManuscriptReview";
 import ManuscriptView from "./ManuscriptView";
+import { openVersionPdf } from "../../_lib/api";
 import { errorMessage, type ApiGroup } from "../../_lib/groups";
 import {
   decideManuscriptVersion,
@@ -264,6 +265,16 @@ export default function ManuscriptHistory({
                       className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
                     >
                       {canReview ? "Review" : "Comments"}
+                    </button>
+                  )}
+                  {version.has_pdf && (
+                    <button
+                      type="button"
+                      onClick={() => void openVersionPdf(projectId, version.version_no)}
+                      title="The exact look of the document, as a PDF"
+                      className="rounded-full border border-[#dfe8df] px-3 py-1 text-xs font-semibold hover:bg-[#f3f7f1]"
+                    >
+                      Exact PDF
                     </button>
                   )}
                   {hasPrevious && (

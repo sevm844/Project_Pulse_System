@@ -12,6 +12,8 @@ export type ManuscriptVersion = {
   saved_at: string | null;
   // The adviser's decision on this version; null until they decide.
   review?: ManuscriptReviewResult | null;
+  // A version frozen from Google Docs also keeps the exact PDF.
+  has_pdf?: boolean;
   content?: JSONContent;
 };
 

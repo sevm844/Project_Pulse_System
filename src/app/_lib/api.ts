@@ -279,3 +279,41 @@ export async function openMonitoringForm(scanId: number, fileName: string | null
     throw err;
   }
 }
+
+// The exact PDF a version frozen from Google Docs keeps: opened in a NEW TAB (the type is forced to PDF, never a web page).
+export async function openVersionPdf(projectId: number, versionNo: number) {
+  const tab = window.open("", "_blank");
+
+  try {
+    const url = URL.createObjectURL(new Blob([await fetchPrivateFile(`/projects/${projectId}/manuscript/versions/${versionNo}/pdf`)], { type: "application/pdf" }));
+    if (tab) tab.location.href = url;
+    else saveBlob(await fetchPrivateFile(`/projects/${projectId}/manuscript/versions/${versionNo}/pdf`), `manuscript-version-${versionNo}.pdf`);
+  } catch (err) {
+    tab?.close();
+    throw err;
+  }
+}
+
+// A POST that answers with a file (the Google Doc as a Word file), read into memory.
+export async function postForBlob(path: string): Promise<Blob> {
+  const token = getStoredToken();
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, { method: "POST", headers: token ? { Authorization: `Bearer ${token}`, Accept: "*/*" } : { Accept: "*/*" } });
+  } catch {
+    throw new ApiError("Cannot reach the server. Please check that the backend is running.", 0);
+  }
+
+  if (!response.ok) {
+    let message = "Something went wrong.";
+    try {
+      message = (await response.json())?.message ?? message;
+    } catch {
+      // the answer was not JSON
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  return response.blob();
+}
