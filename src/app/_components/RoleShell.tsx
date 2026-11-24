@@ -126,7 +126,7 @@ export default function RoleShell({
       <div className="flex h-full w-full overflow-hidden bg-white">
         <aside
           className={`relative hidden h-screen shrink-0 flex-col justify-between overflow-visible border-r border-[#dfe8df] bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 lg:flex ${
-            sidebarCollapsed ? "w-20" : "w-[190px]"
+            sidebarCollapsed ? "w-20" : "w-[220px]"
           }`}
         >
           <SidebarToggle
@@ -143,12 +143,12 @@ export default function RoleShell({
               <Image
                 src="/logotop.png"
                 alt="Project Pulse"
-                width={34}
-                height={34}
+                width={38}
+                height={38}
                 className="rounded-lg"
               />
               {!sidebarCollapsed && (
-                <span className="text-sm font-semibold text-[#203028]">
+                <span className="text-[16px] font-bold text-[#203028]">
                   Project Pulse
                 </span>
               )}
@@ -161,17 +161,17 @@ export default function RoleShell({
             type="button"
             onClick={requestLogout}
             title="Log out"
-            className={`mt-auto flex w-full items-center rounded-lg text-[12px] text-[#59645d] transition hover:bg-[#edf9e9] hover:text-[#203028] ${
+            className={`mt-auto flex w-full items-center rounded-lg text-[13px] font-semibold text-[#4d5751] transition hover:bg-[#edf9e9] hover:text-[#203028] ${
               sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-2 px-3 py-2"
             }`}
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-[18px] w-[18px] shrink-0 opacity-80"
+              className="h-[18px] w-[18px] shrink-0"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
