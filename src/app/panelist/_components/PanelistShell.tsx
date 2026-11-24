@@ -1,14 +1,16 @@
 "use client";
 
 import RoleShell, {
-  type NavItem,
+  type NavEntry,
   type RoleShellProps,
 } from "../../_components/RoleShell";
 
-const navItems: NavItem[] = [
+const navItems: NavEntry[] = [
   { label: "Defenses", icon: "/nav/defense.png", href: "/panelist" },
-  { label: "Manuscripts", icon: "/nav/manuscript.png", href: "/panelist/manuscripts" },
-  { label: "Forms", icon: "/nav/documents.png", href: "/panelist/forms" },
+  { label: "Review Materials", icon: "/nav/documents.png", children: [
+    { label: "Manuscripts", icon: "/nav/manuscript.png", href: "/panelist/manuscripts" },
+    { label: "Forms", icon: "/nav/documents.png", href: "/panelist/forms" },
+  ] },
   { label: "Messages", icon: "/nav/messages.png", href: "/panelist/messages" },
   { label: "Notifications", icon: "/nav/notifications.png", href: "/panelist/notifications" },
 ];

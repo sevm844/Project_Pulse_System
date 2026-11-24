@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
@@ -26,16 +25,12 @@ import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
 import ProfileMenu from "./ProfileMenu";
 import ProfileSwitcher from "./ProfileSwitcher";
+import SidebarNav, { type NavEntry } from "./SidebarNav";
 import SidebarToggle from "./SidebarToggle";
 import { useProfilePhoto } from "./useProfilePhoto";
 
-export type NavItem = {
-  label: string;
-  icon: string;
-  href: string;
-  // Extra path prefixes that also highlight this item. Defaults to [href].
-  matches?: string[];
-};
+// The menu types live with the menu itself (a link, or a parent that opens in place to show its links).
+export type { NavEntry, NavGroup, NavItem } from "./SidebarNav";
 
 export type RoleShellProps = {
   title: string;
@@ -49,7 +44,7 @@ type Props = RoleShellProps & {
   role: UserRole;
   // Lowercase route/segment name, e.g. "adviser" for /adviser/...
   slug: string;
-  navItems: NavItem[];
+  navItems: NavEntry[];
 };
 
 export default function RoleShell({
@@ -159,44 +154,7 @@ export default function RoleShell({
               )}
             </div>
 
-            <nav className="mt-6 text-[12px]">
-              <div className="space-y-1">
-                {navItems.map(({ label, icon, href, matches }) => {
-                  // The dashboard link must match exactly, or it would light up on every page.
-                  const isActive = (matches ?? [href]).some((match) =>
-                    match === home
-                      ? pathname === home
-                      : pathname.startsWith(match),
-                  );
-
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      title={label}
-                      className={`flex items-center rounded-lg transition ${
-                        sidebarCollapsed
-                          ? "justify-center px-0 py-2.5"
-                          : "gap-2 px-3 py-2"
-                      } ${
-                        isActive
-                          ? "bg-[#d7f7d8] font-semibold text-[#203028]"
-                          : "text-[#59645d] hover:bg-[#edf9e9] hover:text-[#203028]"
-                      }`}
-                    >
-                      <Image
-                        src={icon}
-                        alt=""
-                        width={18}
-                        height={18}
-                        className="opacity-80"
-                      />
-                      {!sidebarCollapsed && <span>{label}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-            </nav>
+            <SidebarNav entries={navItems} pathname={pathname} home={home} slug={slug} collapsed={sidebarCollapsed} />
           </div>
 
           <button
