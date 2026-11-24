@@ -30,7 +30,7 @@ function itemActive(item: NavItem, pathname: string, home: string) {
 // The sidebar's menu. A group is a small heading with its links always shown underneath (nothing to click open); the heading itself goes nowhere.
 export default function SidebarNav({ entries, pathname, home, collapsed }: { entries: NavEntry[]; pathname: string; home: string; slug?: string; collapsed: boolean }) {
   const row = (active: boolean) =>
-    `flex w-full items-center rounded-lg transition ${collapsed ? "justify-center px-0 py-2.5" : "gap-2.5 px-3 py-2"} ${
+    `flex w-full items-center rounded-lg transition ${collapsed ? "justify-center px-0 py-2.5" : "gap-2 px-3 py-[7px]"} ${
       active ? "bg-[#d7f7d8] text-[#123f2b]" : "text-[#4d5751] hover:bg-[#edf9e9] hover:text-[#203028]"
     }`;
 
@@ -42,7 +42,7 @@ export default function SidebarNav({ entries, pathname, home, collapsed }: { ent
   );
 
   return (
-    <nav className="mt-6 text-[13px] font-semibold" aria-label="Main menu">
+    <nav className="mt-5 text-[12px] font-semibold" aria-label="Main menu">
       <div className="space-y-1">
         {entries.map((entry, index) => {
           // a plain link right after a group gets room, so it is not mistaken for one of the group's links
@@ -50,7 +50,7 @@ export default function SidebarNav({ entries, pathname, home, collapsed }: { ent
 
           return (
             <div key={entry.label} role="group" aria-label={entry.label} className="space-y-1 pt-3">
-              {collapsed ? <div className="mx-3 border-t border-[#dfe8df]" /> : <p className="px-3 pb-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8a958e]">{entry.label}</p>}
+              {collapsed ? <div className="mx-3 border-t border-[#dfe8df]" /> : <p className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8a958e]">{entry.label}</p>}
               {entry.children.map(link)}
             </div>
           );
