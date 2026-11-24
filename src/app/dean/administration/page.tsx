@@ -8,6 +8,7 @@ const tools = [
   ["Audit Logs", "Review who did what across the system.", "/dean/administration/audit-logs"],
   ["Messaging Window", "Set the hours when students may send messages.", "/dean/administration/message-settings"],
   ["Email Check", "Make sure emails really reach people, and send yourself a test.", "/dean/administration/email"],
+  ["Google Docs Check", "See whether the manuscript can be written in Google Docs, and test the connection.", "/dean/administration/google"],
 ] as const;
 
 export default function DeanAdministrationPage() {
