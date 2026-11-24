@@ -18,7 +18,7 @@ const navItems: NavEntry[] = [
     { label: "Certificates", icon: "/nav/certificates.png", href: "/dean/certificates" },
   ] },
   { label: "Administration", icon: "/nav/administration.png", href: "/dean/administration" },
-  { label: "Reports & Feedback", icon: "/nav/reports.png", children: [
+  { label: "Insights", icon: "/nav/reports.png", children: [
     { label: "Reports", icon: "/nav/reports.png", href: "/dean/reports" },
     { label: "Feedback", icon: "/nav/feedback.png", href: "/dean/feedback" },
   ] },
