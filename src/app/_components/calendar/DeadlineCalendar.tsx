@@ -211,7 +211,7 @@ export default function DeadlineCalendar() {
 
       <div className="order-1 space-y-5 lg:order-2">
         <div className="rounded-2xl border border-[#dfe8df] bg-white p-5 shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
-          <CardHeading title="Coming up" tone="lime" right={!loading && dueThisWeek > 0 ? <span className="text-xs font-semibold text-[#2f6b3c]">{dueThisWeek} due this week</span> : undefined} />
+          <CardHeading title="Coming up" tone="lime" right={!loading && dueThisWeek > 0 ? <span className="text-xs font-semibold text-[#d7f7d8]">{dueThisWeek} due this week</span> : undefined} />
 
           {loading ? (
             <p className="text-sm text-[#7b877f]">Loading your deadlines...</p>

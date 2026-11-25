@@ -228,7 +228,7 @@ export default function PanelistHero({ defenses, loading, onOpen }: { defenses: 
 
       {/* today as a timeline */}
       <DashboardCard className="p-5">
-        <CardHeading title="Today" tone="mint" right={<span className="text-xs text-[#4d5751]">{formatDate(today)}</span>} />
+        <CardHeading title="Today" tone="mint" right={<span className="text-xs text-[#d7f7d8]">{formatDate(today)}</span>} />
 
         {todays.length === 0 ? (
           <p className="rounded-xl bg-[#f8faf7] p-4 text-sm leading-6 text-[#7b877f]">

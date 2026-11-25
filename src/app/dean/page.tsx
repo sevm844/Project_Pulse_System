@@ -163,10 +163,10 @@ export default function DeanDashboardPage() {
           </Card>
 
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 bg-[#e0f3f0] px-5 py-3">
+            <div className="flex items-center justify-between gap-3 bg-[#154530] px-5 py-3">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-[#123f2b]">Project Monitoring</h2>
-                <p className="text-xs text-[#4d5751]">Overview of all capstone groups.</p>
+                <h2 className="text-base font-semibold tracking-tight text-white">Project Monitoring</h2>
+                <p className="text-xs text-[#d7f7d8]">Overview of all capstone groups.</p>
               </div>
 
               <Link href="/dean/projects" className="rounded-lg border border-[#cfe0d3] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1]">

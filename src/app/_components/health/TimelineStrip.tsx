@@ -68,7 +68,7 @@ export default function TimelineStrip({ groupId, title = "Capstone timeline", mo
         tone="mint"
         right={
           moreHref ? (
-            <Link href={moreHref} className="text-xs font-semibold text-[#2f6b3c] underline">
+            <Link href={moreHref} className="text-xs font-semibold text-[#d7f7d8] underline">
               {moreLabel}
             </Link>
           ) : undefined
