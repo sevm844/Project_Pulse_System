@@ -650,9 +650,10 @@ export default function AssignedGroupsPage() {
                   type="button"
                   onClick={() => setTimelineOpen(timelineOpen === group.group_id ? null : group.group_id)}
                   aria-expanded={timelineOpen === group.group_id}
-                  className="mt-3 text-xs font-semibold text-[#4f8f58] hover:underline"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#cfe0d3] bg-white px-3.5 py-2 text-xs font-semibold text-[#123f2b] shadow-sm transition hover:border-[#123f2b] hover:bg-[#e8f1ea]"
                 >
                   {timelineOpen === group.group_id ? "Hide capstone timeline" : "Show capstone timeline"}
+                  <svg aria-hidden="true" viewBox="0 0 12 12" className={`h-3 w-3 transition-transform ${timelineOpen === group.group_id ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5" /></svg>
                 </button>}
                 {timelineOpen === group.group_id && (
                   <div className="mt-3 rounded-xl bg-[#fbfdfb] p-4">
