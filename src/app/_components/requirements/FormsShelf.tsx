@@ -259,15 +259,15 @@ export default function FormsShelf({ role, from }: { role: "Student" | "Adviser"
       {forms !== null && forms.length > 0 && (
         <ul className="mt-6 divide-y divide-[#edf2ec] rounded-xl border border-[#edf2ec]">
           {forms.map((form) => (
-            <li key={form.form_id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-4">
-              <div className="min-w-0">
+            <li key={form.form_id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0 sm:flex-1">
                 <p className="truncate text-sm font-semibold text-[#203028]">{form.title}</p>
                 {form.note && <p className="mt-0.5 text-xs text-[#4d5751]">{form.note}</p>}
-                <p className="mt-0.5 text-xs text-[#7b877f]">
+                <p className="mt-0.5 truncate text-xs text-[#7b877f]" title={form.file_name}>
                   From {form.from_role === "Dean" ? "the Dean" : form.uploaded_by_name} · {formatDate(form.created_at)} · {form.file_name} · {sizeText(form.file_size)}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 gap-2 sm:justify-end">
                 {SHOWN_AS[extOf(form.file_name)] ? (
                   <button type="button" disabled={opening === form.form_id} onClick={() => void view(form)} aria-label={`View ${form.title}`} className="inline-flex items-center gap-1.5 rounded-lg border border-[#cfe0d3] bg-white px-3 py-2 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f8f4] disabled:opacity-50">
                     <EyeIcon />
