@@ -11,6 +11,8 @@ import GroupAdvisers from "../../_components/groups/GroupAdvisers";
 import MonitoringForms from "../../_components/groups/MonitoringForms";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { StageSteps } from "../../_components/ProposalStage";
+import { ProgressTracker } from "../../_components/progress/ProgressViews";
+import { useProgress } from "../../_components/progress/useProgress";
 import {
   errorMessage,
   fetchMyGroup,
@@ -40,6 +42,7 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const progress = useProgress().items[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +111,10 @@ export default function ProjectPage() {
   const approvedTitle = group.project?.project_title || null;
   const stage = group.project?.proposal_stage ?? "Title Proposal";
   const settled = stage !== "Title Proposal";
+  // The three proposal stages end at "Ready for Proposal Defense". After that the group is followed through the defenses (the same tracker as the dashboard), so a group that already
+  // passed its defenses must not still read "Ready for Proposal Defense".
+  const pastProposal = stage === "Ready for Proposal Defense" && Boolean(progress);
+  const stageText = pastProposal && progress ? progress.current_phase === "Completed" ? "Every phase is complete" : progress.current_phase : stage;
 
   return (
     <StudentShell title="My Project">
@@ -148,7 +155,7 @@ export default function ProjectPage() {
             <h3 className="text-lg font-semibold text-[#203028]">Overview</h3>
 
             <div className="mt-4">
-              <StageSteps stage={stage} />
+              {pastProposal && progress ? <ProgressTracker progress={progress} /> : <StageSteps stage={stage} />}
             </div>
 
             {group.project?.project_description ? (
@@ -166,7 +173,7 @@ export default function ProjectPage() {
                 ["Group Name", group.group_name],
                 ["Group Code", group.group_code],
                 ["Adviser", group.adviser?.name || "Not assigned"],
-                ["Stage", stage],
+                ["Stage", stageText],
                 [
                   "School Year / Semester",
                   [group.school_year, group.semester].filter(Boolean).join(" / ") || "-",
