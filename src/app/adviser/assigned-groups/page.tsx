@@ -49,6 +49,7 @@ export default function AssignedGroupsPage() {
   const [stage, setStage] = useState("All");
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [groupsError, setGroupsError] = useState("");
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [schoolYear, setSchoolYear] = useState("");
   const [createCourse, setCreateCourse] = useState<CourseCode>("BSIT");
@@ -164,6 +165,7 @@ export default function AssignedGroupsPage() {
     } catch (err) {
       setGroupsError(errorMessage(err, "Unable to load your groups."));
     }
+    setGroupsLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -287,12 +289,16 @@ export default function AssignedGroupsPage() {
     setShowCreateWizard(false);
   }
 
+  // Only an AppDev adviser forms groups and imports the student list (the user's rule, 2026-11-25). Someone who is ONLY a Capstone or Technical adviser has groups on this page but
+  // no AppDev role on any of them, so the banner is hidden; an adviser with no group yet is an AppDev adviser starting out and sees it.
+  const canFormGroups = groupsLoaded && (groups.length === 0 || groups.some((group) => group.my_access?.roles.includes("AppDev")));
+
   return (
     <AdviserShell title="Assigned Groups">
       <div className="space-y-5">
         {/* Filters */}
         {/* The first thing on the page: a dark green banner with one big button (the user's choice, 2026-11-24, so an adviser never has to hunt for Create Group). */}
-        <HeroCard tone="green">
+        {canFormGroups && <HeroCard tone="green">
           <div className="flex flex-col gap-6 p-6 sm:p-7 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a8e87a]">Title proposal phase</p>
@@ -339,9 +345,9 @@ export default function AssignedGroupsPage() {
               {createMessage}
             </p>
           )}
-        </HeroCard>
+        </HeroCard>}
 
-        {importOpen && <StudentImportDialog onClose={() => setImportOpen(false)} onChanged={() => setImportedKey((key) => key + 1)} />}
+        {canFormGroups && importOpen && <StudentImportDialog onClose={() => setImportOpen(false)} onChanged={() => setImportedKey((key) => key + 1)} />}
         <Card className="p-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
