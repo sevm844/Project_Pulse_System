@@ -112,13 +112,18 @@ export default function NotificationsFeed() {
         </p>
       )}
 
-      <ul className="divide-y divide-[#edf2ec]">
+      <ul className="mt-4 space-y-3">
         {visible.map((item) => (
-          <li key={item.notification_id}>
+          <li
+            key={item.notification_id}
+            className={`overflow-hidden rounded-xl border shadow-[0_6px_18px_rgba(31,42,36,0.05)] ${
+              item.is_read ? "border-[#dfe8df] bg-white" : "border-[#bcd9bd] border-l-4 border-l-[#3a7f35] bg-white"
+            }`}
+          >
             <button
               type="button"
               onClick={() => void open(item)}
-              className="flex w-full items-start gap-3 py-4 text-left transition hover:bg-[#fbfdfb]"
+              className="flex w-full items-start gap-3 px-5 py-4 text-left transition hover:bg-[#fbfdfb]"
             >
               <span
                 aria-hidden="true"
