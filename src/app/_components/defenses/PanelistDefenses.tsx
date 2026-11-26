@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { apiFetch } from "../../_lib/api";
 import {
   DEFENSE_RECOMMENDATIONS,
@@ -16,6 +16,7 @@ import { hasRubric } from "../../_lib/rubric";
 import DashboardCard from "../DashboardCard";
 import CardHeading from "../CardHeading";
 import PanelistHero from "./PanelistHero";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import DefenseDocuments from "./DefenseDocuments";
 
 const fieldClass =
@@ -43,6 +44,25 @@ export default function PanelistDefenses() {
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  // A notice may name one defense (?defense=7): show the tab it is in, open it and scroll to it, once.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (loading || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().defense;
+    const target = wanted ? defenses.find((item) => item.defense_id === wanted) : undefined;
+
+    if (!target) return;
+
+    queueMicrotask(() => {
+      setTab(target.status === "Scheduled" ? "upcoming" : "done");
+      setOpenId(target.defense_id);
+    });
+    scrollToFocus(focusId.defense(target.defense_id));
+  }, [loading, defenses]);
 
   const upcoming = defenses.filter((item) => item.status === "Scheduled");
   const done = defenses.filter((item) => item.status !== "Scheduled");
@@ -170,7 +190,7 @@ function PanelistRow({
   }
 
   return (
-    <li>
+    <li id={focusId.defense(defense.defense_id)}>
       <button
         type="button"
         onClick={onToggle}

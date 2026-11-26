@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import DeanShell from "../_components/DeanShell";
 import Card from "../_components/Card";
 import { apiFetch } from "../../_lib/api";
@@ -24,6 +25,17 @@ export default function DeanAssignedGroupsPage() {
   const [courseFilter, setCourseFilter] = useState("All");
   const [sectionFilter, setSectionFilter] = useState("All");
   const [stageFilter, setStageFilter] = useState("All");
+
+  // A notice may name one group (?group=2): scroll to its row once the list is drawn.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (loading || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().group;
+    if (wanted && projects.some((item) => item.group_id === wanted)) scrollToFocus(focusId.group(wanted));
+  }, [loading, projects]);
 
   useEffect(() => {
     let cancelled = false;
@@ -159,7 +171,7 @@ export default function DeanAssignedGroupsPage() {
 
               <tbody className="divide-y divide-[#edf2ec]">
                 {filteredProjects.map((project) => (
-                  <tr key={project.project_id} className="hover:bg-[#fbfdfb]">
+                  <tr id={focusId.group(project.group_id)} key={project.project_id} className="hover:bg-[#fbfdfb]">
                     <td className="px-5 py-4 text-[#59645d]">
                       {project.course} {project.section}
                     </td>

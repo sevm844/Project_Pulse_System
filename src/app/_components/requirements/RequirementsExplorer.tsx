@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { apiFetch, downloadRequirementAttachment } from "../../_lib/api";
+import { readFocus } from "../../_lib/focus";
 import { COURSE_NAMES, COURSE_OPTIONS, errorMessage, type ApiGroup } from "../../_lib/groups";
 import {
   describeFileRules,
@@ -98,6 +99,9 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
   const [nav, setNav] = useState<Nav>({});
   const [filter, setFilter] = useState<GroupFilter>(NO_GROUP_FILTER);
   const [dialog, setDialog] = useState<{ requirement?: ApiRequirement } | null>(null);
+  // A notice may name one assignment and one group (?requirement=5&group=2): open that assignment and that group, once.
+  const [focusGroup, setFocusGroup] = useState<number | undefined>(undefined);
+  const focusDone = useRef(false);
 
   const load = useCallback(async () => {
     try {
@@ -125,6 +129,30 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  useEffect(() => {
+    if (loading || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus();
+    const target = wanted.requirement ? requirements.find((item) => item.requirement_id === wanted.requirement) : undefined;
+
+    if (!target) return;
+
+    const group = wanted.group ? groups.find((item) => item.group_id === wanted.group) : undefined;
+    const row = wanted.group
+      ? (rowsById[target.requirement_id] ?? []).find((item) => item.group_id === wanted.group)
+      : (rowsById[target.requirement_id] ?? [])[0];
+    const course = group?.course ?? row?.course;
+    const section = group?.section ?? row?.section;
+
+    if (!course || !section) return;
+
+    queueMicrotask(() => {
+      setNav({ course, section, requirementId: target.requirement_id });
+      setFocusGroup(wanted.group);
+    });
+  }, [loading, requirements, rowsById, groups]);
 
   function go(next: Nav) {
     setNav(next);
@@ -330,7 +358,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
           </div>
 
           {requirement.kind === "Title Proposal" ? (
-            <AdviserTitleReview sections={[label]} onChanged={() => void load()} compact />
+            <AdviserTitleReview sections={[label]} onChanged={() => void load()} compact focusGroupId={focusGroup} />
           ) : (
             <SectionGroups
               role={role}
@@ -338,6 +366,7 @@ export default function RequirementsExplorer({ role }: { role: "Adviser" | "Dean
               rows={(rowsById[requirement.requirement_id] ?? []).filter((row) => row.course === nav.course && row.section === nav.section)}
               filter={filter}
               onFilter={setFilter}
+              focusGroup={focusGroup}
               onChanged={(message) => void refresh(message)}
               onError={setError}
             />
@@ -367,6 +396,7 @@ function SectionGroups({
   rows,
   filter,
   onFilter,
+  focusGroup,
   onChanged,
   onError,
 }: {
@@ -375,6 +405,7 @@ function SectionGroups({
   rows: ApiSubmissionRow[];
   filter: GroupFilter;
   onFilter: (filter: GroupFilter) => void;
+  focusGroup?: number;
   onChanged: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -389,7 +420,7 @@ function SectionGroups({
       {rows.length > 0 && shown.length === 0 && <p className="px-4 py-6 text-xs text-[#9aa59e]">No group matches these filters.</p>}
       <ul className="divide-y divide-[#edf2ec]">
         {shown.map((row) => (
-          <SubmissionRow key={row.project_id} role={role} requirement={requirement} row={row} onChanged={onChanged} onError={onError} />
+          <SubmissionRow key={row.project_id} role={role} requirement={requirement} row={row} autoOpen={row.group_id === focusGroup} onChanged={onChanged} onError={onError} />
         ))}
       </ul>
     </>

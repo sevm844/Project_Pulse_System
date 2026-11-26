@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import { apiFetch } from "../../_lib/api";
 import { defenseState, formatTime, type ApiDefense } from "../../_lib/defenses";
 import { errorMessage } from "../../_lib/groups";
@@ -14,7 +15,12 @@ export default function StudentDefenses() {
   useEffect(() => {
     async function load() {
       try {
-        setDefenses(await apiFetch<ApiDefense[]>("/defenses"));
+        const list = await apiFetch<ApiDefense[]>("/defenses");
+        setDefenses(list);
+
+        // A notice may name one defense (?defense=7): scroll to its card.
+        const wanted = readFocus().defense;
+        if (wanted && list.some((item) => item.defense_id === wanted)) scrollToFocus(focusId.defense(wanted));
       } catch (err) {
         setError(errorMessage(err, "Unable to load your defenses."));
       }
@@ -76,7 +82,7 @@ function DefenseCard({ defense }: { defense: ApiDefense }) {
   const state = defenseState(defense);
 
   return (
-    <li className="rounded-xl border border-[#edf2ec] bg-white p-4">
+    <li id={focusId.defense(defense.defense_id)} className="rounded-xl border border-[#edf2ec] bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-[#203028]">{defense.defense_type}</p>

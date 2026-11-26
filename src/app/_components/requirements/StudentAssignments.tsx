@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import FormsShelf from "./FormsShelf";
 import StudentTitleProposals from "../groups/StudentTitleProposals";
@@ -22,6 +22,7 @@ import {
   type ApiSubmission,
 } from "../../_lib/requirements";
 import RowToggle from "../RowToggle";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 
 type Tab = "todo" | "review" | "done";
 
@@ -83,6 +84,26 @@ export default function StudentAssignments({
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  // A notice may name one assignment (?requirement=5): show the tab it is in, open it and scroll to it, once.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (loading || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().requirement;
+    const target = wanted ? requirements.find((item) => item.requirement_id === wanted) : undefined;
+
+    if (!target) return;
+
+    queueMicrotask(() => {
+      setShowForms(false);
+      setTab(tabOf(target));
+      setOpenId(target.requirement_id);
+    });
+    scrollToFocus(focusId.requirement(target.requirement_id));
+  }, [loading, requirements]);
 
   const inSubject = useCallback((item: ApiRequirement) => (subject === "appdev" ? item.scope === "Adviser" : subject === "cap" ? item.scope !== "Adviser" : true), [subject]);
 
@@ -270,7 +291,7 @@ function RequirementRow({
   }
 
   return (
-    <li className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
+    <li id={focusId.requirement(requirement.requirement_id)} className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)]">
       <button
         type="button"
         onClick={onToggle}

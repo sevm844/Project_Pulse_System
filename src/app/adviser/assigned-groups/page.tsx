@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
@@ -31,6 +31,7 @@ import {
   type RemovalReason,
 } from "../../_lib/groups";
 import CloseX from "../../_components/CloseX";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import { getStoredUserEmail, getStoredUserName } from "../../_utils/authStorage";
 import { academicYearOptions, currentTerm } from "../../_lib/terms";
 import { GROUP_SEMESTERS, MAX_GROUP_SIZE, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
@@ -159,6 +160,17 @@ export default function AssignedGroupsPage() {
 
     setActionBusy(false);
   }
+
+  // A notice may name one group (?group=2): scroll to its card once the list is drawn.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (!groupsLoaded || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().group;
+    if (wanted && groups.some((item) => item.group_id === wanted)) scrollToFocus(focusId.group(wanted));
+  }, [groupsLoaded, groups]);
 
   const loadGroups = useCallback(async () => {
     try {
@@ -626,7 +638,7 @@ export default function AssignedGroupsPage() {
               const access = group.my_access;
               // She manages (adds, removes, closes, names advisers) only the groups where she is the working AppDev adviser; every other group is read only for her.
               const canManage = !access || (access.roles.includes("AppDev") && access.level === "full");
-              return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
+              return <div id={focusId.group(group.group_id)} key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><h3 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-2 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "Academic year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
                   <span className={`text-xs font-semibold ${confirmed ?"text-[#123f2b]" : " text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>

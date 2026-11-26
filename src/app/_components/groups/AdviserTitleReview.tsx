@@ -17,6 +17,7 @@ import { formatDateTime } from "../../_lib/requirements";
 import GroupFilterBar, { NO_GROUP_FILTER, matchesGroupFilter, type GroupFacts, type GroupFilter } from "../requirements/GroupFilterBar";
 import RowToggle from "../RowToggle";
 import CollapsibleTitle from "./CollapsibleTitle";
+import { focusId, scrollToFocus } from "../../_lib/focus";
 import ProposalView from "./ProposalView";
 
 type GroupTitles = { group: ApiGroup; titles: ApiTitleSubmission[] };
@@ -40,11 +41,14 @@ export default function AdviserTitleReview({
   sections,
   onChanged,
   compact = false,
+  focusGroupId,
 }: {
   sections: string[] | null;
   onChanged: () => void;
   // True when the course and section are already chosen higher up the page.
   compact?: boolean;
+  // A notice may name one group: it starts open and is scrolled into view.
+  focusGroupId?: number;
 }) {
   const [items, setItems] = useState<GroupTitles[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +64,11 @@ export default function AdviserTitleReview({
   const visibleItems = items.filter((item) => matchesGroupFilter(titleFacts(item), filter));
 
   // Every group starts closed: the adviser opens only the team she is working on.
-  const [openGroups, setOpenGroups] = useState<number[]>([]);
+  const [openGroups, setOpenGroups] = useState<number[]>(focusGroupId ? [focusGroupId] : []);
+
+  useEffect(() => {
+    if (focusGroupId) scrollToFocus(focusId.group(focusGroupId));
+  }, [focusGroupId]);
   const toggleGroup = (id: number) => setOpenGroups((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
 
   const sectionKey = sections ? sections.join("|") : "";
@@ -204,7 +212,7 @@ export default function AdviserTitleReview({
               : "";
 
         return (
-          <section key={group.group_id} className="rounded-xl border border-[#edf2ec] bg-white p-4">
+          <section id={focusId.group(group.group_id)} key={group.group_id} className="rounded-xl border border-[#edf2ec] bg-white p-4">
             <button
               type="button"
               onClick={() => toggleGroup(group.group_id)}

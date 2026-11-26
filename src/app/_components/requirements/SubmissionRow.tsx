@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch, downloadSubmission, openSubmissionInTab } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
 import RowToggle from "../RowToggle";
+import { focusId, scrollToFocus } from "../../_lib/focus";
 import VersionHistory from "./VersionHistory";
 import {
   describeStatus,
@@ -46,12 +47,14 @@ export default function SubmissionRow({
   role,
   requirement,
   row,
+  autoOpen = false,
   onChanged,
   onError,
 }: {
   role: StaffRole;
   requirement: ApiRequirement;
   row: ApiSubmissionRow;
+  autoOpen?: boolean;
   onChanged: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -66,7 +69,12 @@ export default function SubmissionRow({
   const [fileAction, setFileAction] = useState<"open" | "save" | null>(null);
   const [fileError, setFileError] = useState("");
   // Every group starts closed, like the Title Proposal list: open only the team you are working on.
-  const [expanded, setExpanded] = useState(false);
+  // A notice may name this group: then it starts open and is scrolled into view.
+  const [expanded, setExpanded] = useState(autoOpen);
+
+  useEffect(() => {
+    if (autoOpen) scrollToFocus(focusId.group(row.group_id));
+  }, [autoOpen, row.group_id]);
 
   async function send(path: string, body: object | null, message: string) {
     setBusy(true);
@@ -138,7 +146,7 @@ export default function SubmissionRow({
       submission.grammar_status === "Approved");
 
   return (
-    <li className="px-4 py-3.5">
+    <li id={focusId.group(row.group_id)} className="px-4 py-3.5">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}

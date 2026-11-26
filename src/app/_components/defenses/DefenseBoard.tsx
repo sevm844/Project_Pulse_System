@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import {
   DEFENSE_RESULTS,
@@ -12,6 +12,7 @@ import {
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
 import RowToggle from "../RowToggle";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import DefenseDocuments from "./DefenseDocuments";
 import RubricDialog from "./RubricDialog";
 import ScheduleDialog from "./ScheduleDialog";
@@ -46,6 +47,25 @@ export default function DefenseBoard({ role }: { role: Role }) {
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load]);
+
+  // A notice may name one defense (?defense=7): show the tab it is in, open it and scroll to it, once.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (loading || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().defense;
+    const target = wanted ? defenses.find((item) => item.defense_id === wanted) : undefined;
+
+    if (!target) return;
+
+    queueMicrotask(() => {
+      setTab(target.status === "Scheduled" ? "upcoming" : "past");
+      setOpenId(target.defense_id);
+    });
+    scrollToFocus(focusId.defense(target.defense_id));
+  }, [loading, defenses]);
 
   const upcoming = defenses.filter((item) => item.status === "Scheduled");
   const past = defenses
@@ -206,7 +226,7 @@ function DefenseRow({
 
   return (
     <>
-      <tr onClick={onToggle} className={`cursor-pointer align-top transition hover:bg-[#fbfdfb] ${open ? "bg-[#fbfdfb]" : ""}`}>
+      <tr id={focusId.defense(defense.defense_id)} onClick={onToggle} className={`cursor-pointer align-top transition hover:bg-[#fbfdfb] ${open ? "bg-[#fbfdfb]" : ""}`}>
         <td className="px-4 py-3.5">
           <p className="font-bold text-[#123f2b]">{defense.group_name}</p>
           <p className="mt-0.5 text-xs text-[#7b877f]">{defense.course} {defense.section}</p>

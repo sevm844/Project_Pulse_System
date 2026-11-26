@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import { describeLastActive } from "./ManuscriptActivity";
 import ManuscriptHistory from "./ManuscriptHistory";
 import MonitoringForms from "../groups/MonitoringForms";
@@ -39,6 +40,25 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
   useEffect(() => {
     queueMicrotask(() => void load());
   }, [load, reloadKey]);
+
+  // A notice may name one group (?group=2): show it (even a quiet one), open it and scroll to it, once.
+  const focusDone = useRef(false);
+
+  useEffect(() => {
+    if (groups === null || focusDone.current) return;
+    focusDone.current = true;
+
+    const wanted = readFocus().group;
+    const target = wanted ? groups.find((item) => item.group_id === wanted) : undefined;
+
+    if (!target) return;
+
+    queueMicrotask(() => {
+      setShowEmpty(true);
+      setOpenId(target.project_id);
+    });
+    scrollToFocus(focusId.group(target.group_id));
+  }, [groups]);
 
   const needle = search.trim().toLowerCase();
   const empty = (groups ?? []).filter(isEmptyGroup).length;
@@ -114,7 +134,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
           const open = openId === group.project_id;
 
           return (
-            <li key={group.project_id} className="overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
+            <li id={focusId.group(group.group_id)} key={group.project_id} className="overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
               <button
                 type="button"
                 disabled={isEmptyGroup(group) && (group.members ?? []).length === 0}
