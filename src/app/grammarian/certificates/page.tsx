@@ -117,7 +117,7 @@ export default function GrammarianCertificatesPage() {
 
         <section className="rounded-2xl border border-[#dfe8df] bg-white p-5" aria-label="Your signature">
           <h3 className="text-base font-semibold text-[#203028]">Your signature</h3>
-          <p className="mt-1 text-xs text-[#59645d]">Printed above your name on every certificate you issue. Use a clear picture of your signature on plain white paper, or a PNG with a see-through background.</p>
+          <p className="mt-1 text-xs text-[#59645d]">Printed above your name on every certificate you issue. Use a clear picture of your signature on plain white paper, or a PNG with a see-through background. Supported file types: PNG, JPEG or WebP picture.</p>
           <div className="mt-3 flex flex-wrap items-center gap-4">
             <div className="flex h-[84px] w-[220px] items-center justify-center rounded-lg border border-dashed border-[#cfd9d1] bg-[#fbfdfb]">
               {signature ? (

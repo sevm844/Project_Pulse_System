@@ -185,7 +185,7 @@ export default function PanelistRubricPage() {
             <DashboardCard className="p-5">
               <h2 className="text-base font-semibold text-[#203028]">Your signature</h2>
               <p className="mt-1 text-xs leading-5 text-[#7b877f]">
-                A picture of your signature is printed on the form. Upload it once; it is used for every rubric you submit.
+                A picture of your signature is printed on the form. Upload it once; it is used for every rubric you submit. Supported file types: PNG, JPEG or WebP picture.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <label className="cursor-pointer rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]">

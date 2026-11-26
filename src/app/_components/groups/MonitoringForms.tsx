@@ -66,7 +66,7 @@ export default function MonitoringForms({ projectId, canUpload = false }: { proj
     <div>
       <p className="text-sm leading-6 text-[#7b877f]">
         {canUpload
-          ? "After the Dean signs your Capstone Monitoring Form for a defense, scan the paper and hand it in here, once for each of the Alpha, Beta and Omega defenses. Your Capstone adviser and your Technical adviser can then see where your group stands. A PDF or a picture, up to 10 MB."
+          ? "After the Dean signs your Capstone Monitoring Form for a defense, scan the paper and hand it in here, once for each of the Alpha, Beta and Omega defenses. Your Capstone adviser and your Technical adviser can then see where your group stands. Supported file types: PDF or a picture, up to 10 MB."
           : "The scanned Capstone Monitoring Form of this group: one place for each of the Alpha, Beta and Omega defenses, signed by the Dean."}
       </p>
 

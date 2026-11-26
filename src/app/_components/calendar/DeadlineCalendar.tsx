@@ -84,7 +84,11 @@ export default function DeadlineCalendar() {
   const overdue = events.filter((event) => event.kind === "Due" && event.date < todayKey && !event.done);
   const upcoming = events.filter((event) => event.date >= todayKey && !event.done);
   const comingUp = [...overdue, ...upcoming].slice(0, 7);
-  const dueThisWeek = upcoming.filter((event) => event.kind === "Due" && event.date <= keyOf(new Date(Date.now() + 6 * 86400000))).length;
+  // Today plus six days, worked out from today's key (the same day the calendar shows as today).
+  const weekEnd = parseKey(todayKey);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const weekEndKey = keyOf(weekEnd);
+  const dueThisWeek = upcoming.filter((event) => event.kind === "Due" && event.date <= weekEndKey).length;
 
   const selectedEvents = byDay.get(selected) ?? [];
   const selectedNotes = notes.filter((note) => note.date === selected);

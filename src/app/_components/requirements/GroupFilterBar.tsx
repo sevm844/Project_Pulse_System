@@ -76,7 +76,7 @@ export default function GroupFilterBar({
       </label>
       <label className="min-w-[160px] flex-[2] text-[11px] font-semibold text-[#7b877f]">
         Group
-        <input type="search" value={filter.search} onChange={(event) => onChange({ ...filter, search: event.target.value })} placeholder="Search group name" className={selectClass} />
+        <input type="search" value={filter.search} onChange={(event) => onChange({ ...filter, search: event.target.value })} placeholder="Search team name" className={selectClass} />
       </label>
       <p className="pb-2 text-[11px] text-[#9aa59e]">
         {shown} of {groups.length} groups

@@ -78,7 +78,7 @@ export default function RoleProfileContent({
                 </p>
               )}
               <p className="mt-2 text-[11px] leading-4 text-[#7b877f]">
-                {busy ? "Saving..." : "Saved to your account: it shows on every device."}
+                {busy ? "Saving..." : "Supported file types: PNG, JPEG or WebP picture. Saved to your account: it shows on every device."}
               </p>
             </div>
           </div>

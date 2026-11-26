@@ -30,7 +30,9 @@ import {
   type ApiGroupMember,
   type RemovalReason,
 } from "../../_lib/groups";
-import { getStoredUserEmail } from "../../_utils/authStorage";
+import CloseX from "../../_components/CloseX";
+import { getStoredUserEmail, getStoredUserName } from "../../_utils/authStorage";
+import { academicYearOptions, currentTerm } from "../../_lib/terms";
 import { GROUP_SEMESTERS, MAX_GROUP_SIZE, buildSelectedGroupMembers, isSchoolYear } from "../../_utils/studentSelection";
 
 // The search list shows this many students at a time, however many accounts exist.
@@ -51,14 +53,14 @@ export default function AssignedGroupsPage() {
   const [groupsError, setGroupsError] = useState("");
   const [groupsLoaded, setGroupsLoaded] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [schoolYear, setSchoolYear] = useState("");
+  const [schoolYear, setSchoolYear] = useState(() => currentTerm().school_year ?? "");
   const [createCourse, setCreateCourse] = useState<CourseCode>("BSIT");
   const [createSection, setCreateSection] = useState("4-1");
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
   const [studentLoadAttempt, setStudentLoadAttempt] = useState(0);
-  const [semester, setSemester] = useState("1st Semester");
+  const [semester, setSemester] = useState(() => currentTerm().semester ?? "1st Semester");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [leaderUid, setLeaderUid] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
@@ -71,7 +73,7 @@ export default function AssignedGroupsPage() {
   >("");
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [adviserEmail] = useState(() => getStoredUserEmail() || "Adviser");
+  const [adviserName] = useState(() => getStoredUserName() || getStoredUserEmail() || "Adviser");
   const [removing, setRemoving] = useState<{ group: ApiGroup; member: ApiGroupMember } | null>(null);
   const [removeError, setRemoveError] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
@@ -79,7 +81,7 @@ export default function AssignedGroupsPage() {
   const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
   const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
 
-  // The backend already leaves out students who are in a group for this school year + semester.
+  // The backend already leaves out students who are in a group for this academic year + semester.
   const availableStudents = students;
   const activeSchoolYear = isSchoolYear(schoolYear) ? schoolYear : "";
   const selectedMembers = buildSelectedGroupMembers(availableStudents, leaderUid, selectedIds);
@@ -283,7 +285,7 @@ export default function AssignedGroupsPage() {
     );
     setCreateMessageType("success");
     setGroupName("");
-    setSchoolYear("");
+    setSchoolYear(currentTerm().school_year ?? "");
     resetMembers();
     setCreating(false);
     setShowCreateWizard(false);
@@ -438,21 +440,14 @@ export default function AssignedGroupsPage() {
                       Add the students and choose the leader to send group invitations.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateWizard(false)}
-                    aria-label="Close create group wizard"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xl leading-none text-[#59645d] transition hover:bg-[#f3f7f1]"
-                  >
-                    X
-                  </button>
+                  <CloseX onClick={() => setShowCreateWizard(false)} label="Close create group wizard" />
                 </div>
 
                 <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-semibold text-[#59645d]">
-                        Group Name
+                        Team Name
                       </label>
                       <input
                         placeholder="e.g., Project Pulse"
@@ -462,8 +457,8 @@ export default function AssignedGroupsPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="school-year" className="text-xs font-semibold text-[#59645d]">School Year</label>
-                      <input id="school-year" placeholder="e.g., 2026-2027" value={schoolYear} onChange={(e) => { const value = e.target.value; if (isSchoolYear(value) || activeSchoolYear) resetMembers(); setSchoolYear(value); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#d7f7d8]" />
+                      <label htmlFor="academic-year" className="text-xs font-semibold text-[#59645d]">Academic Year</label>
+                      <select id="academic-year" value={schoolYear} onChange={(e) => { setSchoolYear(e.target.value); resetMembers(); }} className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs outline-none focus:border-[#94d29a] focus:ring-2 focus:ring-[#d7f7d8]">{academicYearOptions().map((item) => <option key={item}>{item}</option>)}</select>
                     </div>
                   </div>
 
@@ -506,7 +501,7 @@ export default function AssignedGroupsPage() {
                   <div className="space-y-2.5">
                     <p role="status" className="h-4 text-xs text-[#7b877f]">{studentsLoading ? "Loading registered students..." : ""}</p>
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
-                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this school year and semester are excluded.</p>}
+                    {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this academic year and semester are excluded.</p>}
                     <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
                       Add students to the group (1 to {MAX_GROUP_SIZE})
                       {(pickCourses.length > 0 || pickSections.length > 0) && (
@@ -566,7 +561,7 @@ export default function AssignedGroupsPage() {
                         </tbody>
                       </table>
                     )}
-                    <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use Make leader to change it. A group of 1, 2 or 3 is fine. Enter the school year to hide students who already have a group.</p>
+                    <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use Make leader to change it. A group of 1, 2 or 3 is fine. Students who already have a group this academic year and semester are hidden.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
@@ -575,7 +570,7 @@ export default function AssignedGroupsPage() {
                         Adviser
                       </p>
                       <p className="mt-0.5 truncate text-xs font-semibold text-[#203028]">
-                        {adviserEmail}
+                        {adviserName}
                       </p>
                     </div>
                     <div>
@@ -633,7 +628,7 @@ export default function AssignedGroupsPage() {
               const canManage = !access || (access.roles.includes("AppDev") && access.level === "full");
               return <div key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><h3 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-2 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "School year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
+                  <div><h3 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-2 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "Academic year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
                   <span className={`text-xs font-semibold ${confirmed ?"text-[#123f2b]" : " text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 {access && (

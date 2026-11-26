@@ -268,7 +268,7 @@ export default function DeanProjectProfilePage() {
         <div className="grid gap-4 md:grid-cols-3">
           {[
             ["Group Code", group.group_code],
-            ["School Year", group.school_year || "-"],
+            ["Academic Year", group.school_year || "-"],
             ["Semester", group.semester || "-"],
           ].map(([label, value]) => (
             <Card key={label} className="p-5">

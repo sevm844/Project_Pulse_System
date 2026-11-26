@@ -149,16 +149,16 @@ export const submissionMoment = (submission: Pick<ApiSubmission, "submitted_at" 
 export const newestAssignmentsFirst = <T extends { created_at: string | null; requirement_id: number }>(items: T[]) =>
   [...items].sort((a, b) => moment(b.created_at) - moment(a.created_at) || b.requirement_id - a.requirement_id);
 
-// "PDF, DOCX · up to 5 MB" (every type is shown as "Any file type").
+// "Supported file types: PDF, DOCX · up to 5 MB" (every type is shown as "all types").
 export function describeFileRules(requirement: Pick<ApiRequirement, "allowed_types" | "max_file_mb"> & { max_attempts?: number }) {
   const types =
     requirement.allowed_types.length >= FILE_TYPES.length
-      ? "Any file type"
+      ? "all types"
       : requirement.allowed_types.map((type) => type.toUpperCase()).join(", ");
 
   const attempts = requirement.max_attempts ? ` · ${requirement.max_attempts} ${requirement.max_attempts === 1 ? "attempt" : "attempts"}` : "";
 
-  return `${types} · up to ${requirement.max_file_mb} MB${attempts}`;
+  return `Supported file types: ${types} · up to ${requirement.max_file_mb} MB${attempts}`;
 }
 
 // "BSIT 4A, BSIT 4B" or "All sections".

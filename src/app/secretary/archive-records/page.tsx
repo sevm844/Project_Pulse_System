@@ -48,7 +48,7 @@ export default function ArchiveRecordsPage() {
 
   function exportCsv() {
     downloadCsv("archive-records.csv", [
-      ["Group", "Course", "Section", "School year", "Title", "Adviser", "Archived on", "Archived by", "Remarks"],
+      ["Group", "Course", "Section", "Academic year", "Title", "Adviser", "Archived on", "Archived by", "Remarks"],
       ...visible.map((record) => [
         record.group_name,
         record.course,

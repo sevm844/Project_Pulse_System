@@ -125,7 +125,7 @@ export default function SimilarityReports({
       {canUpload && form && (
         <div className="mt-4 space-y-3 rounded-lg bg-[#f8faf7] p-4">
           <label className="block text-xs font-semibold text-[#203028]">
-            Report file (PDF, up to 20 MB)
+            Report file (supported file type: PDF, up to 20 MB)
             <input
               ref={picker}
               type="file"

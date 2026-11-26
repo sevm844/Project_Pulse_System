@@ -170,12 +170,12 @@ export default function ProjectPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {[
-                ["Group Name", group.group_name],
+                ["Team Name", group.group_name],
                 ["Group Code", group.group_code],
                 ["Adviser", group.adviser?.name || "Not assigned"],
                 ["Stage", stageText],
                 [
-                  "School Year / Semester",
+                  "Academic Year / Semester",
                   [group.school_year, group.semester].filter(Boolean).join(" / ") || "-",
                 ],
               ].map(([label, value]) => (

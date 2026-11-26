@@ -1,4 +1,4 @@
-// School terms (school year + semester): the Dean's group lists open on the current term instead of mixing every year together.
+// School terms (academic year + semester): the Dean's group lists open on the current term instead of mixing every year together.
 
 export type Term = { school_year: string | null; semester: string | null };
 
@@ -19,6 +19,13 @@ export function currentTerm(today = new Date()): Term {
   if (month >= 6) return { school_year: `${year - 1}-${year}`, semester: "Summer" };
 
   return { school_year: `${year - 1}-${year}`, semester: "2nd Semester" };
+}
+
+// The academic years offered in a drop-down: last year, this year and next year (typed years made messy entries). The current one comes first in the choice.
+export function academicYearOptions(today = new Date()): string[] {
+  const start = Number(currentTerm(today).school_year?.slice(0, 4));
+
+  return [start - 1, start, start + 1].map((year) => `${year}-${year + 1}`);
 }
 
 // Every term that has at least one group, newest first.

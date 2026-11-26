@@ -336,7 +336,7 @@ export default function StudentImportDialog({ onClose, onChanged }: { onClose: (
               </button>
             </>
           ) : (
-            <span className="text-[11px] text-[#7b877f]">An Excel file (.xlsx) or a CSV, up to 2 MB and 1500 students.</span>
+            <span className="text-[11px] text-[#7b877f]">Supported file types: Excel (.xlsx) or CSV, up to 2 MB and 1500 students.</span>
           )}
         </div>
       </div>

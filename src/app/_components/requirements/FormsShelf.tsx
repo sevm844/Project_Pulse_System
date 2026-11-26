@@ -205,7 +205,7 @@ export default function FormsShelf({ role, from }: { role: "Student" | "Adviser"
             />
           </label>
           <div className="text-xs font-semibold text-[#203028]">
-            File (PDF, Word, Excel, PowerPoint, picture or ZIP, up to 10 MB). Students can fill in a Word (.docx) form on screen; other types they can only read.
+            File. Supported file types: PDF, Word, Excel, PowerPoint, picture or ZIP, up to 10 MB. Students can fill in a Word (.docx) form on screen; other types they can only read.
             <div className="mt-1 flex flex-wrap items-center gap-3">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#123f2b] bg-white px-4 py-2.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f4f6f3] focus-within:ring-2 focus-within:ring-[#123f2b]/30">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

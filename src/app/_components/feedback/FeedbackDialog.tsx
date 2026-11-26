@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
+import CloseX from "../CloseX";
 
 const fieldClass =
   "w-full rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -46,14 +47,7 @@ export default function FeedbackDialog({ onClose }: { onClose: () => void }) {
             <h2 className="text-lg font-semibold text-[#203028]">Report a bug</h2>
             <p className="mt-1 text-xs text-[#7b877f]">Something broken or wrong? Tell us and it goes to the Dean&apos;s office.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="rounded-lg px-2 py-1 text-lg leading-none text-[#59645d] hover:bg-[#f3f7f1]"
-          >
-            ×
-          </button>
+          <CloseX onClick={onClose} />
         </div>
 
         <form onSubmit={submit} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5">
