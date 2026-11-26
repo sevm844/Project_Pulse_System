@@ -109,26 +109,29 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
         </p>
       )}
 
-      <ul className="divide-y divide-[#edf2ec]">
+      <ul className="space-y-4">
         {shown.map((group) => {
           const open = openId === group.project_id;
 
           return (
-            <li key={group.project_id} className="py-4">
+            <li key={group.project_id} className="overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
               <button
                 type="button"
                 disabled={isEmptyGroup(group) && (group.members ?? []).length === 0}
                 onClick={() => setOpenId(open ? null : group.project_id)}
                 aria-expanded={open}
-                className="group flex w-full items-start gap-4 text-left disabled:opacity-60"
+                className="group block w-full text-left disabled:opacity-60"
               >
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-[#203028]">{group.group_name}</h3>
-                  <p className="mt-0.5 text-xs text-[#59645d]">
+                <div className="bg-[#154530] px-5 py-3">
+                  <h3 className="text-sm font-bold text-white">{group.group_name}</h3>
+                  <p className="mt-0.5 text-xs text-[#d7f7d8]">
                     {group.course} {group.section}
                     {role === "Dean" ? ` · Adviser: ${group.adviser ?? "Not assigned"}` : ""}
                   </p>
-                  <p className="mt-1 text-xs text-[#7b877f]">
+                </div>
+                <div className="flex items-start gap-4 px-5 py-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-[#7b877f]">
                     {group.versions === 0
                       ? "No version submitted yet"
                       : `${group.versions} ${group.versions === 1 ? "version" : "versions"} · latest is Version ${group.latest_version_no}, ${formatDateTime(group.latest_saved_at)}`}
@@ -167,10 +170,11 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                 <div className="pt-0.5">
                   <RowToggle open={open} />
                 </div>
+                </div>
               </button>
 
               {open && (
-                <div className="mt-4 rounded-xl border border-[#edf2ec] bg-white p-4">
+                <div className="border-t border-[#edf2ec] bg-[#fbfdfb] p-5">
                   <ManuscriptHistory
                     projectId={group.project_id}
                     canReview={role !== "Panelist"}
