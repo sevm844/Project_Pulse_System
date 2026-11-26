@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { roleHomePath } from "../_lib/roleHome";
+import PasswordEye from "../_components/PasswordEye";
 import { ApiError, apiFetch, logoutFromApi, toAppRole } from "../_lib/api";
 import {
   getStoredToken,
@@ -227,17 +228,11 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     placeholder="Your password"
-                    className={`${input} pr-16`}
+                    className={`${input} pr-11`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 hover:text-gray-900"
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
+                  <PasswordEye shown={showPassword} onClick={() => setShowPassword(!showPassword)} />
                 </div>
                 <div className="mt-2 flex justify-end">
                   <Link
