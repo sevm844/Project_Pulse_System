@@ -11,6 +11,7 @@ import {
 } from "../../_lib/defenses";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate } from "../../_lib/requirements";
+import RowToggle from "../RowToggle";
 import DefenseDocuments from "./DefenseDocuments";
 import RubricDialog from "./RubricDialog";
 import ScheduleDialog from "./ScheduleDialog";
@@ -109,7 +110,7 @@ export default function DefenseBoard({ role }: { role: Role }) {
         </p>
       )}
 
-      <ul className="divide-y divide-[#edf2ec]">
+      <ul className="mt-4 space-y-3">
         {visible.map((defense) => (
           <DefenseRow
             key={defense.defense_id}
@@ -194,18 +195,17 @@ function DefenseRow({
   }
 
   return (
-    <li>
+    <li className="overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-6 py-4 text-left"
+        className="group flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[#fbfdfb]"
       >
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#203028]">
-            {defense.group_name} · {defense.defense_type}
-          </p>
-          <p className="mt-0.5 text-xs text-[#7b877f]">
+          <p className="truncate text-sm font-bold text-[#123f2b]">{defense.group_name}</p>
+          <p className="mt-0.5 text-xs font-semibold text-[#2f6b3c]">{defense.defense_type}</p>
+          <p className="mt-1 text-xs text-[#7b877f]">
             {formatDate(defense.defense_date)} · {formatTime(defense.defense_time)} · {defense.venue}
           </p>
         </div>
@@ -216,15 +216,16 @@ function DefenseRow({
               {evaluated}/{defense.panel.length} evaluated
             </span>
           )}
-          <span className="flex items-center gap-2">
+          <span className="flex w-28 shrink-0 items-center gap-2">
             <span className={`h-2 w-2 rounded-full ${state.dot}`} />
             {state.label}
           </span>
+          <RowToggle open={open} />
         </div>
       </button>
 
       {open && (
-        <div className="space-y-5 rounded-xl border border-[#edf2ec] bg-[#fbfdfb] p-4 text-sm">
+        <div className="space-y-5 border-t border-[#edf2ec] bg-[#fbfdfb] p-5 text-sm">
           <p className="text-xs text-[#7b877f]">
             {defense.course} {defense.section}
             {defense.adviser ? ` · Adviser ${defense.adviser}` : ""}
