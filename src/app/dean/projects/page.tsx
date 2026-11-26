@@ -89,7 +89,14 @@ export default function DeanProjectsPage() {
     });
   }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter, term]);
 
-  const ready = projects.filter((project) => project.stage === "Ready for Proposal Defense").length;
+  // The proposal stages end at "Ready for Proposal Defense"; after that the group is somewhere in the defenses, so the real place comes from the progress tracker.
+  const placeOf = (project: (typeof projects)[number]) => {
+    const progress = progressByGroup.get(project.group_id);
+    if (project.stage !== "Ready for Proposal Defense" || !progress) return project.stage;
+
+    return progress.current_phase === "Completed" ? "Every phase is complete" : progress.current_phase;
+  };
+  const ready = projects.filter((project) => placeOf(project) === "Ready for Proposal Defense" || placeOf(project) === "Proposal Defense").length;
 
   // What the Dean can act on: groups with nobody left, then groups with no adviser.
   const needsAttention = [
@@ -258,7 +265,7 @@ export default function DeanProjectsPage() {
                         </p>
 
                         <div className="mt-2">
-                          <StageBadge stage={project.stage} />
+                          <StageBadge stage={placeOf(project)} />
                           <GroupStatusNote status={project.group_status} />
                         </div>
 
