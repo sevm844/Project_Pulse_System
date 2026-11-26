@@ -59,7 +59,7 @@ export default function DefenseBoard({ role }: { role: Role }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-xl text-sm leading-6 text-[#7b877f]">{blurb[role]}</p>
         <Link
@@ -110,7 +110,15 @@ export default function DefenseBoard({ role }: { role: Role }) {
         </p>
       )}
 
-      <ul className="mt-4 space-y-3">
+      {visible.length > 0 && <div className="mt-4 overflow-x-auto rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
+      <table className="w-full min-w-[56rem] text-left text-sm">
+        <thead className="bg-[#154530] text-xs font-semibold text-white">
+          <tr>
+            {["Group", "Defense", "Date", "Time", "Room", "Panel", "Evaluated", "Status"].map((heading) => <th key={heading} scope="col" className="px-4 py-3">{heading}</th>)}
+            <th scope="col" className="px-4 py-3"><span className="sr-only">Details</span></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#edf2ec]">
         {visible.map((defense) => (
           <DefenseRow
             key={defense.defense_id}
@@ -126,7 +134,9 @@ export default function DefenseBoard({ role }: { role: Role }) {
             onError={setError}
           />
         ))}
-      </ul>
+        </tbody>
+      </table>
+      </div>}
 
       {dialog && (
         <ScheduleDialog
@@ -195,36 +205,36 @@ function DefenseRow({
   }
 
   return (
-    <li className="overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="group flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[#fbfdfb]"
-      >
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-[#123f2b]">{defense.group_name}</p>
-          <p className="mt-0.5 text-xs font-semibold text-[#2f6b3c]">{defense.defense_type}</p>
-          <p className="mt-1 text-xs text-[#7b877f]">
-            {formatDate(defense.defense_date)} · {formatTime(defense.defense_time)} · {defense.venue}
-          </p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-5 text-xs text-[#59645d]">
-          {scheduled && (
-            <span className="hidden text-[#9aa59e] sm:inline">
-              {evaluated}/{defense.panel.length} evaluated
-            </span>
-          )}
-          <span className="flex w-28 shrink-0 items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${state.dot}`} />
+    <>
+      <tr onClick={onToggle} className={`cursor-pointer align-top transition hover:bg-[#fbfdfb] ${open ? "bg-[#fbfdfb]" : ""}`}>
+        <td className="px-4 py-3.5">
+          <p className="font-bold text-[#123f2b]">{defense.group_name}</p>
+          <p className="mt-0.5 text-xs text-[#7b877f]">{defense.course} {defense.section}</p>
+        </td>
+        <td className="px-4 py-3.5 text-xs font-semibold text-[#2f6b3c]">{defense.defense_type}</td>
+        <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#203028]">{formatDate(defense.defense_date)}</td>
+        <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#203028]">{formatTime(defense.defense_time)}</td>
+        <td className="px-4 py-3.5 text-xs text-[#203028]">{defense.venue}</td>
+        <td className="px-4 py-3.5 text-xs leading-5 text-[#59645d]">
+          {defense.panel.length === 0 ? <span className="text-[#9aa59e]">No panel yet</span> : defense.panel.map((member) => <p key={member.panelist_id}>{member.name}{member.role === "Chair" ? " (Chair)" : ""}</p>)}
+        </td>
+        <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#59645d]">{evaluated}/{defense.panel.length}</td>
+        <td className="px-4 py-3.5 text-xs text-[#59645d]">
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
             {state.label}
           </span>
-          <RowToggle open={open} />
-        </div>
-      </button>
+        </td>
+        <td className="px-4 py-3 text-right">
+          <button type="button" aria-expanded={open} onClick={(event) => { event.stopPropagation(); onToggle(); }} className="group">
+            <RowToggle open={open} />
+          </button>
+        </td>
+      </tr>
 
       {open && (
+        <tr>
+          <td colSpan={9} className="p-0">
         <div className="space-y-5 border-t border-[#edf2ec] bg-[#fbfdfb] p-5 text-sm">
           <p className="text-xs text-[#7b877f]">
             {defense.course} {defense.section}
@@ -344,9 +354,10 @@ function DefenseRow({
             </div>
           )}
         </div>
+        {viewing && <RubricDialog defenseId={defense.defense_id} panelistId={viewing.id} panelistName={viewing.name} onClose={() => setViewing(null)} />}
+          </td>
+        </tr>
       )}
-
-      {viewing && <RubricDialog defenseId={defense.defense_id} panelistId={viewing.id} panelistName={viewing.name} onClose={() => setViewing(null)} />}
-    </li>
+    </>
   );
 }
