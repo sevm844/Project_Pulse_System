@@ -85,12 +85,12 @@ export default function TimelineStrip({ groupId, title = "Capstone timeline", mo
 
       {events && items.before.length + items.after.length > 0 && (
         <div className="overflow-x-auto pb-2 pt-1">
-          <ol className="relative flex min-w-max items-start">
+          <ol className="relative flex w-full min-w-max items-start">
             {items.before.map((event, index) => (
               <Node key={`b-${index}-${event.title}`} event={event} />
             ))}
 
-            <li ref={todayRef} className="relative flex w-24 shrink-0 flex-col items-center">
+            <li ref={todayRef} className="relative flex min-w-[6rem] flex-1 flex-col items-center">
               <span className="absolute left-0 right-0 top-[11px] h-px bg-[#cfe0d3]" aria-hidden />
               <span className="relative z-10 flex h-6 items-center rounded-full bg-[#123f2b] px-3 text-[11px] font-bold uppercase tracking-wide text-white">Today</span>
               <span className="mt-2 text-[11px] font-semibold text-[#123f2b]">{shortDate(todayKey())}</span>
@@ -112,7 +112,7 @@ function Node({ event, first = false }: { event: ApiTimelineEvent; first?: boole
   const done = event.state === "done";
 
   return (
-    <li className="relative flex w-40 shrink-0 flex-col items-center px-1.5 text-center">
+    <li className="relative flex min-w-[10rem] flex-1 flex-col items-center px-1.5 text-center">
       <span className="absolute left-0 right-0 top-[11px] h-px bg-[#cfe0d3]" aria-hidden />
       <span
         className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
