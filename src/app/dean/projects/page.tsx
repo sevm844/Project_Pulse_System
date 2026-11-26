@@ -245,12 +245,12 @@ export default function DeanProjectsPage() {
                   <div key={project.project_id} className="px-5 py-4">
                     <div className="grid gap-4 lg:grid-cols-[1fr_170px] lg:items-start">
                       <div>
-                        <h4 className="font-semibold text-[#203028]">
+                        <h4 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">
                           {project.group_name}
                         </h4>
 
                         <p
-                          className={`mt-1 text-sm ${
+                          className={`mt-2 text-sm ${
                             project.title ? "text-[#59645d]" : "text-[#7b877f]"
                           }`}
                         >
