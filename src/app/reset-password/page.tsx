@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import AuthSplit from "../_components/AuthSplit";
 import PasswordStrength from "../_components/PasswordStrength";
+import PasswordEye from "../_components/PasswordEye";
 import { ApiError, apiFetch } from "../_lib/api";
 import { passwordIsStrong } from "../_lib/password";
 
@@ -67,7 +68,7 @@ function ResetForm() {
     );
   }
 
-  const field = "w-full rounded-xl border border-[#dfe3e0] px-4 py-3 pr-16 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
+  const field = "w-full rounded-xl border border-[#dfe3e0] py-3 pl-4 pr-11 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -99,9 +100,7 @@ function ResetForm() {
             placeholder="Enter new password"
             className={field}
           />
-          <button type="button" onClick={() => setShow({ ...show, password: !show.password })} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#59645d] hover:text-[#111]">
-            {show.password ? "Hide" : "Show"}
-          </button>
+          <PasswordEye shown={show.password} onClick={() => setShow({ ...show, password: !show.password })} label="new password" />
         </span>
       </label>
 
@@ -118,9 +117,7 @@ function ResetForm() {
             placeholder="Re-enter your new password"
             className={field}
           />
-          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#59645d] hover:text-[#111]">
-            {show.confirm ? "Hide" : "Show"}
-          </button>
+          <PasswordEye shown={show.confirm} onClick={() => setShow({ ...show, confirm: !show.confirm })} label="password confirmation" />
         </span>
       </label>
 

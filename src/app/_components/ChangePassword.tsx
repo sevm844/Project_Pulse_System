@@ -5,6 +5,7 @@ import { ApiError, apiFetch } from "../_lib/api";
 import { passwordIsStrong } from "../_lib/password";
 import { getStoredUserEmail } from "../_utils/authStorage";
 import PasswordStrength from "./PasswordStrength";
+import PasswordEye from "./PasswordEye";
 
 // Every person changes their own password here. Two real-life cases:
 //  1. They know their current password: type it, then the new one twice. The rules only show (as a short "still needed" line) when the new password is not good enough.
@@ -15,7 +16,9 @@ export default function ChangePassword() {
   const [current, setCurrent] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [show, setShow] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
@@ -65,8 +68,7 @@ export default function ChangePassword() {
     setLinkBusy(false);
   }
 
-  const field = "mt-1 h-9 w-full rounded-lg border border-[#dfe8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
-  const type = show ? "text" : "password";
+  const field = "h-9 w-full rounded-lg border border-[#dfe8df] bg-white pl-3 pr-11 text-sm font-normal outline-none focus:border-[#2f6b3c] focus:ring-2 focus:ring-[#cfe0d3]";
   const mismatch = confirm.length > 0 && confirm !== password;
 
   return (
@@ -79,7 +81,10 @@ export default function ChangePassword() {
           <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               Current password
-              <input type={type} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={field} />
+              <span className="relative mt-1 block">
+                <input type={showCurrent ? "text" : "password"} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={field} />
+                <PasswordEye shown={showCurrent} onClick={() => setShowCurrent(!showCurrent)} label="current password" />
+              </span>
             </label>
             <button
               type="button"
@@ -98,7 +103,10 @@ export default function ChangePassword() {
           <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               New password
-              <input type={type} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
+              <span className="relative mt-1 block">
+                <input type={showNew ? "text" : "password"} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
+                <PasswordEye shown={showNew} onClick={() => setShowNew(!showNew)} label="new password" />
+              </span>
             </label>
             <PasswordStrength password={password} hint />
           </div>
@@ -106,7 +114,10 @@ export default function ChangePassword() {
           <div>
             <label className="block text-[11px] font-semibold text-[#203028]">
               Confirm new password
-              <input type={type} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={field} />
+              <span className="relative mt-1 block">
+                <input type={showConfirm ? "text" : "password"} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={field} />
+                <PasswordEye shown={showConfirm} onClick={() => setShowConfirm(!showConfirm)} label="password confirmation" />
+              </span>
             </label>
             {mismatch && <p className="mt-1.5 text-[11px] font-semibold text-amber-700">The two passwords are not the same yet.</p>}
           </div>
@@ -158,9 +169,6 @@ export default function ChangePassword() {
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <button type="submit" disabled={busy} className="h-9 rounded-full bg-[#123f2b] px-5 text-xs font-semibold text-white hover:bg-[#0f3324] disabled:opacity-60">
             {busy ? "Saving..." : "Change password"}
-          </button>
-          <button type="button" onClick={() => setShow(!show)} className="text-xs font-semibold text-[#59645d] hover:text-[#111]">
-            {show ? "Hide passwords" : "Show passwords"}
           </button>
         </div>
 
