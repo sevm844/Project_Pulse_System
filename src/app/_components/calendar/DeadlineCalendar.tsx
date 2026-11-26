@@ -6,6 +6,7 @@ import { useCalendarEvents, type CalendarEvent } from "../../_lib/calendarEvents
 import { errorMessage } from "../../_lib/groups";
 import { addCalendarNote, removeCalendarNote, type CalendarNote } from "../../_lib/profile";
 import CardHeading from "../CardHeading";
+import FullCalendar from "./FullCalendar";
 import { loadCalendarNotes } from "../StakeholderCalendar";
 
 // The student's dashboard is about DEADLINES (the user's decision, 2026-11-24): a big month calendar that shows what is due on each day, and a "Coming up" list
@@ -59,6 +60,7 @@ export default function DeadlineCalendar() {
   const [noteTitle, setNoteTitle] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [noteError, setNoteError] = useState("");
+  const [fullOpen, setFullOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,6 +151,10 @@ export default function DeadlineCalendar() {
             </button>
             <button type="button" onClick={() => show(todayKey)} className="ml-1 rounded-lg border border-[#dfe8df] px-2.5 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
               Today
+            </button>
+            <button type="button" onClick={() => setFullOpen(true)} className="ml-1 flex items-center gap-1.5 rounded-lg border border-[#dfe8df] px-2.5 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+              Full calendar
             </button>
           </div>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#59645d]">
@@ -303,6 +309,7 @@ export default function DeadlineCalendar() {
           )}
         </div>
       </div>
+      {fullOpen && <FullCalendar title="My Calendar" events={events} notes={notes} startDate={selected} onClose={() => setFullOpen(false)} />}
     </section>
   );
 }

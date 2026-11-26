@@ -21,6 +21,10 @@ export type CalendarEvent = {
   // A finished item (approved or completed): shown, but not counted as coming up.
   done: boolean;
   href: string;
+  // Defenses only: the start and end (HH:MM) and the room, so the full calendar can place them on a time grid.
+  time?: string | null;
+  endTime?: string | null;
+  venue?: string | null;
 };
 
 // The backend only lets some roles read each list (see routes/api.php).
@@ -36,12 +40,13 @@ const portal: Record<CalendarRole, string> = {
   Grammarian: "/grammarian",
 };
 
-function defenseHref(role: CalendarRole) {
-  return role === "Panelist" ? "/panelist" : `${portal[role]}/defense`;
+// The link names the exact defense / assignment, like a notice does (see _lib/focus.ts).
+function defenseHref(role: CalendarRole, defenseId: number) {
+  return `${role === "Panelist" ? "/panelist" : `${portal[role]}/defense`}?defense=${defenseId}`;
 }
 
-function requirementHref(role: CalendarRole) {
-  return role === "Grammarian" ? "/grammarian/review-queue" : `${portal[role]}/requirements`;
+function requirementHref(role: CalendarRole, requirementId: number) {
+  return role === "Grammarian" ? "/grammarian/review-queue" : `${portal[role]}/requirements?requirement=${requirementId}`;
 }
 
 function defenseEvents(role: CalendarRole, defenses: ApiDefense[]): CalendarEvent[] {
@@ -58,7 +63,10 @@ function defenseEvents(role: CalendarRole, defenses: ApiDefense[]): CalendarEven
         title: `${defense.defense_type}: ${defense.group_name}`,
         detail: parts.join(" · "),
         done: defense.status === "Completed",
-        href: defenseHref(role),
+        href: defenseHref(role, defense.defense_id),
+        time: defense.defense_time ? defense.defense_time.slice(0, 5) : null,
+        endTime: defense.end_time ? defense.end_time.slice(0, 5) : null,
+        venue: defense.venue,
       };
     });
 }
@@ -87,7 +95,7 @@ function requirementEvents(role: CalendarRole, requirements: ApiRequirement[]): 
         title: requirement.title,
         detail,
         done,
-        href: requirementHref(role),
+        href: requirementHref(role, requirement.requirement_id),
       };
     });
 }

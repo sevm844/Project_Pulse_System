@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarEvent } from "../_lib/calendarEvents";
 import { errorMessage } from "../_lib/groups";
+import FullCalendar from "./calendar/FullCalendar";
 import { addCalendarNote, fetchCalendarNotes, importCalendarNotes, removeCalendarNote, type CalendarNote } from "../_lib/profile";
 
 type StakeholderCalendarProps = {
@@ -142,6 +143,7 @@ export default function StakeholderCalendar({
   const [category, setCategory] = useState(categories[0] ?? "General");
 
   const [noteError, setNoteError] = useState("");
+  const [fullOpen, setFullOpen] = useState(false);
 
   // The notes live on the server, so they follow the person to every device. Notes this browser kept before are sent once.
   useEffect(() => {
@@ -271,6 +273,15 @@ export default function StakeholderCalendar({
           {">"}
         </button>
       </div>
+
+      {showEvents && (
+        <div className={`flex justify-end border-b ${isGlass ? "border-white/45" : "border-[#edf2ec]"} px-4 py-1.5`}>
+          <button type="button" onClick={() => setFullOpen(true)} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+            Full calendar
+          </button>
+        </div>
+      )}
 
       <div className={calendarPadding}>
         <div className={`grid grid-cols-7 text-center ${weekDaySize} font-medium text-[#7b877f]`}>
@@ -502,6 +513,7 @@ export default function StakeholderCalendar({
           )}
         </div>
       </div>
+      {fullOpen && <FullCalendar title={title} events={allEvents} notes={notes} startDate={selectedDate} onClose={() => setFullOpen(false)} />}
     </aside>
   );
 }
