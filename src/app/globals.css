@@ -126,3 +126,9 @@ body {
 body:has([aria-modal="true"], .fixed.inset-0) [data-sidebar-toggle] {
   visibility: hidden;
 }
+
+/* The browser's own show-password eye would double ours. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
