@@ -13,7 +13,8 @@ import {
   NO_TITLE_YET,
   type ApiDeanProject,
 } from "../../_lib/groups";
-import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
+import { PHASE_CHOICES, placeOf as phaseOf } from "../../_lib/phase";
+import { useProgress } from "../../_components/progress/useProgress";
 
 const selectClass =
   "mt-2 w-full rounded-xl border border-[#dfe8df] bg-[#fbfdfb] px-3 py-2.5 text-sm text-[#203028] outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -25,6 +26,8 @@ export default function DeanAssignedGroupsPage() {
   const [courseFilter, setCourseFilter] = useState("All");
   const [sectionFilter, setSectionFilter] = useState("All");
   const [stageFilter, setStageFilter] = useState("All");
+  const progressItems = useProgress().items;
+  const progressByGroup = useMemo(() => new Map(progressItems.map((item) => [item.group_id, item])), [progressItems]);
 
   // A notice may name one group (?group=2): scroll to its row once the list is drawn.
   const focusDone = useRef(false);
@@ -67,9 +70,9 @@ export default function DeanAssignedGroupsPage() {
         (project) =>
           (courseFilter === "All" || project.course === courseFilter) &&
           (sectionFilter === "All" || project.section === sectionFilter) &&
-          (stageFilter === "All" || project.stage === stageFilter),
+          (stageFilter === "All" || phaseOf(project.stage, progressByGroup.get(project.group_id)) === stageFilter),
       ),
-    [courseFilter, projects, sectionFilter, stageFilter],
+    [courseFilter, progressByGroup, projects, sectionFilter, stageFilter],
   );
 
   function resetFilters() {
@@ -136,7 +139,7 @@ export default function DeanAssignedGroupsPage() {
             <label className="text-xs font-semibold text-[#59645d]">
               Stage
               <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value)} className={selectClass}>
-                {["All", ...PROPOSAL_STAGES].map((stage) => (
+                {["All", ...PHASE_CHOICES].map((stage) => (
                   <option key={stage}>{stage}</option>
                 ))}
               </select>
@@ -181,7 +184,7 @@ export default function DeanAssignedGroupsPage() {
                     <td className="px-5 py-4 text-[#59645d]">
                       {project.title || NO_TITLE_YET}
                     </td>
-                    <td className="px-5 py-4 text-[#59645d]">{project.stage}</td>
+                    <td className="px-5 py-4 text-[#59645d]">{phaseOf(project.stage, progressByGroup.get(project.group_id))}</td>
                     <td className="px-5 py-4 text-[#59645d]">
                       {project.adviser || NO_ADVISER_YET}
                     </td>

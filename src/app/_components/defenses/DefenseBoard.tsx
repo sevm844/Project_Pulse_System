@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../_lib/api";
 import {
   DEFENSE_RESULTS,
+  DEFENSE_TYPES,
   defenseState,
   formatTime,
   type ApiDefense,
@@ -71,7 +72,8 @@ export default function DefenseBoard({ role }: { role: Role }) {
   const past = defenses
     .filter((item) => item.status !== "Scheduled")
     .sort((a, b) => (b.defense_date ?? "").localeCompare(a.defense_date ?? ""));
-  const visible = tab === "upcoming" ? upcoming : past;
+  const [typeFilter, setTypeFilter] = useState("All");
+  const visible = (tab === "upcoming" ? upcoming : past).filter((item) => typeFilter === "All" || item.defense_type === typeFilter);
 
   async function changed(message: string) {
     setNotice(message);
@@ -108,6 +110,13 @@ export default function DefenseBoard({ role }: { role: Role }) {
             {label}
           </button>
         ))}
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Show one kind of defense" className="mb-2 ml-auto rounded-lg border border-[#dfe8df] bg-white px-3 py-1.5 text-xs font-normal text-[#59645d] outline-none focus:ring-2 focus:ring-[#d7f7d8]">
+          {["All", ...DEFENSE_TYPES].map((item) => (
+            <option key={item} value={item}>
+              {item === "All" ? "All defenses" : item}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error && (

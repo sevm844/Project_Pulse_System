@@ -41,7 +41,7 @@ import { GROUP_SEMESTERS, MAX_GROUP_SIZE, buildSelectedGroupMembers, isSchoolYea
 
 // The search list shows this many students at a time, however many accounts exist.
 const PICKER_LIMIT = 6;
-import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
+import { PHASE_CHOICES, placeOf as phaseOf } from "../../_lib/phase";
 
 const groupCreationCourses = COURSE_OPTIONS as CourseCode[];
 
@@ -86,7 +86,8 @@ export default function AssignedGroupsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [archivedGroups, setArchivedGroups] = useState<ApiGroup[]>([]);
   const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
-  const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
+  const progressItems = useProgress().items;
+  const progressByGroup = useMemo(() => new Map(progressItems.map((item) => [item.group_id, item])), [progressItems]);
 
   // The backend already leaves out students who are in a group for this academic year + semester.
   const availableStudents = students;
@@ -274,11 +275,11 @@ export default function AssignedGroupsPage() {
     return confirmedGroups.filter((group) => {
       const matchesCourse = course === "All" || group.course === course;
       const matchesSection = section === "All" || group.section === section;
-      const matchesStage = stage === "All" || group.project?.proposal_stage === stage;
+      const matchesStage = stage === "All" || (group.project ? phaseOf(group.project.proposal_stage, progressByGroup.get(group.group_id)) === stage : false);
 
       return matchesCourse && matchesSection && matchesStage;
     });
-  }, [confirmedGroups, course, section, stage]);
+  }, [confirmedGroups, course, progressByGroup, section, stage]);
 
   async function handleCreateGroup() {
     if (!detailsReady || !validMembers || !selectedMembers) {
@@ -427,7 +428,7 @@ export default function AssignedGroupsPage() {
                 className="mt-2 w-full rounded-lg border border-[#dfe8df] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d7f7d8]"
               >
                 <option>All</option>
-                {PROPOSAL_STAGES.map((item) => (
+                {PHASE_CHOICES.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
@@ -669,7 +670,7 @@ export default function AssignedGroupsPage() {
               const canManage = !access || (access.roles.includes("AppDev") && access.level === "full");
               return <div id={focusId.group(group.group_id)} key={group.group_id} className="rounded-xl border border-[#dfe8df] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><h3 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-2 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "Academic year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={group.project.proposal_stage} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
+                  <div><h3 className="inline-block rounded-lg border border-[#cfe0d3] bg-[#eef6ef] px-3 py-1.5 font-semibold text-[#123f2b]">{group.group_name}<GroupStatusNote status={group.group_status} /></h3><p className="mt-2 text-xs text-[#7b877f]">{group.course} · {group.section} · {group.school_year || "Academic year not recorded"} / {group.semester || "Semester not recorded"}</p>{group.project && <div className="mt-2"><StageBadge stage={phaseOf(group.project.proposal_stage, progressByGroup.get(group.group_id))} /></div>}{progressByGroup.get(group.group_id) && <div className="mt-2"><ProgressMini progress={progressByGroup.get(group.group_id)!} /></div>}</div>
                   <span className={`text-xs font-semibold ${confirmed ?"text-[#123f2b]" : " text-amber-800"}`}>{confirmed ? "✓ Student Confirmation complete" : "Student Confirmation pending"} · {accepted}/{group.members.length} accepted</span>
                 </div>
                 {access && (
@@ -803,7 +804,7 @@ export default function AssignedGroupsPage() {
                       {group.project?.project_title || NO_TITLE_YET}
                     </td>
                     <td className="px-5 py-4">
-                      {group.project ? <StageBadge stage={group.project.proposal_stage} /> : "-"}
+                      {group.project ? <StageBadge stage={phaseOf(group.project.proposal_stage, progressByGroup.get(group.group_id))} /> : "-"}
                     </td>
                     <td className="px-5 py-4 text-[#59645d]">
                       {group.members.length}

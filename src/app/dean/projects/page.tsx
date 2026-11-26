@@ -20,7 +20,7 @@ import TermSelect from "../../_components/TermSelect";
 import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import { ALL_TERMS, defaultTerm, termLabel, termsOf } from "../../_lib/terms";
-import { PROPOSAL_STAGES } from "../../_utils/projectWorkflow";
+import { PHASE_CHOICES, placeOf as phaseOf } from "../../_lib/phase";
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-[#dfe8df] bg-white px-3 py-2.5 text-sm font-normal outline-none focus:ring-2 focus:ring-[#d7f7d8]";
@@ -29,7 +29,8 @@ export default function DeanProjectsPage() {
   const [projects, setProjects] = useState<ApiDeanProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
+  const progressItems = useProgress().items;
+  const progressByGroup = useMemo(() => new Map(progressItems.map((item) => [item.group_id, item])), [progressItems]);
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("All");
   const [stageFilter, setStageFilter] = useState("All");
@@ -108,22 +109,17 @@ export default function DeanProjectsPage() {
         (!query || searchable.includes(query)) &&
         (term === ALL_TERMS || termLabel(project) === term) &&
         (courseFilter === "All" || project.course === courseFilter) &&
-        (stageFilter === "All" || project.stage === stageFilter) &&
+        (stageFilter === "All" || phaseOf(project.stage, progressByGroup.get(project.group_id)) === stageFilter) &&
         (adviserFilter === "All" ||
           (adviserFilter === NO_ADVISER_YET
             ? !project.adviser
             : project.adviser === adviserFilter))
       );
     });
-  }, [adviserFilter, courseFilter, projects, searchQuery, stageFilter, term]);
+  }, [adviserFilter, courseFilter, progressByGroup, projects, searchQuery, stageFilter, term]);
 
   // The proposal stages end at "Ready for Proposal Defense"; after that the group is somewhere in the defenses, so the real place comes from the progress tracker.
-  const placeOf = (project: (typeof projects)[number]) => {
-    const progress = progressByGroup.get(project.group_id);
-    if (project.stage !== "Ready for Proposal Defense" || !progress) return project.stage;
-
-    return progress.current_phase === "Completed" ? "Every phase is complete" : progress.current_phase;
-  };
+  const placeOf = (project: (typeof projects)[number]) => phaseOf(project.stage, progressByGroup.get(project.group_id));
   const ready = projects.filter((project) => placeOf(project) === "Ready for Proposal Defense" || placeOf(project) === "Proposal Defense").length;
 
   // What the Dean can act on: groups with nobody left, then groups with no adviser.
@@ -240,7 +236,7 @@ export default function DeanProjectsPage() {
             <label className="text-xs font-semibold text-[#59645d]">
               Stage
               <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value)} className={inputClass}>
-                {["All", ...PROPOSAL_STAGES].map((stage) => (
+                {["All", ...PHASE_CHOICES].map((stage) => (
                   <option key={stage}>{stage}</option>
                 ))}
               </select>
