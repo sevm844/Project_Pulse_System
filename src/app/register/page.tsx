@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiError, apiFetch } from "../_lib/api";
 import { passwordIsStrong } from "../_lib/password";
+import PasswordStrength from "../_components/PasswordStrength";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -234,6 +235,8 @@ export default function RegisterPage() {
                 <input type="password" placeholder="Confirm password" className={input} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
             </div>
+
+            <PasswordStrength password={password} />
 
             <label className="flex items-start gap-3 text-sm text-gray-600">
               <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); saveDraft({ agreed: e.target.checked }); }} className="mt-1 h-4 w-4 accent-[#123f2b]" />
