@@ -203,7 +203,7 @@ export default function DocumentLibrary({ role }: { role: Role }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-6xl">
       <p className="max-w-xl text-sm leading-6 text-[#7b877f]">
         {role === "Student"
           ? "Every file your group has sent, with its versions and review status."
@@ -314,63 +314,84 @@ export default function DocumentLibrary({ role }: { role: Role }) {
         </p>
       )}
 
-      <ul className="mt-2 divide-y divide-[#edf2ec]">
-        {visible.map((item) => {
-          const look = statusLook[item.status];
+      {visible.length > 0 && (
+        <div className="mt-4 overflow-x-auto rounded-xl border border-[#dfe8df] bg-white shadow-[0_6px_18px_rgba(31,42,36,0.05)]">
+          <table className="w-full min-w-[52rem] text-left text-sm">
+            <thead className="bg-[#154530] text-xs font-semibold text-white">
+              <tr>
+                <th scope="col" className="px-4 py-3">Document</th>
+                <th scope="col" className="px-4 py-3">Assignment</th>
+                {role !== "Student" && <th scope="col" className="px-4 py-3">Group</th>}
+                <th scope="col" className="px-4 py-3">Sent by</th>
+                <th scope="col" className="px-4 py-3">Sent on</th>
+                <th scope="col" className="px-4 py-3">Status</th>
+                <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            {visible.map((item) => {
+              const look = statusLook[item.status];
 
-          return (
-            <li key={item.submission_id} className="py-4">
-              <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#203028]">
-                    {item.has_file ? item.file_name : item.link_url}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#7b877f]">
-                    {item.requirement_title}
-                    {role !== "Student" ? ` · ${item.group_name} (${item.course} ${item.section})` : ""}
-                    {` · Version ${item.version_no}`}
-                    {item.submitted_by ? ` · Submitted by ${item.submitted_by}` : ""}
-                    {item.submitted_at ? ` · ${formatDateTime(item.submitted_at)}` : ""}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-4 text-xs">
-                  <span className="flex items-center gap-2 text-[#59645d]">
-                    <span className={`h-2 w-2 rounded-full ${toneDot[look.tone]}`} />
-                    {look.label}
-                  </span>
-
-                  {item.has_file && (
-                    <button type="button" onClick={() => void openFile(item)} className="font-semibold text-[#4f8f58] hover:underline">
-                      Open
-                    </button>
+              return (
+                <tbody key={item.submission_id} className="border-t border-[#edf2ec] first:border-t-0">
+                  <tr className="align-top">
+                    <td className="max-w-[16rem] px-4 py-3.5">
+                      <p className="truncate font-semibold text-[#123f2b]" title={(item.has_file ? item.file_name : item.link_url) ?? undefined}>
+                        {item.has_file ? item.file_name : item.link_url}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#7b877f]">Version {item.version_no}</p>
+                    </td>
+                    <td className="px-4 py-3.5 text-xs text-[#203028]">{item.requirement_title}</td>
+                    {role !== "Student" && (
+                      <td className="px-4 py-3.5 text-xs text-[#203028]">
+                        <p className="font-semibold">{item.group_name}</p>
+                        <p className="mt-0.5 text-[#7b877f]">{item.course} {item.section}</p>
+                      </td>
+                    )}
+                    <td className="px-4 py-3.5 text-xs text-[#203028]">{item.submitted_by ?? <span className="text-[#9aa59e]">Not recorded</span>}</td>
+                    <td className="px-4 py-3.5 text-xs text-[#203028]">{item.submitted_at ? formatDateTime(item.submitted_at) : ""}</td>
+                    <td className="px-4 py-3.5 text-xs text-[#59645d]">
+                      <span className="flex items-center gap-2 whitespace-nowrap">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${toneDot[look.tone]}`} />
+                        {look.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right text-xs">
+                      <span className="inline-flex items-center gap-4 whitespace-nowrap">
+                        {item.has_file && (
+                          <button type="button" onClick={() => void openFile(item)} className="font-semibold text-[#4f8f58] hover:underline">
+                            Open
+                          </button>
+                        )}
+                        {item.has_file && (
+                          <button
+                            type="button"
+                            onClick={() => void downloadSubmission(item.submission_id, item.file_name).catch((err) => setError(errorMessage(err, "Unable to open the file.")))}
+                            className="font-semibold text-[#4f8f58] hover:underline"
+                          >
+                            Download
+                          </button>
+                        )}
+                        {item.link_url && (
+                          <a href={item.link_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#4f8f58] hover:underline">
+                            Open link
+                          </a>
+                        )}
+                      </span>
+                    </td>
+                  </tr>
+                  {item.version_no > 1 && (
+                    <tr>
+                      <td colSpan={role === "Student" ? 6 : 7} className="px-4 pb-3 pt-0">
+                        <VersionHistory submissionId={item.submission_id} versionNo={item.version_no} />
+                      </td>
+                    </tr>
                   )}
-
-                  {item.has_file && (
-                    <button
-                      type="button"
-                      onClick={() => void downloadSubmission(item.submission_id, item.file_name).catch((err) => setError(errorMessage(err, "Unable to open the file.")))}
-                      className="font-semibold text-[#4f8f58] hover:underline"
-                    >
-                      Download
-                    </button>
-                  )}
-
-                  {item.link_url && (
-                    <a href={item.link_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#4f8f58] hover:underline">
-                      Open link
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-2">
-                <VersionHistory submissionId={item.submission_id} versionNo={item.version_no} />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                </tbody>
+              );
+            })}
+          </table>
+        </div>
+      )}
 
     </div>
   );
