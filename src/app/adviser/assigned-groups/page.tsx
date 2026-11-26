@@ -17,7 +17,10 @@ import { ProgressMini } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import type { CourseCode, UserProfile } from "../../_lib/types";
 import { apiFetch } from "../../_lib/api";
+import { formatDate } from "../../_lib/requirements";
 import {
+  archiveGroup,
+  restoreGroup,
   closeGroup,
   COURSE_OPTIONS,
   errorMessage,
@@ -79,6 +82,9 @@ export default function AssignedGroupsPage() {
   const [removeError, setRemoveError] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionNotice, setActionNotice] = useState("");
+  // Finished groups that were put away: shown only when this is ticked.
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedGroups, setArchivedGroups] = useState<ApiGroup[]>([]);
   const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
   const progressByGroup = new Map(useProgress().items.map((item) => [item.group_id, item]));
 
@@ -135,6 +141,7 @@ export default function AssignedGroupsPage() {
     try {
       await action();
       await loadGroups();
+      if (showArchived) setArchivedGroups(await apiFetch<ApiGroup[]>("/groups?archived=1"));
       setActionNotice(message);
     } catch (err) {
       setGroupsError(errorMessage(err, "That did not work. Please try again."));
@@ -171,6 +178,20 @@ export default function AssignedGroupsPage() {
     const wanted = readFocus().group;
     if (wanted && groups.some((item) => item.group_id === wanted)) scrollToFocus(focusId.group(wanted));
   }, [groupsLoaded, groups]);
+
+  useEffect(() => {
+    if (!showArchived) return;
+
+    let cancelled = false;
+
+    apiFetch<ApiGroup[]>("/groups?archived=1")
+      .then((rows) => !cancelled && setArchivedGroups(rows))
+      .catch((err) => !cancelled && setGroupsError(errorMessage(err, "Unable to load the archived groups.")));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showArchived]);
 
   const loadGroups = useCallback(async () => {
     try {
@@ -626,8 +647,16 @@ export default function AssignedGroupsPage() {
         )}
 
         <Card className="p-5">
-          <h2 className="text-lg font-semibold text-[#203028]">Group Invitations</h2>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-[#203028]">Group Invitations</h2>
           <p className="mt-1 text-sm text-[#7b877f]">Sending an invitation completes setup. Student Confirmation completes only when all members accept.</p>
+            </div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-[#59645d]">
+              <input type="checkbox" checked={showArchived} onChange={(event) => setShowArchived(event.target.checked)} className="h-4 w-4 accent-[#123f2b]" />
+              Show archived groups
+            </label>
+          </div>
           {groupsError && <p role="alert" className="mt-3 text-sm text-[#b42318]">{groupsError}</p>}
           {actionNotice && <p role="status" className="mt-3 text-sm text-[#4f8f58]">{actionNotice}</p>}
           <div className="mt-4 space-y-4">
@@ -653,6 +682,20 @@ export default function AssignedGroupsPage() {
                   </p>
                 )}
                 <p className="mt-3 text-xs font-medium text-[#4f8f58]">✓ Group Details · ✓ Student Members · {confirmed ? "✓ Student Confirmation" : "Student Confirmation pending"}</p>
+                {canManage && group.can_archive && (
+                  <button
+                    type="button"
+                    disabled={actionBusy}
+                    onClick={() => {
+                      if (window.confirm(`Archive ${group.group_name}? It is finished. It leaves your working lists (nothing is deleted, the students still see their project) and you can bring it back from "Show archived groups".`)) {
+                        void groupAction(() => archiveGroup(group.group_id), `${group.group_name} was archived.`);
+                      }
+                    }}
+                    className="mt-3 mr-3 inline-flex items-center rounded-lg border border-[#cfe0d3] bg-white px-3.5 py-2 text-xs font-semibold text-[#123f2b] shadow-sm transition hover:border-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-60"
+                  >
+                    Archive this group
+                  </button>
+                )}
                 {access?.level !== "proposal" && <button
                   type="button"
                   onClick={() => setTimelineOpen(timelineOpen === group.group_id ? null : group.group_id)}
@@ -679,6 +722,43 @@ export default function AssignedGroupsPage() {
               </div>;
             })}
           </div>
+          {showArchived && (
+            <div className="mt-6 border-t border-[#edf2ec] pt-5">
+              <h3 className="text-base font-semibold text-[#203028]">Archived groups</h3>
+              <p className="mt-1 text-xs text-[#7b877f]">Finished groups that were put away. Nothing was deleted, and the students still see their project.</p>
+              {archivedGroups.length === 0 ? (
+                <p className="mt-3 text-sm text-[#7b877f]">No archived groups.</p>
+              ) : (
+                <ul className="mt-3 divide-y divide-[#edf2ec] rounded-xl border border-[#dfe8df]">
+                  {archivedGroups.map((group) => {
+                    const access = group.my_access;
+                    const canRestore = !access || (access.roles.includes("AppDev") && access.level === "full");
+
+                    return (
+                      <li key={group.group_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#203028]">{group.group_name}</p>
+                          <p className="mt-0.5 text-xs text-[#7b877f]">
+                            {group.course} · {group.section} · {group.school_year || "Academic year not recorded"} / {group.semester || "Semester not recorded"} · Archived {group.archived_at ? formatDate(group.archived_at) : ""}
+                          </p>
+                        </div>
+                        {canRestore && (
+                          <button
+                            type="button"
+                            disabled={actionBusy}
+                            onClick={() => void groupAction(() => restoreGroup(group.group_id), `${group.group_name} is back in your working list.`)}
+                            className="rounded-lg border border-[#cfe0d3] bg-white px-3.5 py-2 text-xs font-semibold text-[#123f2b] transition hover:border-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-60"
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
         </Card>
 
         {/* Groups table */}

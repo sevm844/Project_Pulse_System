@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import DeanShell from "../_components/DeanShell";
 import Card from "../_components/Card";
 import { apiFetch } from "../../_lib/api";
+import { formatDate } from "../../_lib/requirements";
 import {
+  archiveGroup,
+  restoreGroup,
   COURSE_OPTIONS,
   errorMessage,
   NO_ADVISER_YET,
@@ -33,11 +36,16 @@ export default function DeanProjectsPage() {
   const [adviserFilter, setAdviserFilter] = useState("All");
   // null = not chosen yet: the list opens on the current school term.
   const [termChoice, setTermChoice] = useState<string | null>(null);
+  // Finished groups that were put away are shown only when this is ticked (then the board lists only those).
+  const [showArchived, setShowArchived] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [busyGroup, setBusyGroup] = useState<number | null>(null);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    apiFetch<ApiDeanProject[]>("/dean/projects")
+    apiFetch<ApiDeanProject[]>(showArchived ? "/dean/projects?archived=1" : "/dean/projects")
       .then((rows) => {
         if (!cancelled) setProjects(rows);
       })
@@ -51,7 +59,26 @@ export default function DeanProjectsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [showArchived, reloadKey]);
+
+  // Put a finished group away, or bring it back. Nothing is deleted.
+  async function putAway(project: ApiDeanProject, restore: boolean) {
+    if (!restore && !window.confirm(`Archive ${project.group_name}? It is finished. It leaves the working lists (nothing is deleted, the students still see their project) and you can bring it back from "Show archived groups".`)) return;
+
+    setBusyGroup(project.group_id);
+    setError("");
+    setNotice("");
+
+    try {
+      await (restore ? restoreGroup(project.group_id) : archiveGroup(project.group_id));
+      setNotice(restore ? `${project.group_name} is back in the working list.` : `${project.group_name} was archived.`);
+      setReloadKey((key) => key + 1);
+    } catch (err) {
+      setError(errorMessage(err, "That did not work. Please try again."));
+    }
+
+    setBusyGroup(null);
+  }
 
   const advisers = useMemo(
     () => [...new Set(projects.map((project) => project.adviser).filter(Boolean))] as string[],
@@ -59,7 +86,8 @@ export default function DeanProjectsPage() {
   );
 
   const terms = useMemo(() => termsOf(projects), [projects]);
-  const term = termChoice ?? defaultTerm(projects);
+  // Archived groups are mostly from earlier years, so that view opens on every term.
+  const term = termChoice ?? (showArchived ? ALL_TERMS : defaultTerm(projects));
 
   const filteredProjects = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -169,13 +197,19 @@ export default function DeanProjectsPage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="w-fit rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
-            >
-              Reset Filters
-            </button>
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 text-xs font-semibold text-[#59645d]">
+                <input type="checkbox" checked={showArchived} onChange={(event) => setShowArchived(event.target.checked)} className="h-4 w-4 accent-[#123f2b]" />
+                Show archived groups
+              </label>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="w-fit rounded-lg border border-[#dfe8df] px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]"
+              >
+                Reset Filters
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -227,8 +261,10 @@ export default function DeanProjectsPage() {
           <Card className="overflow-hidden">
             <div className="border-b border-[#edf2ec] px-5 py-4">
               <h3 className="text-base font-semibold text-[#203028]">
-                Project Board
+                {showArchived ? "Archived Groups" : "Project Board"}
               </h3>
+              {error && <p role="alert" className="mt-1 text-xs text-[#b42318]">{error}</p>}
+              {notice && <p role="status" className="mt-1 text-xs text-[#2f6f3a]">{notice}</p>}
               <p className="mt-1 text-xs text-[#7b877f]">
                 {filteredProjects.length} project
                 {filteredProjects.length === 1 ? "" : "s"} found
@@ -287,6 +323,28 @@ export default function DeanProjectsPage() {
                         >
                           Open Profile
                         </Link>
+                        {showArchived ? (
+                          <button
+                            type="button"
+                            disabled={busyGroup === project.group_id}
+                            onClick={() => void putAway(project, true)}
+                            className="rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-center text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-60"
+                          >
+                            Restore
+                          </button>
+                        ) : (
+                          project.can_archive && (
+                            <button
+                              type="button"
+                              disabled={busyGroup === project.group_id}
+                              onClick={() => void putAway(project, false)}
+                              className="rounded-lg border border-[#cfe0d3] bg-white px-4 py-2 text-center text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-60"
+                            >
+                              Archive
+                            </button>
+                          )
+                        )}
+                        {showArchived && project.archived_at && <p className="text-[11px] text-[#7b877f]">Archived {formatDate(project.archived_at)}</p>}
                       </div>
                     </div>
                   </div>

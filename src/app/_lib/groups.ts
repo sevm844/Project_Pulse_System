@@ -24,6 +24,9 @@ export type ApiGroup = {
   group_status: GroupStatus;
   // Why a closed group was closed; null while it is open.
   closed_reason: string | null;
+  // When a finished group was put away from the working lists (null = a working group). can_archive: finished, so the adviser or the Dean may put it away.
+  archived_at?: string | null;
+  can_archive?: boolean;
   created_at: string | null;
   adviser: { user_id: number; name: string } | null;
   // The Capstone and Technical advisers named after the Proposal Defense (null until then).
@@ -89,6 +92,8 @@ export type ApiDeanProject = {
   stage: ProposalStage;
   group_status: GroupStatus;
   status: string | null;
+  archived_at?: string | null;
+  can_archive?: boolean;
 };
 
 export const NO_TITLE_YET = "No title chosen yet";
@@ -155,6 +160,10 @@ export type CloseReason = (typeof CLOSE_REASONS)[number];
 // group that still has members, and then a reason is required.
 export const closeGroup = (groupId: number, reasonCategory?: CloseReason, reason?: string) =>
   post(`/groups/${groupId}/close`, reasonCategory ? { reason_category: reasonCategory, reason: reason || undefined } : undefined);
+
+// Adviser (her working group) or Dean: put a FINISHED group away from the working lists, or bring it back. Nothing is deleted and the students still see their project.
+export const archiveGroup = (groupId: number) => post(`/groups/${groupId}/archive`);
+export const restoreGroup = (groupId: number) => post(`/groups/${groupId}/unarchive`);
 
 // Dean only: undo a close. Needs a reason; the students and adviser are told. Defenses cancelled by the close stay cancelled.
 export const reopenGroup = (groupId: number, reason: string) => post(`/groups/${groupId}/reopen`, { reason });
