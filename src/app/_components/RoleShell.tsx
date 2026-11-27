@@ -161,14 +161,14 @@ export default function RoleShell({
             type="button"
             onClick={requestLogout}
             title="Log out"
-            className={`mt-auto flex w-full items-center rounded-lg text-[12px] font-semibold text-[#4d5751] transition hover:bg-[#edf9e9] hover:text-[#203028] ${
-              sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-2 px-3 py-2"
+            className={`mt-auto flex w-full items-center rounded-lg text-[13px] font-semibold text-[#4d5751] transition hover:bg-[#edf9e9] hover:text-[#203028] ${
+              sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-2 px-3 py-[7px]"
             }`}
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-4 w-4 shrink-0"
+              className="h-5 w-5 shrink-0"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"

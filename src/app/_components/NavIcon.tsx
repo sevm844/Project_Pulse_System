@@ -26,7 +26,7 @@ function iconName(src: string) {
   return src.replace(/^.*\//, "").replace(/\.png$/, "");
 }
 
-export default function NavIcon({ src, className = "h-4 w-4" }: { src: string; className?: string }) {
+export default function NavIcon({ src, className = "h-5 w-5" }: { src: string; className?: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className={`${className} shrink-0`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       {PATHS[iconName(src)]}

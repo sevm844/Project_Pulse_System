@@ -42,7 +42,7 @@ export default function SidebarNav({ entries, pathname, home, collapsed }: { ent
   );
 
   return (
-    <nav className="mt-5 text-[12px] font-semibold" aria-label="Main menu">
+    <nav className="mt-5 text-[13px] font-semibold" aria-label="Main menu">
       <div className="space-y-1">
         {entries.map((entry, index) => {
           // a plain link right after a group gets room, so it is not mistaken for one of the group's links
