@@ -254,7 +254,7 @@ export default function StakeholderCalendar({
               : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
           }`}
         >
-          {"<"}
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>
         </button>
 
         <h2 className={`${monthTitleSize} font-semibold tracking-tight text-[#203028]`}>
@@ -270,7 +270,7 @@ export default function StakeholderCalendar({
               : "border border-[#dfe8df] bg-white hover:bg-[#f3f7f1]"
           }`}
         >
-          {">"}
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
         </button>
       </div>
 

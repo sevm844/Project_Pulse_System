@@ -137,17 +137,17 @@ export default function DeadlineCalendar() {
 
   return (
     <section className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label="Deadlines and calendar">
-      <div className="order-2 overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)] lg:order-1">
+      <div className="order-2 flex flex-col overflow-hidden rounded-2xl border border-[#dfe8df] bg-white shadow-[0_16px_42px_rgba(31,42,36,0.07)] lg:order-1">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf2ec] px-4 py-3">
           <div className="flex items-center gap-2">
             <button type="button" aria-label="Previous month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
-              ‹
+              <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>
             </button>
             <h2 className="min-w-[9rem] text-center text-base font-semibold tracking-tight text-[#203028]">
               {month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </h2>
             <button type="button" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#dfe8df] text-[#203028] hover:bg-[#f3f7f1]">
-              ›
+              <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
             </button>
             <button type="button" onClick={() => show(todayKey)} className="ml-1 rounded-lg border border-[#dfe8df] px-2.5 py-1.5 text-xs font-semibold text-[#123f2b] hover:bg-[#f3f7f1]">
               Today
@@ -165,14 +165,15 @@ export default function DeadlineCalendar() {
           </p>
         </div>
 
-        <div className="p-2.5 sm:p-3">
+        {/* The card is as tall as the column beside it: the weeks share that height instead of leaving an empty white band under the last row. */}
+        <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[#7b877f]">
             {WEEK_DAYS.map((name) => (
               <span key={name} className="py-1">{name}</span>
             ))}
           </div>
 
-          <div className="mt-1 grid grid-cols-7 gap-1">
+          <div className="mt-1 grid flex-1 grid-cols-7 auto-rows-fr gap-1">
             {days.map((item) => {
               const list = byDay.get(item.key) ?? [];
               const isToday = item.key === todayKey;
