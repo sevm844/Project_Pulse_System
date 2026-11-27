@@ -386,6 +386,9 @@ function FAQAccordion() {
 }
 
 export default function Home() {
+  // On a phone the links (About, Features...) and the two buttons live in a menu under the bar.
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <main className="relative min-h-screen overflow-x-clip bg-white text-[#171c19]">
       <style>{`
@@ -423,14 +426,47 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2">
-            <a href="/login" className="rounded-lg border border-[#123f2b] px-4 py-2 text-xs font-semibold text-[#123f2b] transition hover:bg-[#f3f8f4] sm:text-sm">
+            <a href="/login" className="hidden rounded-lg border border-[#123f2b] px-4 py-2 text-xs font-semibold text-[#123f2b] transition hover:bg-[#f3f8f4] sm:block sm:text-sm">
               Log in
             </a>
-            <a href="/register" className="whitespace-nowrap rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324] sm:text-sm">
+            <a href="/register" className="hidden whitespace-nowrap rounded-lg bg-[#123f2b] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0f3324] sm:block sm:text-sm">
               Create Account
             </a>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label={menuOpen ? "Close the menu" : "Open the menu"}
+              aria-expanded={menuOpen}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dfe8d6] bg-white text-[#123f2b] transition hover:bg-[#f3f8f4] md:hidden"
+            >
+              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                {menuOpen ? <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /> : <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />}
+              </svg>
+            </button>
           </div>
         </div>
+
+        {menuOpen && (
+          <nav className="border-t border-[#e3eadd] bg-white px-4 pb-4 pt-2 md:hidden" aria-label="Menu">
+            <ul className="text-sm font-semibold text-[#2b3a31]">
+              {navLinks.map(([label, href]) => (
+                <li key={href}>
+                  <a href={href} onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-3 transition hover:bg-[#f3f8f4]">
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:hidden">
+              <a href="/login" className="rounded-lg border border-[#123f2b] px-4 py-2.5 text-center text-sm font-semibold text-[#123f2b] transition hover:bg-[#f3f8f4]">
+                Log in
+              </a>
+              <a href="/register" className="rounded-lg bg-[#123f2b] px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#0f3324]">
+                Create Account
+              </a>
+            </div>
+          </nav>
+        )}
       </header>
 
       <section className="relative z-10 mx-3 mt-3 overflow-hidden rounded-[28px] border border-[#e4e8e2] bg-[#f1f3f0] px-5 pb-16 pt-16 text-center sm:mx-5 lg:pb-20 lg:pt-24">

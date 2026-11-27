@@ -20,11 +20,13 @@ import {
   getStoredUserUid,
   initialsOf,
 } from "../_utils/authStorage";
+import CloseX from "./CloseX";
 import DashboardSearchIcon from "./DashboardSearchIcon";
 import FeedbackDialog from "./feedback/FeedbackDialog";
 import NotificationBell from "./notifications/NotificationBell";
 import ProfileMenu from "./ProfileMenu";
 import ProfileSwitcher from "./ProfileSwitcher";
+import NavIcon from "./NavIcon";
 import SidebarNav, { type NavEntry } from "./SidebarNav";
 import SidebarToggle from "./SidebarToggle";
 import { useProfilePhoto } from "./useProfilePhoto";
@@ -65,6 +67,8 @@ export default function RoleShell({
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [heldRoles, setHeldRoles] = useState<UserRole[]>(() => getStoredUserRoles());
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  // On a phone the sidebar is a drawer that slides over the page.
+  const [menuOpen, setMenuOpen] = useState(false);
   const { photo: profileImage } = useProfilePhoto(slug);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -102,6 +106,23 @@ export default function RoleShell({
         // Offline or signed out: the normal API handling deals with it; keep what is stored.
       });
   }, [role, router]);
+
+  // The drawer closes when the page changes, and with the Escape key.
+  useEffect(() => {
+    queueMicrotask(() => setMenuOpen(false));
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    window.addEventListener("keydown", onKey);
+
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   function toggleSidebar() {
     const nextValue = !sidebarCollapsed;
@@ -191,18 +212,32 @@ export default function RoleShell({
               aria-label={`${title} toolbar`}
               className="flex shrink-0 items-center justify-between border-b border-[#edf2ec] px-5 py-4 lg:px-8"
             >
-              <div />
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="Open the menu"
+                  aria-expanded={menuOpen}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#dfe8df] bg-white text-[#203028] transition hover:bg-[#f3f7f1] lg:hidden"
+                >
+                  <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                    <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />
+                  </svg>
+                </button>
+              </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setFeedbackOpen(true)}
-                  className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-[13px] font-semibold text-[#59645d] transition hover:bg-[#f3f7f1]"
+                  className="hidden rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-[13px] font-semibold text-[#59645d] transition hover:bg-[#f3f7f1] sm:block"
                 >
                   Feedback
                 </button>
 
-                <DashboardSearchIcon />
+                <div className="hidden sm:block">
+                  <DashboardSearchIcon />
+                </div>
 
                 <NotificationBell href={`${home}/notifications`} />
 
@@ -232,6 +267,58 @@ export default function RoleShell({
           </div>
         </section>
       </div>
+
+      {menuOpen && (
+        <div className="fixed inset-0 z-[90] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <button type="button" aria-label="Close the menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-[#123f2b]/40" />
+
+          <div className="relative flex h-full w-[260px] max-w-[85vw] flex-col justify-between overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#fbfef9_42%,#f2fbef_100%)] px-2 py-5 shadow-[0_0_40px_rgba(18,63,43,0.25)]">
+            <div>
+              <div className="flex items-center justify-between gap-2 px-2">
+                <div className="flex items-center gap-2">
+                  <Image src="/logotop.png" alt="Project Pulse" width={34} height={34} className="rounded-lg" />
+                  <span className="text-[14px] font-bold text-[#203028]">Project Pulse</span>
+                </div>
+                <CloseX onClick={() => setMenuOpen(false)} label="Close the menu" />
+              </div>
+
+              {/* A tap on any link closes the drawer (the page may be the one already open, so the address alone would not). */}
+              <div onClick={(event) => { if ((event.target as HTMLElement).closest("a")) setMenuOpen(false); }}>
+                <SidebarNav entries={navItems} pathname={pathname} home={home} slug={slug} collapsed={false} />
+              </div>
+            </div>
+
+            <div className="space-y-1 text-[13px] font-semibold text-[#4d5751]">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setFeedbackOpen(true);
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-[7px] transition hover:bg-[#edf9e9] hover:text-[#203028]"
+              >
+                <NavIcon src="/nav/feedback.png" />
+                <span>Report a bug</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  requestLogout();
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-[7px] transition hover:bg-[#edf9e9] hover:text-[#203028]"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {feedbackOpen && <FeedbackDialog onClose={() => setFeedbackOpen(false)} />}
     </main>

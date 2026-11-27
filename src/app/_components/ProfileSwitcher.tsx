@@ -72,7 +72,7 @@ export default function ProfileSwitcher({ name, email, image, roles }: { name: s
   }
 
   const plain = (
-    <div className="text-right">
+    <div className="hidden text-right md:block">
       <p className="text-[13px] font-semibold">{name}</p>
       <p className="text-[11px] text-[#7b877f]">{email}</p>
     </div>
