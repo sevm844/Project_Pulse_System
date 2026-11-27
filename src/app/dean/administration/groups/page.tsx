@@ -289,7 +289,6 @@ export default function DeanGroupsPage() {
                   <th className="px-5 py-3 font-medium">Members</th>
                   <th className="px-5 py-3 font-medium">Stage</th>
                   <th className="px-5 py-3 font-medium">Adviser</th>
-                  <th className="px-5 py-3 font-medium">Code</th>
                 </tr>
               </thead>
 
@@ -361,17 +360,13 @@ export default function DeanGroupsPage() {
                           ))}
                         </select>
                       </td>
-
-                      <td className="px-5 py-4 text-xs font-semibold text-[#4f8f58]">
-                        {group.group_code}
-                      </td>
                     </tr>
                   );
                 })}
 
                 {filteredGroups.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-[#7b877f]">
+                    <td colSpan={6} className="px-5 py-8 text-center text-sm text-[#7b877f]">
                       {loading
                         ? "Loading groups..."
                         : "No groups found. Groups are created by advisers."}

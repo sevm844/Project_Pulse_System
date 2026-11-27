@@ -260,9 +260,8 @@ export default function DeanProjectProfilePage() {
           </p>
         )}
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {[
-            ["Group Code", group.group_code],
             ["Academic Year", group.school_year || "-"],
             ["Semester", group.semester || "-"],
           ].map(([label, value]) => (

@@ -171,7 +171,6 @@ export default function ProjectPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {[
                 ["Team Name", group.group_name],
-                ["Group Code", group.group_code],
                 ["Adviser", group.adviser?.name || "Not assigned"],
                 ["Stage", stageText],
                 [
