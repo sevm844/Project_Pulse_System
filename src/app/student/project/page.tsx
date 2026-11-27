@@ -43,6 +43,12 @@ export default function ProjectPage() {
   const [saving, setSaving] = useState(false);
   const progress = useProgress().items[0];
 
+  // A link such as /student/project?tab=timeline opens that tab (the dashboard's "See the full timeline").
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (wanted === "overview" || wanted === "timeline" || wanted === "team") queueMicrotask(() => setTab(wanted));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 

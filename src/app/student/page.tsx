@@ -193,7 +193,7 @@ export default function StudentDashboardPage() {
             </div>
           </HeroCard>
 
-          <TimelineStrip groupId={group.group_id} title="Your capstone timeline" moreHref="/student/project" />
+          <TimelineStrip groupId={group.group_id} title="Your capstone timeline" moreHref="/student/project?tab=timeline" />
 
           <DeadlineCalendar />
 
