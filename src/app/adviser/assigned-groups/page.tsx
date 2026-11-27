@@ -367,7 +367,12 @@ export default function AssignedGroupsPage() {
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-base font-bold text-[#123f2b] shadow-[0_16px_40px_rgba(0,0,0,0.25)] transition hover:bg-[#d7f7d8]"
               >
-                <span aria-hidden className="flex h-6 w-6 items-center justify-center rounded-full bg-[#123f2b] text-lg leading-none text-white">+</span>
+                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#123f2b] text-white">
+                  {/* Drawn, not typed: a "+" letter sits a little low and to one side in its circle. */}
+                  <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M6 1.5v9M1.5 6h9" />
+                  </svg>
+                </span>
                 Create Group
               </button>
               <button type="button" onClick={() => setImportOpen(true)} className="text-sm font-semibold text-white/90 underline underline-offset-4 hover:text-white">

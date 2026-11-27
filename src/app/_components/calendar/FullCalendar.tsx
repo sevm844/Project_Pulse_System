@@ -5,7 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CalendarEvent } from "../../_lib/calendarEvents";
 import type { CalendarNote } from "../../_lib/profile";
-import CloseX from "../CloseX";
+
+// One drawn icon size for every button in the calendar's top bar.
+function Icon({ path }: { path: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={path} />
+    </svg>
+  );
+}
 
 // The calendar at full size (the consultant's request, 2026-11-26): month, week and day views ("zoom") so every defense can be seen at a glance, with its time and room.
 // Defenses are placed on a time grid by their start and end; due dates and personal notes sit in an "all day" row. Click a defense or a due date to open it.
@@ -140,6 +148,8 @@ export default function FullCalendar({
             return `${first.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${last.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
           })();
 
+  // The four round-corner icon buttons and the close button are all the same 36 px square with the same drawn 16 px icon (typed < > + − x each sit differently in their box).
+  const iconButtonClass = "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#dfe8df] bg-white text-[#203028] transition hover:bg-[#f3f7f1] disabled:opacity-40";
   const buttonClass = "flex h-9 items-center justify-center rounded-lg border border-[#dfe8df] bg-white px-3 text-xs font-semibold text-[#203028] transition hover:bg-[#f3f7f1] disabled:opacity-40";
 
   return createPortal(
@@ -147,21 +157,21 @@ export default function FullCalendar({
       <div className="flex shrink-0 flex-wrap items-center gap-3 bg-[#154530] px-4 py-3 text-white sm:px-6">
         <h2 className="mr-2 text-base font-semibold">{title}</h2>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => step(-1)} aria-label="Previous" className={buttonClass}>
-            {"<"}
+          <button type="button" onClick={() => step(-1)} aria-label="Previous" className={iconButtonClass}>
+            <Icon path="M10 3.5L5.5 8l4.5 4.5" />
           </button>
           <button type="button" onClick={() => setAnchor(new Date())} className={buttonClass}>
             Today
           </button>
-          <button type="button" onClick={() => step(1)} aria-label="Next" className={buttonClass}>
-            {">"}
+          <button type="button" onClick={() => step(1)} aria-label="Next" className={iconButtonClass}>
+            <Icon path="M6 3.5L10.5 8 6 12.5" />
           </button>
         </div>
         <p className="min-w-0 flex-1 text-base font-semibold sm:text-lg">{heading}</p>
 
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => zoom(-1)} disabled={view === "month"} aria-label="Zoom out" className={buttonClass}>
-            −
+          <button type="button" onClick={() => zoom(-1)} disabled={view === "month"} aria-label="Zoom out" className={iconButtonClass}>
+            <Icon path="M3.5 8h9" />
           </button>
           <div className="flex overflow-hidden rounded-lg border border-[#dfe8df]" role="tablist" aria-label="View">
             {VIEWS.map((item) => (
@@ -177,12 +187,12 @@ export default function FullCalendar({
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => zoom(1)} disabled={view === "day"} aria-label="Zoom in" className={buttonClass}>
-            +
+          <button type="button" onClick={() => zoom(1)} disabled={view === "day"} aria-label="Zoom in" className={iconButtonClass}>
+            <Icon path="M8 3.5v9M3.5 8h9" />
           </button>
-          <span className="ml-1 rounded-lg bg-white text-[#59645d]">
-            <CloseX onClick={onClose} label="Close the calendar" />
-          </span>
+          <button type="button" onClick={onClose} aria-label="Close the calendar" className={`${iconButtonClass} ml-1`}>
+            <Icon path="M4 4l8 8M12 4L4 12" />
+          </button>
         </div>
       </div>
 
