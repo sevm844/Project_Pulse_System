@@ -1,13 +1,13 @@
 import type { JSONContent } from "@tiptap/react";
-import { blocksFromDocument, measurePictures, pictureSources, type ExportOptions } from "./model";
+import { blocksFromDocument, contentWidthOf, fitToWidth, measurePictures, pictureSources, type ExportOptions } from "./model";
 
-export type { ExportOptions, TitlePage } from "./model";
+export type { ExportOptions, PageLayout, TitlePage } from "./model";
 export type ExportFormat = "pdf" | "docx";
 
 // Turn a manuscript into a PDF or Word file and hand it to the browser as a download. Everything happens in the
 // browser from the saved document; nothing is sent anywhere.
 export async function exportManuscript(content: JSONContent, format: ExportFormat, options: ExportOptions): Promise<void> {
-  const blocks = blocksFromDocument(content, await measurePictures(pictureSources(content)));
+  const blocks = fitToWidth(blocksFromDocument(content, await measurePictures(pictureSources(content))), contentWidthOf(options.layout ?? "thesis"));
   const blob = format === "pdf" ? await (await import("./pdf")).buildPdf(blocks, options) : await (await import("./docx")).buildDocx(blocks, options);
 
   saveBlob(blob, `${safeFileName(options.fileName)}.${format}`);

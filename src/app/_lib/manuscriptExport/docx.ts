@@ -1,4 +1,4 @@
-import { BODY_FONT, BODY_SIZE, HEADING_SIZE, decodePicture, headingsOf, placeCells, type Block, type ExportOptions, type Para, type Run, type TableBlock, type TitlePage } from "./model";
+import { BODY_FONT, BODY_SIZE, HEADING_SIZE, decodePicture, headingsOf, marginsOf, placeCells, type Block, type ExportOptions, type Para, type Run, type TableBlock, type TitlePage } from "./model";
 
 // The Word file is written by the `docx` library from the shared model. Fonts keep the names the student chose, headings
 // use Word's own Heading 1-3 styles (so the table of contents and Word's navigation pane work), and lists are real lists.
@@ -7,13 +7,22 @@ type D = typeof import("docx");
 type Child = InstanceType<D["Paragraph"]> | InstanceType<D["Table"]> | InstanceType<D["TableOfContents"]>;
 
 const TWIP = 20; // twips per point
-const PAGE = { width: 12240, height: 15840, margin: 1440 };
-const CONTENT_TWIPS = PAGE.width - 2 * PAGE.margin; // 9360
+const PAGE = { width: 12240, height: 15840 };
 const noHash = (color?: string) => color?.replace("#", "").toUpperCase();
 
 export async function buildDocx(blocks: Block[], options: ExportOptions): Promise<Blob> {
   const d = await import("docx");
   let ordered = 0; // every numbered list starts again at 1
+
+  const thesis = (options.layout ?? "thesis") === "thesis";
+  const margin = (() => {
+    const pt = marginsOf(options.layout ?? "thesis");
+
+    return { top: pt.top * TWIP, right: pt.right * TWIP, bottom: pt.bottom * TWIP, left: pt.left * TWIP };
+  })();
+  const contentTwips = PAGE.width - margin.left - margin.right;
+  // The first body paragraph never gets a page break before it (the contents page already ends).
+  let firstBodyParagraph = true;
 
   const alignment = (align?: string) =>
     align === "center" ? d.AlignmentType.CENTER : align === "right" ? d.AlignmentType.RIGHT : align === "justify" ? d.AlignmentType.JUSTIFIED : d.AlignmentType.LEFT;
@@ -48,10 +57,14 @@ export async function buildDocx(blocks: Block[], options: ExportOptions): Promis
     const size = para.heading ? HEADING_SIZE[para.heading] : BODY_SIZE;
     const after = ctx.inCell || ctx.list ? 0 : Math.round(0.4 * size * TWIP);
     const headingStyle = para.heading ? ([d.HeadingLevel.HEADING_1, d.HeadingLevel.HEADING_2, d.HeadingLevel.HEADING_3] as const)[para.heading - 1] : undefined;
+    const first = firstBodyParagraph;
+    firstBodyParagraph = false;
 
     return new d.Paragraph({
       heading: headingStyle,
       keepNext: para.heading ? true : undefined,
+      // Thesis layout: every chapter (Heading 1) starts on a new page.
+      pageBreakBefore: thesis && para.heading === 1 && !ctx.inCell && !ctx.list && !first ? true : undefined,
       alignment: alignment(para.align),
       spacing: {
         line: Math.round(240 * (para.heading ? 1.15 : para.lineHeight)),
@@ -70,11 +83,11 @@ export async function buildDocx(blocks: Block[], options: ExportOptions): Promis
     const { cols } = placeCells(block);
     if (cols === 0) return null;
 
-    const width = Math.floor(CONTENT_TWIPS / cols);
+    const width = Math.floor(contentTwips / cols);
     const line = { style: d.BorderStyle.SINGLE, size: 4, color: "777777" };
 
     return new d.Table({
-      width: { size: CONTENT_TWIPS, type: d.WidthType.DXA },
+      width: { size: contentTwips, type: d.WidthType.DXA },
       columnWidths: Array(cols).fill(width),
       borders: { top: line, bottom: line, left: line, right: line, insideHorizontal: line, insideVertical: line },
       rows: block.rows.map(
@@ -172,21 +185,24 @@ export async function buildDocx(blocks: Block[], options: ExportOptions): Promis
     return out;
   }
 
-  const pageProperties = { page: { size: { width: PAGE.width, height: PAGE.height }, margin: { top: PAGE.margin, right: PAGE.margin, bottom: PAGE.margin, left: PAGE.margin, footer: 720 } } };
+  // Thesis layout: the front pages (contents) are numbered i, ii... and the body starts again at 1, each in its own section.
+  const pageProperties = (numbering?: { start: number; formatType: (typeof d.NumberFormat)[keyof typeof d.NumberFormat] }) => ({
+    page: { size: { width: PAGE.width, height: PAGE.height }, margin: { ...margin, footer: 720 }, pageNumbers: numbering },
+  });
   const wantsToc = options.toc && headingsOf(blocks).length > 0;
 
-  const body: Child[] = [];
+  const front: Child[] = [];
   if (wantsToc) {
-    body.push(
+    front.push(
       new d.Paragraph({
         alignment: d.AlignmentType.CENTER,
         spacing: { after: 320 },
         children: [new d.TextRun({ text: "TABLE OF CONTENTS", font: BODY_FONT, size: 28, bold: true })],
       }),
       new d.TableOfContents("Table of Contents", { hyperlink: true, headingStyleRange: "1-3" }),
-      new d.Paragraph({ children: [new d.PageBreak()] }),
     );
   }
+  const body: Child[] = [];
   for (const block of blocks) body.push(...toChildren(block));
   if (body.length === 0) body.push(new d.Paragraph({}));
 
@@ -226,10 +242,20 @@ export async function buildDocx(blocks: Block[], options: ExportOptions): Promis
       ],
     },
     numbering: { config: [{ reference: "bullets", levels: levels("bullet") }, { reference: "ordered", levels: levels("decimal") }] },
-    sections: [
-      ...(options.titlePage ? [{ properties: pageProperties, children: titlePage(options.titlePage) }] : []),
-      { properties: pageProperties, footers: options.pageNumbers ? { default: footer } : undefined, children: body },
-    ],
+    sections: thesis
+      ? [
+          ...(options.titlePage ? [{ properties: pageProperties(), children: titlePage(options.titlePage) }] : []),
+          ...(wantsToc ? [{ properties: pageProperties({ start: 1, formatType: d.NumberFormat.LOWER_ROMAN }), footers: options.pageNumbers ? { default: footer } : undefined, children: front }] : []),
+          { properties: pageProperties({ start: 1, formatType: d.NumberFormat.DECIMAL }), footers: options.pageNumbers ? { default: footer } : undefined, children: body },
+        ]
+      : [
+          ...(options.titlePage ? [{ properties: pageProperties(), children: titlePage(options.titlePage) }] : []),
+          {
+            properties: pageProperties(),
+            footers: options.pageNumbers ? { default: footer } : undefined,
+            children: [...front, ...(wantsToc ? [new d.Paragraph({ children: [new d.PageBreak()] })] : []), ...body],
+          },
+        ],
   });
 
   return d.Packer.toBlob(document);

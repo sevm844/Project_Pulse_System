@@ -42,6 +42,36 @@ export const BODY_SIZE = 11;
 export const HEADING_SIZE = { 1: 14, 2: 12, 3: 11 } as const;
 // Letter paper, 1 inch margins: the widest a picture or table can be, in points.
 export const CONTENT_WIDTH = 468;
+
+// The paper layout of the file. "thesis" is the usual capstone / thesis layout: a wider left margin (1.5 inch) for binding and 1 inch on the other sides, each chapter
+// (Heading 1) starting on a new page, and roman numerals (i, ii...) on the front pages (the contents) with the body numbered from 1. "editor" is the older layout:
+// 1 inch all round and one running page number, so it has exactly the pages of the editor. Letter paper in both.
+export type PageLayout = "thesis" | "editor";
+export const PAGE_WIDTH_PT = 612;
+export const marginsOf = (layout: PageLayout) => ({ top: 72, right: 72, bottom: 72, left: layout === "thesis" ? 108 : 72 });
+export const contentWidthOf = (layout: PageLayout) => {
+  const margins = marginsOf(layout);
+
+  return PAGE_WIDTH_PT - margins.left - margins.right;
+};
+
+// Pictures were sized for the editor's page; on a narrower text area they are made to fit (keeping their shape).
+export function fitToWidth(blocks: Block[], width: number): Block[] {
+  return blocks.map((block): Block => {
+    switch (block.t) {
+      case "image":
+        return block.width > width ? { ...block, width, height: (block.height * width) / block.width } : block;
+      case "list":
+        return { ...block, items: block.items.map((item) => fitToWidth(item, width)) };
+      case "quote":
+        return { ...block, blocks: fitToWidth(block.blocks, width) };
+      case "table":
+        return { ...block, rows: block.rows.map((row) => row.map((cell) => ({ ...cell, blocks: fitToWidth(cell.blocks, width) }))) };
+      default:
+        return block;
+    }
+  });
+}
 const MAX_IMAGE_HEIGHT = 600;
 
 type Size = { w: number; h: number };
@@ -235,6 +265,8 @@ export type ExportOptions = {
   toc: boolean;
   pageNumbers: boolean;
   fileName: string; // without the extension
+  // Margins, chapter breaks and page numbering (see PageLayout); "thesis" when not given.
+  layout?: PageLayout;
 };
 
 // Real image sizes, read in the browser.

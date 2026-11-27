@@ -1,4 +1,4 @@
-import { BODY_FONT, BODY_SIZE, HEADING_SIZE, headingsOf, placeCells, type Block, type ExportOptions, type Para, type Run, type TableBlock, type TitlePage } from "./model";
+import { BODY_FONT, BODY_SIZE, HEADING_SIZE, headingsOf, marginsOf, placeCells, plainText, type Block, type ExportOptions, type Para, type Run, type TableBlock, type TitlePage } from "./model";
 
 // The PDF is drawn by pdfmake from the shared model. Arimo, Tinos and Cousine are look-alikes of Arial, Times New Roman
 // and Courier New with the very same letter widths, so lines and pages break where they would in the original fonts.
@@ -177,33 +177,106 @@ export async function loadPdfMake() {
   return pdfMake;
 }
 
+// i, ii, iii... for the front pages.
+function roman(value: number): string {
+  const table: [number, string][] = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let rest = Math.max(1, value);
+  let out = "";
+
+  for (const [amount, letters] of table) {
+    while (rest >= amount) {
+      out += letters;
+      rest -= amount;
+    }
+  }
+
+  return out;
+}
+
+// The table of contents is written by hand (not by pdfmake's own) so the page numbers it shows are the ones printed at the foot of the pages: in the thesis layout the body
+// starts again at 1, but pdfmake can only count real pages.
+function contentsNodes(items: { level: 1 | 2 | 3; text: string; page: number }[]): Node[] {
+  const lines = items.map((item, index): Node => ({
+    // The last line tells which page the contents end on (the body starts on the next one).
+    ...(index === items.length - 1 ? { id: "toc-end" } : {}),
+    columns: [
+      { text: item.level === 1 ? item.text.toUpperCase() : item.text, width: "*", bold: item.level === 1, fontSize: BODY_SIZE },
+      { text: item.page > 0 ? String(item.page) : "", width: 36, alignment: "right", fontSize: BODY_SIZE },
+    ],
+    columnGap: 8,
+    lineHeight: 1.15,
+    margin: [(item.level - 1) * 18, item.level === 1 ? 8 : 2, 0, 2],
+  }));
+
+  return [{ text: "TABLE OF CONTENTS", bold: true, fontSize: 14, alignment: "center", margin: [0, 0, 0, 16] }, ...lines, { text: "", pageBreak: "after" }];
+}
+
 export async function buildPdf(blocks: Block[], options: ExportOptions): Promise<Blob> {
   const pdfMake = await loadPdfMake();
+  const layout = options.layout ?? "thesis";
+  const thesis = layout === "thesis";
+  const margins = marginsOf(layout);
+  const headings = headingsOf(blocks);
+  const wantsToc = options.toc && headings.length > 0;
 
-  const content: Node[] = [];
-  if (options.titlePage) content.push(...titlePage(options.titlePage));
-  if (options.toc && headingsOf(blocks).length > 0) {
-    content.push({ toc: { title: { text: "TABLE OF CONTENTS", bold: true, fontSize: 14, alignment: "center", margin: [0, 0, 0, 16] } } }, { text: "", pageBreak: "after" });
+  // Where things landed on the real pages. The pages are laid out once to find them, and again with the numbers written in (the table of contents has the same height both times).
+  const seen = new Map<string, number>();
+  const bodyStartOf = () => (wantsToc ? (seen.get("toc-end") ?? (options.titlePage ? 2 : 1)) + 1 : options.titlePage ? 2 : 1);
+
+  function definitionFor(): Record<string, unknown> {
+    const bodyStart = bodyStartOf();
+    const shown = (real: number) => (thesis ? real - bodyStart + 1 : real);
+
+    const content: Node[] = [];
+    if (options.titlePage) content.push(...titlePage(options.titlePage));
+    if (wantsToc) {
+      content.push(...contentsNodes(headings.map((heading, index) => ({ ...heading, page: seen.has("h" + index) ? shown(seen.get("h" + index) as number) : 0 }))));
+    }
+
+    // Thesis layout: every chapter (Heading 1) starts on a new page, except the very first thing of the body (the contents already ended the page) or right after a page break.
+    let first = true;
+    let afterBreak = false;
+    let headingIndex = 0;
+    for (const block of blocks) {
+      const node = blockNode(block);
+      if (!node) continue;
+
+      if (block.t === "p" && block.heading && plainText(block)) node.id = "h" + headingIndex++;
+      // (a separate break, so the heading itself is still found on its page)
+      if (thesis && block.t === "p" && block.heading === 1 && !first && !afterBreak) content.push({ text: "", pageBreak: "after" });
+
+      first = false;
+      afterBreak = block.t === "break";
+      content.push(node);
+    }
+    if (content.length === 0) content.push({ text: " " });
+
+    return {
+      info: { title: options.titlePage?.title || options.fileName, author: "Project Pulse" },
+      pageSize: "LETTER",
+      pageMargins: [margins.left, margins.top, margins.right, margins.bottom],
+      defaultStyle: { font: "Arimo", fontSize: BODY_SIZE, lineHeight: 1.5 },
+      content,
+      // The title page carries no number. Thesis layout: the front pages (contents) are i, ii... and the body starts again at 1. Editor layout: the page's real position.
+      footer: options.pageNumbers
+        ? (page: number) => {
+            if (options.titlePage && page === 1) return null;
+
+            const text = !thesis ? String(page) : page < bodyStart ? roman(page - (options.titlePage ? 1 : 0)) : String(page - bodyStart + 1);
+
+            return { text, alignment: "center", fontSize: 10, margin: [margins.left, 22, margins.right, 0] };
+          }
+        : undefined,
+      // Notes the page each heading (and the start of the body) falls on. A heading never stands alone at the bottom of a page.
+      pageBreakBefore: (node: { headlineLevel?: number; id?: string; startPosition?: { pageNumber: number } }, following: unknown[]) => {
+        if (node.id && node.startPosition) seen.set(node.id, node.startPosition.pageNumber);
+
+        return Boolean(node.headlineLevel) && following.length === 0;
+      },
+    };
   }
-  for (const block of blocks) {
-    const node = blockNode(block);
-    if (node) content.push(node);
-  }
-  if (content.length === 0) content.push({ text: " " });
 
-  const definition = {
-    info: { title: options.titlePage?.title || options.fileName, author: "Project Pulse" },
-    pageSize: "LETTER",
-    pageMargins: [72, 72, 72, 72],
-    defaultStyle: { font: "Arimo", fontSize: BODY_SIZE, lineHeight: 1.5 },
-    content,
-    // The title page carries no number; the rest are numbered with the page's real position.
-    footer: options.pageNumbers
-      ? (page: number) => (options.titlePage && page === 1 ? null : { text: String(page), alignment: "center", fontSize: 10, margin: [72, 22, 72, 0] })
-      : undefined,
-    // A heading never stands alone at the bottom of a page.
-    pageBreakBefore: (node: { headlineLevel?: number }, following: unknown[]) => Boolean(node.headlineLevel) && following.length === 0,
-  };
+  if (wantsToc) await pdfMake.createPdf(definitionFor()).getBlob();
 
-  return pdfMake.createPdf(definition).getBlob();
+  return pdfMake.createPdf(definitionFor()).getBlob();
 }

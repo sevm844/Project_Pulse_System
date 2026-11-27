@@ -4,7 +4,7 @@ import type { JSONContent } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { COURSE_NAMES, errorMessage, fetchMyGroup, type ApiGroup } from "../../_lib/groups";
-import { exportManuscript, safeFileName, type ExportFormat, type TitlePage } from "../../_lib/manuscriptExport";
+import { exportManuscript, safeFileName, type ExportFormat, type PageLayout, type TitlePage } from "../../_lib/manuscriptExport";
 
 const DEGREES = COURSE_NAMES;
 
@@ -26,7 +26,7 @@ function defaultTitlePage(group: ApiGroup | null): TitlePage {
   };
 }
 
-type Saved = { titlePage: boolean; toc: boolean; pageNumbers: boolean; fields: TitlePage };
+type Saved = { titlePage: boolean; toc: boolean; pageNumbers: boolean; layout?: PageLayout; fields: TitlePage };
 
 const storageKey = (projectId: number) => `pulse-export-${projectId}`;
 
@@ -53,6 +53,8 @@ export default function ManuscriptExportDialog({
   const [titlePage, setTitlePage] = useState(!startPlain);
   const [toc, setToc] = useState(!startPlain);
   const [pageNumbers, setPageNumbers] = useState(!startPlain);
+  // A plain copy (to check elsewhere) keeps the editor's own pages; the finished document uses the thesis layout.
+  const [layout, setLayout] = useState<PageLayout>(startPlain ? "editor" : "thesis");
   const [fields, setFields] = useState<TitlePage>(() => defaultTitlePage(group ?? null));
   const [ready, setReady] = useState(!loadMyGroup || Boolean(group));
   const [busy, setBusy] = useState<ExportFormat | null>(null);
@@ -78,6 +80,7 @@ export default function ManuscriptExportDialog({
           setTitlePage(saved.titlePage !== false);
           setToc(saved.toc !== false);
           setPageNumbers(saved.pageNumbers !== false);
+          setLayout(saved.layout === "editor" ? "editor" : "thesis");
           base = { ...base, ...saved.fields, authors: Array.isArray(saved.fields.authors) ? saved.fields.authors : base.authors };
         }
       } catch {
@@ -111,7 +114,7 @@ export default function ManuscriptExportDialog({
     try {
       if (!startPlain) {
         try {
-          window.localStorage.setItem(storageKey(projectId), JSON.stringify({ titlePage, toc, pageNumbers, fields } satisfies Saved));
+          window.localStorage.setItem(storageKey(projectId), JSON.stringify({ titlePage, toc, pageNumbers, layout, fields } satisfies Saved));
         } catch {
           // remembering is a convenience only
         }
@@ -122,6 +125,7 @@ export default function ManuscriptExportDialog({
         titlePage: titlePage ? page : null,
         toc,
         pageNumbers,
+        layout,
         fileName: safeFileName(`${fields.title.trim() || group?.group_name || "Manuscript"} - ${label}`),
       });
     } catch (err) {
@@ -177,7 +181,7 @@ export default function ManuscriptExportDialog({
         <div className="flex items-start justify-between gap-4 border-b border-[#edf2ec] px-5 py-4">
           <div>
             <h3 className="text-lg font-semibold text-[#203028]">Download manuscript</h3>
-            <p className="mt-0.5 text-xs text-[#59645d]">{label} as a PDF or a Word file, Letter size with 1 inch margins.</p>
+            <p className="mt-0.5 text-xs text-[#59645d]">{label} as a PDF or a Word file, Letter size. Choose the page layout below.</p>
           </div>
           <button type="button" onClick={onClose} disabled={busy !== null} className="rounded-full border border-[#dfe8df] px-4 py-1.5 text-xs font-semibold hover:bg-[#f3f7f1] disabled:opacity-50">
             Close
@@ -199,6 +203,24 @@ export default function ManuscriptExportDialog({
                   <label key={text as string} className="flex cursor-pointer items-center gap-2 text-sm text-[#203028]">
                     <input type="checkbox" checked={value as boolean} onChange={(event) => (setter as (v: boolean) => void)(event.target.checked)} className="h-4 w-4 accent-[#123f2b]" />
                     {text as string}
+                  </label>
+                ))}
+              </fieldset>
+
+              <fieldset className="space-y-2">
+                <legend className={labelCls}>Page layout</legend>
+                {(
+                  [
+                    ["thesis", "Thesis layout", "1.5 inch left margin for binding and 1 inch elsewhere, each chapter starts on a new page, the contents pages are numbered i, ii and the body starts again at 1."],
+                    ["editor", "Like the editor", "1 inch margins all round and one running page number: the same pages you see while writing."],
+                  ] as const
+                ).map(([value, name, text]) => (
+                  <label key={value} className="flex cursor-pointer items-start gap-2 text-sm text-[#203028]">
+                    <input type="radio" name="export-layout" checked={layout === value} onChange={() => setLayout(value)} className="mt-1 h-4 w-4 accent-[#123f2b]" />
+                    <span>
+                      <span className="font-semibold">{name}</span>
+                      <span className="block text-xs text-[#7b877f]">{text}</span>
+                    </span>
                   </label>
                 ))}
               </fieldset>
