@@ -50,6 +50,8 @@ export type ApiDefense = {
   result: (typeof DEFENSE_RESULTS)[number] | null;
   remarks: string | null;
   panel: ApiPanelMember[];
+  // Alpha, Beta and Omega: no panel and no score; the Dean's signature on the Capstone Monitoring Form is the result.
+  uses_monitoring_form?: boolean;
   // The group's members (Surname, First), leader first. Not sent to students.
   members?: string[];
   // Dean and Adviser only.

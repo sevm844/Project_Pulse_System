@@ -17,7 +17,7 @@ import ZoomBox from "./ZoomBox";
 import Toolbar from "./Toolbar";
 import { createManuscriptExtensions } from "./extensions";
 import { ApiError } from "../../_lib/api";
-import { CollabProvider, cursorColor, type CollabStatus } from "../../_lib/collab";
+import { CollabProvider, cursorColor, type CollabStatus, type ManuscriptLock } from "../../_lib/collab";
 import { getStoredUserName, getStoredUserUid } from "../../_utils/authStorage";
 import { shareManuscriptWithAdvisers } from "../../_lib/advisers";
 import { errorMessage } from "../../_lib/groups";
@@ -39,9 +39,10 @@ export default function ManuscriptEditor() {
   const [provider, setProvider] = useState<CollabProvider | null>(null);
   const [collabStatus, setCollabStatus] = useState<CollabStatus>("connecting");
   const [fatal, setFatal] = useState("");
+  const [lock, setLock] = useState<ManuscriptLock | null>(null);
 
   useEffect(() => {
-    const created = new CollabProvider({ onStatus: setCollabStatus, onFatal: setFatal });
+    const created = new CollabProvider({ onStatus: setCollabStatus, onFatal: setFatal, onLock: setLock });
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProvider(created);
 
@@ -51,10 +52,10 @@ export default function ManuscriptEditor() {
   if (fatal) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">{fatal}</p>;
   if (!provider) return <p className="text-sm text-[#7b877f]">Opening the manuscript...</p>;
 
-  return <ManuscriptEditorBody provider={provider} collabStatus={collabStatus} />;
+  return <ManuscriptEditorBody provider={provider} collabStatus={collabStatus} lock={lock} />;
 }
 
-function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProvider; collabStatus: CollabStatus }) {
+function ManuscriptEditorBody({ provider, collabStatus, lock }: { provider: CollabProvider; collabStatus: CollabStatus; lock: ManuscriptLock | null }) {
   const [state, setState] = useState<SaveState>("loading");
   const [message, setMessage] = useState("");
   const [projectId, setProjectId] = useState<number | null>(null);
@@ -340,9 +341,15 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
     setImporting(false);
   }
 
+  // While editing is closed for a defense the draft cannot be typed in, imported into or replaced; the server refuses it too.
+  useEffect(() => {
+    if (!editor || state === "loading") return;
+    editor.setEditable(!lock, false);
+  }, [editor, lock, state]);
+
   // The whole group's draft is replaced, for everyone editing.
   function useVersionAsDraft(content: JSONContent) {
-    if (!editor) return;
+    if (!editor || lock) return;
     // What is there now is kept in the history before it is replaced.
     void saveManuscriptSnapshot(editor.getJSON(), provider.cursor, true).catch(() => {});
     skipActivity.current = true;
@@ -375,6 +382,13 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
 
   return (
     <div className="space-y-4">
+      {lock && (
+        <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          <p className="font-semibold">Editing is closed</p>
+          <p className="mt-0.5">{lock.message}</p>
+          {lock.defense_date && <p className="mt-0.5 text-xs">It opens again when the Dean records the result of your {lock.defense_type}.</p>}
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-[#203028]">Manuscript</h2>
@@ -522,7 +536,7 @@ function ManuscriptEditorBody({ provider, collabStatus }: { provider: CollabProv
             <span className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                disabled={!editor || state === "loading" || importing}
+                disabled={!editor || state === "loading" || importing || !!lock}
                 onClick={() => wordFileRef.current?.click()}
                 className="rounded-full border border-[#cfe0d3] bg-[#f3f8f4] px-3 py-1 text-xs font-semibold text-[#123f2b] hover:bg-[#e8f1ea] disabled:opacity-50"
               >

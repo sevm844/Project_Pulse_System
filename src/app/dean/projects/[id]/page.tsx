@@ -12,7 +12,7 @@ import GroupTimeline from "../../../_components/health/GroupTimeline";
 import TimelineStrip from "../../../_components/health/TimelineStrip";
 import CertificateList from "../../../_components/certificates/CertificateList";
 import GroupAdvisers from "../../../_components/groups/GroupAdvisers";
-import MonitoringForms from "../../../_components/groups/MonitoringForms";
+import MonitoringForm from "../../../_components/groups/MonitoringForm";
 import ManuscriptHistory from "../../../_components/manuscript/ManuscriptHistory";
 import SimilarityReports from "../../../_components/manuscript/SimilarityReports";
 import { ProgressTracker } from "../../../_components/progress/ProgressViews";
@@ -207,7 +207,7 @@ export default function DeanProjectProfilePage() {
             <h3 className="text-lg font-semibold text-[#203028]">Advisers and Capstone Monitoring Form</h3>
             <GroupAdvisers group={group} canAssign={group.group_status !== "Closed"} onChanged={() => window.location.reload()} />
             <div className="mt-5">
-              <MonitoringForms projectId={group.project.project_id} />
+              <MonitoringForm projectId={group.project.project_id} role="Dean" />
             </div>
           </Card>
         )}

@@ -36,11 +36,13 @@ type Props = {
   peers: SheetRow[]; // the rows being scheduled, so a group is only offered the time that is left
   busy: BusySlot[];
   hours: TimeWindow;
+  /** Alpha, Beta and Omega have no panel: the Dean alone decides on the Capstone Monitoring Form. */
+  noPanel?: boolean;
   onSelectAll?: (checked: boolean) => void;
   onCancel?: (row: SheetRowModel) => void;
 };
 
-export default function SheetGrid({ mode, rows, panelists, issues, serverIssues, dirty, peers, busy, hours, onChange, onMove, onPaste, onFillDown, onSelectAll, onCancel }: Props) {
+export default function SheetGrid({ mode, rows, panelists, issues, serverIssues, dirty, peers, busy, hours, noPanel = false, onChange, onMove, onPaste, onFillDown, onSelectAll, onCancel }: Props) {
   const dates = [...new Set(rows.filter((r) => r.date).map((r) => r.date))].sort();
   const colorOf = (date: string) => DAY_COLORS[dates.indexOf(date) % DAY_COLORS.length];
   const editable = rows.filter((r) => !r.locked);
@@ -87,7 +89,7 @@ export default function SheetGrid({ mode, rows, panelists, issues, serverIssues,
             <th className="w-[7rem] px-2 py-2.5">End</th>
             <th className="w-16 px-2 py-2.5">Length</th>
             <th className="min-w-[9.5rem] px-2 py-2.5">{fillHeader("Venue", "venue")}</th>
-            <th className="min-w-[12rem] px-2 py-2.5">{fillHeader("Panel", "panel")}</th>
+            {!noPanel && <th className="min-w-[12rem] px-2 py-2.5">{fillHeader("Panel", "panel")}</th>}
             <th className="min-w-[13rem] px-2 py-2.5">Notes</th>
             {mode === "scheduled" && <th className="w-20 px-2 py-2.5" />}
           </tr>
@@ -99,7 +101,7 @@ export default function SheetGrid({ mode, rows, panelists, issues, serverIssues,
             const refused = serverIssues[row.key] ?? [];
             const problems = [...conflict, ...refused.filter((m) => !conflict.includes(m))];
             const off = Boolean(row.locked) || (mode === "new" && !row.include);
-            const missing = !off && (!row.date || !row.time || !row.venue.trim() || row.panel.length === 0);
+            const missing = !off && (!row.date || !row.time || !row.venue.trim() || (!noPanel && row.panel.length === 0));
             const changed = dirty?.has(row.key);
 
             return (
@@ -226,9 +228,11 @@ export default function SheetGrid({ mode, rows, panelists, issues, serverIssues,
                   />
                 </td>
 
-                <td className="px-1 py-1.5 align-top">
-                  <PanelCell row={row} panelists={panelists} disabled={off} onChange={(panel, chair) => onChange(row.key, { panel, chair })} />
-                </td>
+                {!noPanel && (
+                  <td className="px-1 py-1.5 align-top">
+                    <PanelCell row={row} panelists={panelists} disabled={off} onChange={(panel, chair) => onChange(row.key, { panel, chair })} />
+                  </td>
+                )}
 
                 <td className="px-2 py-1.5 align-top">
                   <div className="space-y-0.5 pt-1.5">

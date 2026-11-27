@@ -265,21 +265,6 @@ export async function previewSharedForm(formId: number, mimeType: string): Promi
   return URL.createObjectURL(new Blob([await fetchPrivateFile(`/forms/${formId}/file`)], { type: mimeType }));
 }
 
-// A scanned Capstone Monitoring Form opens in a NEW TAB (a PDF or a picture; the type is forced from the file name, never a web page).
-export async function openMonitoringForm(scanId: number, fileName: string | null) {
-  const type = TAB_TYPES[(fileName ?? "").split(".").pop()?.toLowerCase() ?? ""] ?? "application/pdf";
-  const tab = window.open("", "_blank");
-
-  try {
-    const url = URL.createObjectURL(new Blob([await fetchPrivateFile(`/monitoring-forms/${scanId}/file`)], { type }));
-    if (tab) tab.location.href = url;
-    else saveBlob(await fetchPrivateFile(`/monitoring-forms/${scanId}/file`), fileName);
-  } catch (err) {
-    tab?.close();
-    throw err;
-  }
-}
-
 // The exact PDF a version frozen from Google Docs keeps: opened in a NEW TAB (the type is forced to PDF, never a web page).
 export async function openVersionPdf(projectId: number, versionNo: number) {
   const tab = window.open("", "_blank");

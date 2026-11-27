@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { focusId, readFocus, scrollToFocus } from "../../_lib/focus";
 import { describeLastActive } from "./ManuscriptActivity";
 import ManuscriptHistory from "./ManuscriptHistory";
-import MonitoringForms from "../groups/MonitoringForms";
+import MonitoringForm from "../groups/MonitoringForm";
 import RowToggle from "../RowToggle";
 import { apiFetch } from "../../_lib/api";
 import { errorMessage } from "../../_lib/groups";
@@ -76,7 +76,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
     <div className="mx-auto max-w-4xl space-y-5">
       <p className="max-w-2xl text-sm leading-6 text-[#7b877f]">
         {role === "Adviser"
-          ? "The groups you are the Capstone adviser or the Technical adviser of. Open a group to read the versions it submitted, compare two versions, write your comments and recommendations on the exact words, and see its scanned Capstone Monitoring Form. You read and comment only."
+          ? "The groups you are the Capstone adviser or the Technical adviser of. Open a group to read the versions it submitted, compare two versions, write your comments and recommendations on the exact words, and see its Capstone Monitoring Form, where you approve each row at least a day before its defense. Otherwise you read and comment only."
           : role === "Panelist"
             ? "The manuscripts of the groups you will panel. Open a group to read the versions it submitted and compare them before the defense."
             : "The manuscripts submitted by every group and the documents they shared with you. Open a group to read a version or a shared document, compare two versions, and comment on the exact words."}
@@ -206,7 +206,7 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                   {role !== "Panelist" && (
                     <div className="mt-6 border-t border-[#edf2ec] pt-4">
                       <h4 className="mb-2 text-sm font-semibold text-[#203028]">Capstone Monitoring Form</h4>
-                      <MonitoringForms projectId={group.project_id} />
+                      <MonitoringForm projectId={group.project_id} role={role === "Dean" ? "Dean" : "Adviser"} />
                     </div>
                   )}
                 </div>

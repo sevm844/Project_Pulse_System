@@ -15,7 +15,11 @@ type SyncAnswer = {
   log_size: number;
   initialised: boolean;
   online: { user_id: number; name: string; data: string }[];
+  lock?: ManuscriptLock | null;
 };
+
+/** Editing is closed from the day before an Alpha, Beta or Omega defense until its result is recorded. */
+export type ManuscriptLock = { locked: boolean; defense_type: string; defense_date: string; locked_from: string; message: string };
 
 export type CollabStatus = "connecting" | "synced" | "syncing" | "offline" | "stopped";
 
@@ -62,6 +66,8 @@ export class CollabProvider {
       onStatus?: (status: CollabStatus) => void;
       /** Something went wrong that retrying cannot fix (for example the group was closed). */
       onFatal?: (message: string) => void;
+      /** The server says whether editing is closed (null = open). Called after every round trip. */
+      onLock?: (lock: ManuscriptLock | null) => void;
       /** Where the group's collab routes live: the official manuscript by default, or `/my-documents/{id}` for an extra document. */
       basePath?: string;
     } = {},
@@ -252,6 +258,7 @@ export class CollabProvider {
       }, this);
       this.cursor = answer.cursor;
       this.showOthers(answer.online);
+      this.handlers.onLock?.(answer.lock ?? null);
 
       return answer;
     } finally {
@@ -301,6 +308,14 @@ export class CollabProvider {
   }
 
   private fail(err: unknown) {
+    // 423: the manuscript is locked for a defense. Not a connection problem: the editor turns read-only and we keep polling to see when it opens again.
+    if (err instanceof ApiError && err.status === 423) {
+      this.handlers.onLock?.({ locked: true, defense_type: "", defense_date: "", locked_from: "", message: err.message });
+      this.setStatus("synced");
+      if (this.ready) this.schedule(SLOW_MS);
+      return;
+    }
+
     if (err instanceof ApiError && (err.status === 404 || err.status === 403)) {
       this.setStatus("stopped");
       this.handlers.onFatal?.(err.message || "Co-editing is not available for this manuscript.");

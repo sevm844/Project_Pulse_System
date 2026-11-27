@@ -8,7 +8,7 @@ import Card from "../_components/Card";
 import CertificateList from "../../_components/certificates/CertificateList";
 import DescriptionText from "../../_components/groups/DescriptionText";
 import GroupAdvisers from "../../_components/groups/GroupAdvisers";
-import MonitoringForms from "../../_components/groups/MonitoringForms";
+import MonitoringForm from "../../_components/groups/MonitoringForm";
 import GroupTimeline from "../../_components/health/GroupTimeline";
 import { ProgressTracker } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
@@ -207,7 +207,7 @@ export default function ProjectPage() {
           <Card className="p-5">
             <h3 className="text-lg font-semibold text-[#203028]">Capstone Monitoring Form</h3>
             <div className="mt-2">
-              <MonitoringForms projectId={group.project.project_id} canUpload />
+              <MonitoringForm projectId={group.project.project_id} role="Student" />
             </div>
           </Card>
         )}

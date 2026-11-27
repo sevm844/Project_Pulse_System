@@ -151,13 +151,15 @@ export default function ScheduleSheet({ role }: { role: Role }) {
     queueMicrotask(() => void reload(type));
   }, [type, reload]);
 
+  // Alpha, Beta and Omega have no panel and no score: the Dean alone decides, on the Capstone Monitoring Form.
+  const noPanel = type === "Alpha Defense" || type === "Beta Defense" || type === "Omega Defense";
   const rows = tab === "new" ? newRows : schedRows;
   const setRows = tab === "new" ? setNewRows : setSchedRows;
   const active = tab === "new" ? newRows.filter((r) => r.include && !r.locked) : schedRows;
   const dirty = useMemo(() => new Set(schedRows.filter((r) => original[r.key] !== signature(r)).map((r) => r.key)), [schedRows, original]);
 
   const issues = useMemo(() => findIssues(active, busy, today, names), [active, busy, today, names]);
-  const incomplete = active.filter((r) => !r.date || !r.time || !r.venue.trim() || r.panel.length === 0 || r.minutes < 10 || r.minutes > 480);
+  const incomplete = active.filter((r) => !r.date || !r.time || !r.venue.trim() || (!noPanel && r.panel.length === 0) || r.minutes < 10 || r.minutes > 480);
   const clashes = active.filter((r) => issues.has(r.key));
   const refused = active.filter((r) => (serverIssues[r.key] ?? []).length > 0);
   const toSave = tab === "new" ? active : active.filter((r) => dirty.has(r.key));
@@ -298,8 +300,8 @@ export default function ScheduleSheet({ role }: { role: Role }) {
     defense_time: r.time,
     duration_minutes: r.minutes,
     venue: r.venue.trim(),
-    panelist_ids: r.panel,
-    chair_id: r.chair,
+    panelist_ids: noPanel ? [] : r.panel,
+    chair_id: noPanel ? null : r.chair,
   });
 
   async function scheduleAll() {
@@ -482,6 +484,8 @@ export default function ScheduleSheet({ role }: { role: Role }) {
             </div>
           </details>
 
+          {noPanel && <p className="mt-4 text-xs leading-5 text-[#59645d]">The {type} has no panel and no score: only the Dean is there, and his signature on the group&apos;s Capstone Monitoring Form is the result.</p>}
+          {!noPanel && (
           <div className="mt-4">
             <p className="text-xs font-semibold text-[#59645d]">Panel (the same for every group; change a row afterwards if one is different)</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -516,6 +520,7 @@ export default function ScheduleSheet({ role }: { role: Role }) {
               )}
             </div>
           </div>
+          )}
 
           <button type="button" onClick={autoFill} className="mt-5 rounded-lg bg-[#123f2b] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#0f3324]">
             Fill the schedule
@@ -575,6 +580,7 @@ export default function ScheduleSheet({ role }: { role: Role }) {
             peers={active}
             busy={busy}
             hours={hours}
+            noPanel={noPanel}
             onSelectAll={(checked) => {
               touched.current = true;
               setNewRows((current) => current.map((r) => (r.locked ? r : { ...r, include: checked })));

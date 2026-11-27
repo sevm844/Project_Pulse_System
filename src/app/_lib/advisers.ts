@@ -18,8 +18,33 @@ export type AdvisingRow = {
 };
 export type Advising = { waiting: AdvisingRow[]; handed_off: AdvisingRow[]; advising: AdvisingRow[] };
 
-export type MonitoringScan = { scan_id: number; file_name: string; mime_type: string; file_size: number; submitted_by: string; submitted_at: string };
-export type MonitoringSlot = { defense_type: "Alpha" | "Beta" | "Omega"; scans: MonitoringScan[] };
+// The Capstone Monitoring Form: ONE form per group (cover + a row for each of the Alpha, Beta and Omega defenses). The Dean's signature is the only source of Passed.
+export type MonitoringSignature = { name: string | null; role?: string | null; signed_at: string };
+export type MonitoringRow = {
+  defense_type: "Alpha" | "Beta" | "Omega";
+  defense_id: number | null;
+  defense_date: string | null;
+  defense_time: string | null;
+  together_with_omega: boolean;
+  milestones: string | null;
+  adviser_signature: MonitoringSignature | null;
+  adviser_deadline: string | null;
+  dean_signature: MonitoringSignature | null;
+  state: "not_scheduled" | "pending" | "passed" | "failed";
+  dean_na: boolean;
+  students_may_edit: boolean;
+  adviser_may_approve: boolean;
+  dean_may_decide: boolean;
+};
+export type MonitoringFormData = {
+  project_id: number;
+  team_name: string;
+  members: { name: string; email: string }[];
+  project_title: string | null;
+  academic_year: string;
+  rules: string[];
+  rows: MonitoringRow[];
+};
 
 export const fetchAvailableAdvisers = () => apiFetch<NamedAdviser[]>("/advisers/available");
 export const fetchGroupAdvisers = (projectId: number) => apiFetch<GroupAdvisers>(`/projects/${projectId}/advisers`);
@@ -31,14 +56,16 @@ export const setGroupAdvisers = (projectId: number, capstoneId: number, technica
     body: JSON.stringify({ capstone_adviser_id: capstoneId, technical_adviser_id: technicalId }),
   });
 
-export const fetchMonitoringForms = (projectId: number) => apiFetch<MonitoringSlot[]>(`/projects/${projectId}/monitoring-forms`);
+export const fetchMonitoringForm = (projectId: number) => apiFetch<MonitoringFormData>(`/projects/${projectId}/monitoring-form`);
 
-export function uploadMonitoringForm(type: string, file: File) {
-  const body = new FormData();
-  body.append("file", file);
+export const saveMilestones = (type: string, milestones: string) =>
+  apiFetch<MonitoringFormData>(`/my-monitoring-forms/${type}`, { method: "PUT", body: JSON.stringify({ milestones }) });
 
-  return apiFetch<{ scan_id: number }>(`/my-monitoring-forms/${type}`, { method: "POST", body });
-}
+export const approveMonitoringRow = (projectId: number, type: string) =>
+  apiFetch<MonitoringFormData>(`/projects/${projectId}/monitoring-forms/${type}/adviser-approval`, { method: "POST" });
+
+export const signMonitoringRow = (projectId: number, type: string, passed: boolean) =>
+  apiFetch<MonitoringFormData>(`/projects/${projectId}/monitoring-forms/${type}/dean-signature`, { method: "PUT", body: JSON.stringify({ passed }) });
 
 // A student tells the group's Capstone and Technical advisers to read the latest submitted version and comment on it.
 export const shareManuscriptWithAdvisers = () => apiFetch<{ shared: boolean; version_no: number; advisers: number }>("/my-manuscript/share-advisers", { method: "POST" });

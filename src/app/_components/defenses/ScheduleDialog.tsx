@@ -26,6 +26,8 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState(defense ? String(defense.project_id) : "");
   const [type, setType] = useState<string>(defense?.defense_type ?? DEFENSE_TYPES[0]);
+  // Alpha, Beta and Omega have no panel: the Dean alone decides on the Capstone Monitoring Form.
+  const noPanel = type === "Alpha Defense" || type === "Beta Defense" || type === "Omega Defense";
   const [date, setDate] = useState(defense?.defense_date ?? "");
   const [time, setTime] = useState(defense?.defense_time ?? "");
   const [venue, setVenue] = useState(defense?.venue ?? "");
@@ -73,8 +75,8 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
       defense_date: date,
       defense_time: time,
       venue: venue.trim(),
-      panelist_ids: picked,
-      chair_id: chairId,
+      panelist_ids: noPanel ? [] : picked,
+      chair_id: noPanel ? null : chairId,
     };
 
     try {
@@ -97,7 +99,7 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
     }
   }
 
-  const ready = Boolean((defense || projectId) && date && time && venue.trim() && picked.length > 0);
+  const ready = Boolean((defense || projectId) && date && time && venue.trim() && (noPanel || picked.length > 0));
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1f2a24]/40 p-4">
@@ -188,6 +190,9 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
             />
           </label>
 
+          {noPanel ? (
+            <p className="text-xs leading-5 text-[#59645d]">No panel and no score for the {type}: only the Dean is there, and his signature on the Capstone Monitoring Form is the result.</p>
+          ) : (
           <div>
             <p className="text-xs font-semibold text-[#59645d]">Panel</p>
 
@@ -224,6 +229,7 @@ export default function ScheduleDialog({ defense, onClose, onSaved }: Props) {
               </ul>
             )}
           </div>
+          )}
         </div>
 
         {error && (

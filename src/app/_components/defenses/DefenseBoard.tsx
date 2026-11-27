@@ -245,9 +245,9 @@ function DefenseRow({
         <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#203028]">{formatTime(defense.defense_time)}</td>
         <td className="px-4 py-3.5 text-xs text-[#203028]">{defense.venue}</td>
         <td className="px-4 py-3.5 text-xs leading-5 text-[#59645d]">
-          {defense.panel.length === 0 ? <span className="text-[#9aa59e]">No panel yet</span> : defense.panel.map((member) => <p key={member.panelist_id}>{member.name}{member.role === "Chair" ? " (Chair)" : ""}</p>)}
+          {defense.uses_monitoring_form ? <span className="text-[#9aa59e]">The Dean alone</span> : defense.panel.length === 0 ? <span className="text-[#9aa59e]">No panel yet</span> : defense.panel.map((member) => <p key={member.panelist_id}>{member.name}{member.role === "Chair" ? " (Chair)" : ""}</p>)}
         </td>
-        <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#59645d]">{evaluated}/{defense.panel.length}</td>
+        <td className="whitespace-nowrap px-4 py-3.5 text-xs text-[#59645d]">{defense.uses_monitoring_form ? "-" : `${evaluated}/${defense.panel.length}`}</td>
         <td className="px-4 py-3.5 text-xs text-[#59645d]">
           <span className="flex items-center gap-2 whitespace-nowrap">
             <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
@@ -271,6 +271,12 @@ function DefenseRow({
             {` · ${defense.project_title ?? "No title chosen yet"}`}
           </p>
 
+          {defense.uses_monitoring_form ? (
+            <p className="text-xs leading-5 text-[#59645d]">
+              There is no panel and no score for the {defense.defense_type}. The Dean decides on the group&apos;s Capstone Monitoring Form: the adviser approves the row at least a day before, then the Dean&apos;s signature means Passed.{" "}
+              {role === "Dean" && <Link href={`/dean/projects/${defense.project_id}`} className="font-semibold text-[#4f8f58] hover:underline">Open the Monitoring Form</Link>}
+            </p>
+          ) : (
           <div>
             <p className="text-xs font-semibold text-[#203028]">Panel</p>
             <ul className="mt-1.5 space-y-1 text-xs text-[#59645d]">
@@ -285,8 +291,10 @@ function DefenseRow({
               ))}
             </ul>
           </div>
+          )}
 
           {defense.evaluations && defense.evaluations.length > 0 && (
+
             <div>
               <p className="text-xs font-semibold text-[#203028]">
                 Evaluations
@@ -328,12 +336,12 @@ function DefenseRow({
 
           {scheduled && (
             <div className="space-y-3 border-t border-[#edf2ec] pt-4">
-              {!canRecord && (
+              {!canRecord && !defense.uses_monitoring_form && (
                 <p className="text-xs text-[#7b877f]">
                   {isProposal ? "The group's adviser records the Proposal Defense result." : "The Dean records this result once every panelist has evaluated."}
                 </p>
               )}
-              {canRecord && (
+              {canRecord && !defense.uses_monitoring_form && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-[#203028]">Record the result</p>
                   {!everyoneDone && (
@@ -374,7 +382,7 @@ function DefenseRow({
 
               {defense.actionable !== false && <div className="flex gap-4 text-xs font-semibold">
                 <button type="button" onClick={onEdit} className="text-[#4f8f58] hover:underline">
-                  Reschedule or change panel
+                  {defense.uses_monitoring_form ? "Reschedule" : "Reschedule or change panel"}
                 </button>
                 <button type="button" disabled={busy} onClick={cancel} className="text-[#b42318] hover:underline">
                   Cancel defense
