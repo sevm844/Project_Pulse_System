@@ -101,7 +101,7 @@ export default function RubricPaper({
               {section.criteria.map((criterion) => (
                 <li key={criterion.key}>
                   <p className="text-[13px]">{criterion.label}</p>
-                  <div role="radiogroup" aria-label={criterion.label} className="mt-1.5 grid grid-cols-4 gap-1.5">
+                  <div role="radiogroup" aria-label={criterion.label} className="mt-1.5 grid grid-cols-2 gap-1.5 min-[480px]:grid-cols-4">
                     {RATING_LEVELS.map((level) => {
                       const on = ratings[criterion.key] === level.value;
 
@@ -113,7 +113,7 @@ export default function RubricPaper({
                           aria-checked={on}
                           disabled={!editable}
                           onClick={() => choose(criterion.key, level.value)}
-                          className={`rounded-md border px-1 py-2 text-center text-[11px] font-semibold leading-4 ${on ? "border-[#123f2b] bg-[#d7f7d8] text-[#123f2b]" : "border-[#c9d3cc] bg-white text-[#59645d]"} ${editable ? "" : "cursor-default"}`}
+                          className={`flex min-h-12 min-w-0 flex-col items-center justify-center rounded-md border px-1.5 py-2 text-center text-[12px] font-semibold leading-4 ${on ? "border-[#123f2b] bg-[#d7f7d8] text-[#123f2b]" : "border-[#c9d3cc] bg-white text-[#59645d]"} ${editable ? "" : "cursor-default"}`}
                         >
                           {level.label}
                           <span className="block text-[10px] font-normal">({level.value})</span>
