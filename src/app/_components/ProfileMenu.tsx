@@ -57,14 +57,14 @@ export default function ProfileMenu({
       {open && (
         <div role="menu" className="absolute right-0 top-full z-40 mt-2 w-60 overflow-hidden rounded-xl border border-[#dfe8df] bg-white shadow-[0_18px_50px_rgba(32,48,40,0.16)]">
           <div className="border-b border-[#edf2ec] px-4 py-3">
-            <p className="truncate text-sm font-semibold text-[#203028]">{name}</p>
+            <p className="truncate text-[13px] font-semibold text-[#203028]">{name}</p>
             <p className="truncate text-[11px] text-[#7b877f]">{email}</p>
           </div>
           <Link
             href={settingsHref}
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm text-[#203028] transition hover:bg-[#f3f8f4]"
+            className="block px-4 py-2.5 text-[13px] text-[#203028] transition hover:bg-[#f3f8f4]"
           >
             Settings
           </Link>
@@ -75,7 +75,7 @@ export default function ProfileMenu({
               setOpen(false);
               requestLogout();
             }}
-            className="block w-full border-t border-[#edf2ec] px-4 py-2.5 text-left text-sm text-[#59645d] transition hover:bg-[#f3f8f4]"
+            className="block w-full border-t border-[#edf2ec] px-4 py-2.5 text-left text-[13px] text-[#59645d] transition hover:bg-[#f3f8f4]"
           >
             Log out
           </button>

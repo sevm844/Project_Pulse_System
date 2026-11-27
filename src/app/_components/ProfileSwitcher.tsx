@@ -73,8 +73,8 @@ export default function ProfileSwitcher({ name, email, image, roles }: { name: s
 
   const plain = (
     <div className="text-right">
-      <p className="text-xs font-semibold">{name}</p>
-      <p className="text-[10px] text-[#7b877f]">{email}</p>
+      <p className="text-[13px] font-semibold">{name}</p>
+      <p className="text-[11px] text-[#7b877f]">{email}</p>
     </div>
   );
 
@@ -90,8 +90,8 @@ export default function ProfileSwitcher({ name, email, image, roles }: { name: s
         className="flex items-center gap-2 rounded-lg px-2 py-1 text-right transition hover:bg-[#f3f7f1]"
       >
         <span>
-          <span className="block text-xs font-semibold">{name}</span>
-          <span className="block text-[10px] font-semibold text-[#2f8f4e]">{current} profile</span>
+          <span className="block text-[13px] font-semibold">{name}</span>
+          <span className="block text-[11px] font-semibold text-[#2f8f4e]">{current} profile</span>
         </span>
         <span aria-hidden="true" className="text-[10px] text-[#7b877f]">
           ▾
@@ -100,7 +100,7 @@ export default function ProfileSwitcher({ name, email, image, roles }: { name: s
 
       {open && (
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#dfe8df] bg-white p-3 shadow-[0_18px_50px_rgba(31,42,36,0.18)]">
-          <p className="px-2 pb-2 text-xs font-semibold text-[#203028]">Switch profile</p>
+          <p className="px-2 pb-2 text-[13px] font-semibold text-[#203028]">Switch profile</p>
           <p className="px-2 pb-3 text-[11px] leading-4 text-[#7b877f]">You have {roles.length} profiles on this account. Each one opens that role&apos;s own pages.</p>
 
           <ul className="space-y-1">
@@ -123,7 +123,7 @@ export default function ProfileSwitcher({ name, email, image, roles }: { name: s
                       {!image && initialsOf(name)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-[#203028]">{role}</span>
+                      <span className="block truncate text-[13px] font-semibold text-[#203028]">{role}</span>
                       <span className="block truncate text-[11px] text-[#7b877f]">{name}</span>
                     </span>
                     <span className="text-[11px] font-semibold text-[#2f8f4e]">{busy === role ? "Switching..." : isCurrent ? "Current" : ""}</span>

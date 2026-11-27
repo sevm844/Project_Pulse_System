@@ -197,7 +197,7 @@ export default function RoleShell({
                 <button
                   type="button"
                   onClick={() => setFeedbackOpen(true)}
-                  className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-xs font-semibold text-[#59645d] transition hover:bg-[#f3f7f1]"
+                  className="rounded-lg border border-[#dfe8df] bg-white px-3 py-2 text-[13px] font-semibold text-[#59645d] transition hover:bg-[#f3f7f1]"
                 >
                   Feedback
                 </button>
