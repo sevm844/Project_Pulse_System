@@ -10,7 +10,6 @@ import DescriptionText from "../../_components/groups/DescriptionText";
 import GroupAdvisers from "../../_components/groups/GroupAdvisers";
 import MonitoringForms from "../../_components/groups/MonitoringForms";
 import GroupTimeline from "../../_components/health/GroupTimeline";
-import { StageSteps } from "../../_components/ProposalStage";
 import { ProgressTracker } from "../../_components/progress/ProgressViews";
 import { useProgress } from "../../_components/progress/useProgress";
 import {
@@ -115,6 +114,7 @@ export default function ProjectPage() {
   // passed its defenses must not still read "Ready for Proposal Defense".
   const pastProposal = stage === "Ready for Proposal Defense" && Boolean(progress);
   const stageText = pastProposal && progress ? progress.current_phase === "Completed" ? "Every phase is complete" : progress.current_phase : stage;
+  // Every group sees the same full tracker from the start (the proposal stage is written inside its first phase).
 
   return (
     <StudentShell title="My Project">
@@ -155,7 +155,7 @@ export default function ProjectPage() {
             <h3 className="text-lg font-semibold text-[#203028]">Overview</h3>
 
             <div className="mt-4">
-              {pastProposal && progress ? <ProgressTracker progress={progress} /> : <StageSteps stage={stage} />}
+              {progress ? <ProgressTracker progress={progress} /> : <p className="text-sm text-[#7b877f]">Loading your progress...</p>}
             </div>
 
             {group.project?.project_description ? (
