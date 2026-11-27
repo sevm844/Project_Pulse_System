@@ -7,7 +7,7 @@ import DeanShell from "../../_components/DeanShell";
 import Card from "../../_components/Card";
 import CloseGroupDialog from "../../../_components/groups/CloseGroupDialog";
 import RemoveMemberDialog from "../../../_components/groups/RemoveMemberDialog";
-import { GroupStatusNote, StageSteps } from "../../../_components/ProposalStage";
+import { GroupStatusNote } from "../../../_components/ProposalStage";
 import GroupTimeline from "../../../_components/health/GroupTimeline";
 import TimelineStrip from "../../../_components/health/TimelineStrip";
 import CertificateList from "../../../_components/certificates/CertificateList";
@@ -189,11 +189,6 @@ export default function DeanProjectProfilePage() {
             </div>
           </div>
 
-          {project && (
-            <div className="mt-5">
-              <StageSteps stage={project.proposal_stage} />
-            </div>
-          )}
         </Card>
 
         <TimelineStrip groupId={group.group_id} title="Capstone timeline" />

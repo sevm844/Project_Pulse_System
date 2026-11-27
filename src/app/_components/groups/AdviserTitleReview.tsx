@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { GroupStatusNote, StageSteps } from "../ProposalStage";
+import { GroupStatusNote } from "../ProposalStage";
+import { ProgressTracker } from "../progress/ProgressViews";
+import type { ApiProgress } from "../../_lib/progress";
 import { apiFetch } from "../../_lib/api";
 import {
   chooseGroupTitle,
@@ -52,6 +54,8 @@ export default function AdviserTitleReview({
 }) {
   const [items, setItems] = useState<GroupTitles[]>([]);
   const [loading, setLoading] = useState(true);
+  // The same 7-phase tracker every other screen shows, found by group.
+  const [progressOf, setProgressOf] = useState<Record<number, ApiProgress>>({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -81,6 +85,9 @@ export default function AdviserTitleReview({
           group.group_status !== "Closed" &&
           (!wanted || wanted.includes(`${group.course} ${group.section}`)),
       );
+      // A nice-to-have: if it fails the rest of the screen still works.
+      const progress = await apiFetch<ApiProgress[]>("/progress").catch(() => [] as ApiProgress[]);
+      setProgressOf(Object.fromEntries(progress.map((item) => [item.group_id, item])));
       const loaded = await Promise.all(
         groups.map(async (group) => ({
           group,
@@ -242,9 +249,9 @@ export default function AdviserTitleReview({
             {expanded && (
               <div>
 
-              {stage && (
+              {progressOf[group.group_id] && (
                 <div className="mt-4">
-                  <StageSteps stage={stage} />
+                  <ProgressTracker progress={progressOf[group.group_id]} />
                 </div>
               )}
 
