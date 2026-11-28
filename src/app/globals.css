@@ -132,3 +132,13 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;
 }
+
+/* Drop-down lists (the student picker): they float over the form and fade in, so nothing below them jumps. */
+@keyframes picker-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.picker-list { animation: picker-in 140ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .picker-list { animation: none; }
+}

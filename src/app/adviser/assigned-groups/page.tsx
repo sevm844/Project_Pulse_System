@@ -534,7 +534,7 @@ export default function AssignedGroupsPage() {
                     <p role="status" className="h-4 text-xs text-[#7b877f]">{studentsLoading ? "Loading registered students..." : ""}</p>
                     {studentsError && <div role="alert" className="rounded-lg bg-red-50 p-2 text-xs text-red-800"><p>{studentsError}</p><button type="button" onClick={() => setStudentLoadAttempt((attempt) => attempt + 1)} className="mt-2 underline">Retry loading students</button></div>}
                     {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this academic year and semester are excluded.</p>}
-                    <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
+                    <div className="relative text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
                       Add students to the group (1 to {MAX_GROUP_SIZE})
                       <input
                         type="search"
@@ -547,7 +547,7 @@ export default function AssignedGroupsPage() {
                         className="mt-1 w-full rounded-md border border-[#dfe8df] bg-white h-9 px-2.5 py-1.5 text-xs font-normal disabled:bg-gray-50"
                       />
                       {pickerOpen && chosenIds.length < MAX_GROUP_SIZE && (
-                        <ul className="mt-1 max-h-48 overflow-y-auto rounded-md border border-[#dfe8df] bg-white">
+                        <ul className="picker-list absolute left-0 right-0 top-full z-20 mt-1 max-h-48 overflow-y-auto rounded-md border border-[#dfe8df] bg-white shadow-[0_10px_24px_rgba(31,42,36,0.12)]">
                           {pickable.length === 0 && <li className="px-3 py-2 font-normal text-[#7b877f]">No student matches.</li>}
                           {pickable.slice(0, PICKER_LIMIT).map((student) => (
                             <li key={student.uid}>
