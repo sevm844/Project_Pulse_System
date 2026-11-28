@@ -1,17 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { approveMonitoringRow, fetchMonitoringForm, saveMonitoringForm, signMonitoringRow, type MonitoringFormData, type MonitoringRow } from "../../_lib/advisers";
+import { approveMonitoringRow, fetchMonitoringForm, saveMonitoringForm, signMonitoringRow, type MonitoringFormData } from "../../_lib/advisers";
 import { deleteSignature, fetchSignature, saveSignature, signatureDataUrl } from "../../_lib/certificates";
 import { errorMessage } from "../../_lib/groups";
+import { formatTime } from "../../_lib/defenses";
 import { formatDate, formatDateTime } from "../../_lib/requirements";
-
-const STATE_TEXT: Record<MonitoringRow["state"], [string, string]> = {
-  not_scheduled: ["Not scheduled yet", "text-[#7b877f]"],
-  pending: ["Waiting for the defense", "text-amber-700"],
-  passed: ["Passed", "text-[#1f7a4a]"],
-  failed: ["Failed", "text-[#b42318]"],
-};
 
 // Real examples shown in the empty boxes (never a description of what to write).
 const MILESTONE_EXAMPLES: Record<string, string> = {
@@ -207,18 +201,13 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
             </thead>
             <tbody>
               {form.rows.map((row) => {
-                const [stateText, stateColor] = STATE_TEXT[row.state];
                 const draft = drafts[row.defense_type];
                 const editable = role === "Student" && row.students_may_edit;
 
                 return (
                   <tr key={row.defense_type} className="align-top">
                     <td className="w-36 border border-[#cfd9d1] px-2 py-3 text-center">
-                      <p className="font-bold uppercase">{row.defense_type} Defense</p>
-                      <p className="mt-1">{row.defense_date ? formatDate(row.defense_date) : "Date of defense: not set yet"}</p>
-                      {row.defense_time && <p className="text-[#7b877f]">{row.defense_time}</p>}
-                      {row.together_with_omega && <p className="mt-0.5 text-[11px] text-[#7b877f]">Evaluated together with the Omega Defense</p>}
-                      <p className={`mt-2 font-semibold ${stateColor}`}>{stateText}</p>
+                      <p className="font-bold">{row.defense_type.toUpperCase()} Defense</p>
                     </td>
 
                     <td className="border border-[#cfd9d1] px-2 py-2">
@@ -325,6 +314,28 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
           </div>
         )}
       </section>
+
+      {/* For the adviser and the Dean only, outside the form itself: when each defense is and how it stands (the form stays exactly like the paper one). */}
+      {role !== "Student" && (
+        <section className="rounded-xl border border-[#dfe8df] bg-white p-4">
+          <h4 className="text-sm font-semibold text-[#203028]">Defense schedule</h4>
+          <ul className="mt-2 space-y-1 text-xs text-[#59645d]">
+            {form.rows.map((row) => (
+              <li key={row.defense_type} className="flex flex-wrap items-center justify-between gap-x-4">
+                <span className="font-semibold text-[#203028]">{row.defense_type} Defense</span>
+                <span>
+                  {row.defense_date ? `${formatDate(row.defense_date)}, ${formatTime(row.defense_time)}` : "Not scheduled yet"}
+                  {row.together_with_omega ? " (together with the Omega Defense)" : ""}
+                  {" · "}
+                  <span className={row.state === "passed" ? "font-semibold text-[#1f7a4a]" : row.state === "failed" ? "font-semibold text-[#b42318]" : ""}>
+                    {row.state === "passed" ? "Passed" : row.state === "failed" ? "Failed" : row.state === "pending" ? "Scheduled" : "Waiting for the Dean to schedule it"}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

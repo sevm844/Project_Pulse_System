@@ -1,6 +1,6 @@
 import { saveBlob, safeFileName } from "./index";
 import { loadPdfMake } from "./pdf";
-import { formatDate, formatDateTime } from "../requirements";
+import { formatDateTime } from "../requirements";
 import type { MonitoringFormData, MonitoringRow } from "../advisers";
 
 // The Capstone Monitoring Form as one document to print: the cover page (team name, members with e-mail, title) and then the milestones table,
@@ -11,7 +11,6 @@ const LOGO_RATIO = 1231 / 2671;
 const HEADINGS = ["DEFENSE", "MILESTONE TO BE COMPLETED", "Adviser's Signature", "Date Signed", "Dean's Signature", "Date Signed"];
 
 const label = (row: MonitoringRow) => `${row.defense_type.toUpperCase()} Defense`;
-const dateOf = (row: MonitoringRow) => (row.defense_date ? formatDate(row.defense_date) : "");
 // The adviser's cell is the signature picture only; a row without a picture (old data) falls back to the name.
 const adviserText = (row: MonitoringRow) => (row.adviser_signature ? row.adviser_signature.name ?? "" : "");
 const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDateTime(row.adviser_signature.signed_at) : "");
@@ -52,7 +51,7 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
   const body: unknown[][] = [HEADINGS.map((h) => cell(h, { bold: true, alignment: "center" }))];
   for (const row of form.rows) {
     body.push([
-      cell(`${label(row)}\n${dateOf(row) ? `\n${dateOf(row)}${row.together_with_omega ? "\n(with the Omega Defense)" : ""}` : "\n(Date of Defense)"}`, { alignment: "center" }),
+      cell(label(row), { alignment: "center", bold: true }),
       cell(row.milestones ?? "", { margin: [4, 4, 4, 40] }),
       row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
       cell(adviserDate(row), { alignment: "center" }),
@@ -130,7 +129,7 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
       new d.TableRow({
         height: { value: 1700, rule: d.HeightRule.ATLEAST },
         children: [
-          cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] }), ...lines(dateOf(row) ? `${dateOf(row)}${row.together_with_omega ? "\n(with the Omega Defense)" : ""}` : "(Date of Defense)")], widths[0]),
+          cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] })], widths[0]),
           cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ children: [run(line, false, 19)] })), widths[1]),
           cell(await signatureCell(row.adviser_signature?.image, adviserText(row)), widths[2]),
           cell(lines(adviserDate(row)), widths[3]),
