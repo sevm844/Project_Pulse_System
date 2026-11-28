@@ -13,6 +13,13 @@ const STATE_TEXT: Record<MonitoringRow["state"], [string, string]> = {
   failed: ["Failed", "text-[#b42318]"],
 };
 
+// Real examples shown in the empty boxes (never a description of what to write).
+const MILESTONE_EXAMPLES: Record<string, string> = {
+  Alpha: ["Chapters 1 to 3 completed", "System design and database design finished", "Login and registration modules working"].join("\n"),
+  Beta: ["Chapters 4 and 5 drafted", "All main modules completed", "User testing with 10 respondents done"].join("\n"),
+  Omega: ["Final manuscript completed", "System deployed and tested", "User manual and installation guide finished"].join("\n"),
+};
+
 const buttonClass = "rounded-lg border border-[#123f2b] px-3 py-1.5 text-xs font-semibold text-[#123f2b] transition hover:bg-[#edf9e9] disabled:opacity-60";
 const solidClass = "rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0f3324] disabled:opacity-60";
 
@@ -178,11 +185,11 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
 
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4 text-sm text-[#203028]">
         <p className="font-semibold">Team name</p>
-        {coverField("team_name", form.team_name, "Write your team name", 1)}
+        {coverField("team_name", form.team_name, "Team Alon", 1)}
         <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, then the members: name and e-mail address, one per line)</span></p>
-        {coverField("members", form.members, "Leader's name, e-mail address\nMember's name, e-mail address", 4)}
+        {coverField("members", form.members, "Santos, Maria Clara L., 2301234@ub.edu.ph\nReyes, Juan Miguel P., 2305678@ub.edu.ph", 4)}
         <p className="mt-3 font-semibold">Title of capstone project</p>
-        {coverField("project_title", form.project_title, "Write the title of your capstone project", 2)}
+        {coverField("project_title", form.project_title, "Barangay Health Records Management System with Appointment Scheduling", 2)}
       </section>
 
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4">
@@ -223,7 +230,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                             rows={5}
                             maxLength={4000}
                             aria-label={`Milestones for the ${row.defense_type} defense`}
-                            placeholder="List the milestones / deliverables for this stage, as in your Gantt chart."
+                            placeholder={MILESTONE_EXAMPLES[row.defense_type]}
                             className="w-full rounded-lg border border-[#cfd9d1] px-2 py-1.5 text-center text-xs outline-none focus:border-[#4ac214]"
                           />
                         </>
