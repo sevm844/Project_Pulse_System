@@ -150,43 +150,58 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                   </p>
                 </div>
                 <div className="flex items-start gap-4 px-5 py-4">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-[#7b877f]">
+                <dl className="grid min-w-0 flex-1 grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-xs">
+                  <dt className="font-semibold text-[#203028]">Versions</dt>
+                  <dd className="text-[#59645d]">
                     {group.versions === 0
                       ? "No version submitted yet"
                       : `${group.versions} ${group.versions === 1 ? "version" : "versions"} · latest is Version ${group.latest_version_no}, ${formatDateTime(group.latest_saved_at)}`}
-                    {group.latest_decision && (
-                      <span className={`ml-2 font-semibold ${group.latest_decision === "Approved" ? "text-emerald-700" : "text-amber-700"}`}>
-                        {group.latest_decision === "Approved" ? "Latest version approved" : "Changes requested on the latest version"}
-                      </span>
-                    )}
-                    {group.open_comments > 0 && (
-                      <span className="ml-2 font-semibold text-amber-700">
-                        {group.open_comments} open {group.open_comments === 1 ? "comment" : "comments"}
-                      </span>
-                    )}
-                  </p>
-                  {sharedCount(group) > 0 && (
-                    <p className="mt-1 text-xs font-semibold text-[#2f6b3c]">
-                      {sharedCount(group)} shared {sharedCount(group) === 1 ? "document" : "documents"} · latest edited {formatDateTime(group.latest_shared_at ?? null)}
-                    </p>
-                  )}
-                  {(group.members ?? []).length > 0 && (
-                    <p className="mt-1 text-xs text-[#59645d]">
-                      Last typed:{" "}
-                      {(group.members ?? []).map((member, index) => {
-                        const last = describeLastActive(member.last_active_at);
+                  </dd>
 
-                        return (
-                          <span key={member.user_id}>
-                            {index > 0 && " · "}
-                            {member.name} <span className={last.quiet ? "font-semibold text-amber-700" : ""}>{last.text}</span>
-                          </span>
-                        );
-                      })}
-                    </p>
+                  {(group.latest_decision || group.open_comments > 0) && (
+                    <>
+                      <dt className="font-semibold text-[#203028]">Review</dt>
+                      <dd className="space-y-0.5 font-semibold">
+                        {group.latest_decision && (
+                          <p className={group.latest_decision === "Approved" ? "text-emerald-700" : "text-amber-700"}>
+                            {group.latest_decision === "Approved" ? "Latest version approved" : "Changes requested on the latest version"}
+                          </p>
+                        )}
+                        {group.open_comments > 0 && (
+                          <p className="text-amber-700">
+                            {group.open_comments} open {group.open_comments === 1 ? "comment" : "comments"}
+                          </p>
+                        )}
+                      </dd>
+                    </>
                   )}
-                </div>
+
+                  {sharedCount(group) > 0 && (
+                    <>
+                      <dt className="font-semibold text-[#203028]">Shared</dt>
+                      <dd className="font-semibold text-[#2f6b3c]">
+                        {sharedCount(group)} shared {sharedCount(group) === 1 ? "document" : "documents"} · latest edited {formatDateTime(group.latest_shared_at ?? null)}
+                      </dd>
+                    </>
+                  )}
+
+                  {(group.members ?? []).length > 0 && (
+                    <>
+                      <dt className="font-semibold text-[#203028]">Last typed</dt>
+                      <dd className="space-y-0.5 text-[#59645d]">
+                        {(group.members ?? []).map((member) => {
+                          const last = describeLastActive(member.last_active_at);
+
+                          return (
+                            <p key={member.user_id}>
+                              {member.name} <span className={last.quiet ? "font-semibold text-amber-700" : ""}>· {last.text}</span>
+                            </p>
+                          );
+                        })}
+                      </dd>
+                    </>
+                  )}
+                </dl>
                 <div className="pt-0.5">
                   <RowToggle open={open} />
                 </div>
