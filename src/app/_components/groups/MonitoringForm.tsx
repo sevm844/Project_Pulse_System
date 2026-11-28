@@ -15,9 +15,9 @@ const STATE_TEXT: Record<MonitoringRow["state"], [string, string]> = {
 
 // Real examples shown in the empty boxes (never a description of what to write).
 const MILESTONE_EXAMPLES: Record<string, string> = {
-  Alpha: ["Chapters 1 to 3 completed", "System design and database design finished", "Login and registration modules working"].join("\n"),
-  Beta: ["Chapters 4 and 5 drafted", "All main modules completed", "User testing with 10 respondents done"].join("\n"),
-  Omega: ["Final manuscript completed", "System deployed and tested", "User manual and installation guide finished"].join("\n"),
+  Alpha: ["Chapter 1","Chapter 2","Chapter 3"].join(String.fromCharCode(10)),
+  Beta: ["Data Dictionary","Context Diagram","Data Flow Diagram","Entity Relationship Diagram"].join(String.fromCharCode(10)),
+  Omega: ["Front End (90%)","Back End (90%)","Chapter 4","Chapter 5"].join(String.fromCharCode(10)),
 };
 
 const buttonClass = "rounded-lg border border-[#123f2b] px-3 py-1.5 text-xs font-semibold text-[#123f2b] transition hover:bg-[#edf9e9] disabled:opacity-60";
