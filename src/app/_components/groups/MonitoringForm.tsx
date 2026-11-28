@@ -239,7 +239,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                         </p>
                       )}
                     </td>
-                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center">{row.adviser_signature ? formatDate(row.adviser_signature.signed_at) : ""}</td>
+                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center align-middle">{row.adviser_signature ? formatDate(row.adviser_signature.signed_at) : ""}</td>
 
                     <td className="w-44 border border-[#cfd9d1] px-2 py-3 text-center">
                       {row.dean_signature ? (
@@ -274,7 +274,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                         <p className="text-[#7b877f]">{row.adviser_signature ? "After the defense" : ""}</p>
                       )}
                     </td>
-                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center">{row.dean_signature ? formatDate(row.dean_signature.signed_at) : ""}</td>
+                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center align-middle">{row.dean_signature ? formatDate(row.dean_signature.signed_at) : ""}</td>
                   </tr>
                 );
               })}

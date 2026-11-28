@@ -54,9 +54,9 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
       cell(label(row), { alignment: "center", bold: true }),
       cell(row.milestones ?? "", { alignment: "center", margin: [4, 4, 4, 40] }),
       row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
-      cell(adviserDate(row), { alignment: "center" }),
+      cell(adviserDate(row), { alignment: "center", margin: [3, 22, 3, 3] }),
       row.dean_signature?.image ? { image: row.dean_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(deanText(row), { alignment: "center" }),
-      cell(deanDate(row), { alignment: "center" }),
+      cell(deanDate(row), { alignment: "center", margin: [3, 22, 3, 3] }),
     ]);
   }
 
@@ -104,8 +104,8 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
   const para = (children: InstanceType<typeof d.TextRun>[], spacing: { before?: number; after?: number } = {}) => new d.Paragraph({ children, spacing });
   const logo = () => new d.Paragraph({ alignment: d.AlignmentType.RIGHT, spacing: { after: 240 }, children: [new d.ImageRun({ type: "png", data: bytes, transformation: { width: 190, height: Math.round(190 * LOGO_RATIO) } })] });
   const lines = (text: string) => text.split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, 19)] }));
-  const cell = (children: InstanceType<typeof d.Paragraph>[], width: number) =>
-    new d.TableCell({ width: { size: width, type: d.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children });
+  const cell = (children: InstanceType<typeof d.Paragraph>[], width: number, middle = false) =>
+    new d.TableCell({ verticalAlign: middle ? d.VerticalAlign.CENTER : undefined, width: { size: width, type: d.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children });
 
   const none = { style: d.BorderStyle.NONE, size: 0, color: "FFFFFF" };
   // A signature picture in a cell (fitted in a box about 100 x 42 points), or the plain text when there is none.
@@ -132,9 +132,9 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
           cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] })], widths[0]),
           cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, 19)] })), widths[1]),
           cell(await signatureCell(row.adviser_signature?.image, adviserText(row)), widths[2]),
-          cell(lines(adviserDate(row)), widths[3]),
+          cell(lines(adviserDate(row)), widths[3], true),
           cell(await signatureCell(row.dean_signature?.image, deanText(row)), widths[4]),
-          cell(lines(deanDate(row)), widths[5]),
+          cell(lines(deanDate(row)), widths[5], true),
         ],
       }),
   ));
