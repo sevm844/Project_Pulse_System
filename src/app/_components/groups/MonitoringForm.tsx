@@ -235,7 +235,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                         </button>
                       ) : (
                         <p className="text-[#7b877f]">
-                          {row.state === "not_scheduled" ? "After the Dean schedules it" : row.adviser_deadline && row.state === "pending" ? `Not approved yet. Approve by ${formatDate(row.adviser_deadline)}` : "Not approved"}
+                          {row.state === "not_scheduled" ? "Opens after the previous signature" : row.adviser_deadline && row.state === "pending" ? `Not approved yet. Approve by ${formatDate(row.adviser_deadline)}` : "Not approved"}
                         </p>
                       )}
                     </td>
