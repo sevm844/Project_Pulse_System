@@ -221,11 +221,11 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                       )}
                     </td>
 
-                    <td className="w-40 border border-[#cfd9d1] px-2 py-3 text-center">
+                    <td className="w-52 border border-[#cfd9d1] px-2 py-3 text-center">
                       {row.adviser_signature ? (
                         row.adviser_signature.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.adviser_signature.image} alt={`Signature of ${row.adviser_signature.name ?? "the adviser"}`} className="mx-auto h-14 max-w-full object-contain" />
+                          <img src={row.adviser_signature.image} alt={`Signature of ${row.adviser_signature.name ?? "the adviser"}`} className="mx-auto h-20 max-w-full object-contain" />
                         ) : (
                           <p className="font-semibold">{row.adviser_signature.name}</p>
                         )
@@ -239,13 +239,13 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                         </p>
                       )}
                     </td>
-                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center align-middle">{row.adviser_signature ? formatDate(row.adviser_signature.signed_at) : ""}</td>
+                    <td className="w-36 border border-[#cfd9d1] px-2 py-3 text-center align-middle text-sm font-medium">{row.adviser_signature ? formatDate(row.adviser_signature.signed_at) : ""}</td>
 
-                    <td className="w-44 border border-[#cfd9d1] px-2 py-3 text-center">
+                    <td className="w-52 border border-[#cfd9d1] px-2 py-3 text-center">
                       {row.dean_signature ? (
                         row.dean_signature.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.dean_signature.image} alt={`Signature of ${row.dean_signature.name ?? "the Dean"}`} className="mx-auto h-14 max-w-full object-contain" />
+                          <img src={row.dean_signature.image} alt={`Signature of ${row.dean_signature.name ?? "the Dean"}`} className="mx-auto h-20 max-w-full object-contain" />
                         ) : (
                           <p className="text-[#7b877f]">Signed</p>
                         )
@@ -274,7 +274,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                         <p className="text-[#7b877f]">{row.adviser_signature ? "After the defense" : ""}</p>
                       )}
                     </td>
-                    <td className="w-28 border border-[#cfd9d1] px-2 py-3 text-center align-middle">{row.dean_signature ? formatDate(row.dean_signature.signed_at) : ""}</td>
+                    <td className="w-36 border border-[#cfd9d1] px-2 py-3 text-center align-middle text-sm font-medium">{row.dean_signature ? formatDate(row.dean_signature.signed_at) : ""}</td>
                   </tr>
                 );
               })}

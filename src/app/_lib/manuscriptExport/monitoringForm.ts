@@ -53,10 +53,10 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
     body.push([
       cell(label(row), { alignment: "center", bold: true }),
       cell(row.milestones ?? "", { alignment: "center", margin: [4, 4, 4, 40] }),
-      row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
-      cell(adviserDate(row), { alignment: "center", margin: [3, 22, 3, 3] }),
-      row.dean_signature?.image ? { image: row.dean_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(deanText(row), { alignment: "center" }),
-      cell(deanDate(row), { alignment: "center", margin: [3, 22, 3, 3] }),
+      row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [125, 55], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
+      cell(adviserDate(row), { alignment: "center", fontSize: 10.5, margin: [3, 28, 3, 3] }),
+      row.dean_signature?.image ? { image: row.dean_signature.image, fit: [125, 55], alignment: "center", margin: [2, 6, 2, 6] } : cell(deanText(row), { alignment: "center" }),
+      cell(deanDate(row), { alignment: "center", fontSize: 10.5, margin: [3, 28, 3, 3] }),
     ]);
   }
 
@@ -72,7 +72,7 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
       { text: "MONITORING OF CAPSTONE PROJECT MILESTONES", bold: true, alignment: "center", fontSize: 11 },
       { text: `AY ${form.academic_year}`, bold: true, alignment: "center", fontSize: 11, margin: [0, 0, 0, 12] },
       {
-        table: { headerRows: 1, widths: [90, "*", 100, 76, 100, 76], body },
+        table: { headerRows: 1, widths: [80, "*", 125, 88, 125, 88], body },
         layout: { hLineWidth: () => 0.7, vLineWidth: () => 0.7, hLineColor: () => "#222", vLineColor: () => "#222" },
       },
       ...form.rules.map((rule, i) => ({ text: `* ${rule}`, bold: true, margin: [0, i === 0 ? 16 : 4, 0, 0] })),
@@ -103,7 +103,7 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
   const run = (text: string, bold = false, size = 22) => new d.TextRun({ text, bold, font, size });
   const para = (children: InstanceType<typeof d.TextRun>[], spacing: { before?: number; after?: number } = {}) => new d.Paragraph({ children, spacing });
   const logo = () => new d.Paragraph({ alignment: d.AlignmentType.RIGHT, spacing: { after: 240 }, children: [new d.ImageRun({ type: "png", data: bytes, transformation: { width: 190, height: Math.round(190 * LOGO_RATIO) } })] });
-  const lines = (text: string) => text.split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, 19)] }));
+  const lines = (text: string, size = 19) => text.split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, size)] }));
   const cell = (children: InstanceType<typeof d.Paragraph>[], width: number, middle = false) =>
     new d.TableCell({ verticalAlign: middle ? d.VerticalAlign.CENTER : undefined, width: { size: width, type: d.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children });
 
@@ -112,14 +112,14 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
   const signatureCell = async (image: string | null | undefined, fallback: string) => {
     if (!image) return lines(fallback);
     const bitmap = await createImageBitmap(await (await fetch(image)).blob());
-    const scale = Math.min(100 / bitmap.width, 42 / bitmap.height);
+    const scale = Math.min(125 / bitmap.width, 55 / bitmap.height);
     const size = { width: Math.round((bitmap.width * scale * 4) / 3), height: Math.round((bitmap.height * scale * 4) / 3) };
     bitmap.close();
     const data = new Uint8Array(await (await fetch(image)).arrayBuffer());
 
     return [new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [new d.ImageRun({ type: data[0] === 0xff ? "jpg" : "png", data, transformation: size })] })];
   };
-  const widths = [1700, 3400, 2000, 1500, 2000, 1500];
+  const widths = [1600, 3200, 2500, 1800, 2500, 1800];
   const head = new d.TableRow({
     tableHeader: true,
     children: HEADINGS.map((h, i) => cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(h, true, 19)] })], widths[i])),
@@ -132,9 +132,9 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
           cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] })], widths[0]),
           cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, 19)] })), widths[1]),
           cell(await signatureCell(row.adviser_signature?.image, adviserText(row)), widths[2]),
-          cell(lines(adviserDate(row)), widths[3], true),
+          cell(lines(adviserDate(row), 22), widths[3], true),
           cell(await signatureCell(row.dean_signature?.image, deanText(row)), widths[4]),
-          cell(lines(deanDate(row)), widths[5], true),
+          cell(lines(deanDate(row), 22), widths[5], true),
         ],
       }),
   ));
