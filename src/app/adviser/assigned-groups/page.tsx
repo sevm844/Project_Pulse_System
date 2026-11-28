@@ -68,8 +68,6 @@ export default function AssignedGroupsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [leaderUid, setLeaderUid] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
-  const [pickCourse, setPickCourse] = useState("");
-  const [pickSection, setPickSection] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [createMessage, setCreateMessage] = useState("");
   const [createMessageType, setCreateMessageType] = useState<
@@ -107,13 +105,8 @@ export default function AssignedGroupsPage() {
   const pickable = availableStudents.filter(
     (student) =>
       !chosenIds.includes(student.uid) &&
-      (!pickCourse || student.course === pickCourse) &&
-      (!pickSection || student.section === pickSection) &&
       (!searchWords || `${student.fullName} ${student.email} ${student.studentNumber ?? ""}`.toLowerCase().includes(searchWords)),
   );
-  // Only the courses and sections that the waiting students really have (from the imported list).
-  const pickCourses = Array.from(new Set(availableStudents.map((student) => student.course).filter((item): item is string => Boolean(item)))).sort();
-  const pickSections = Array.from(new Set(availableStudents.map((student) => student.section).filter((item): item is string => Boolean(item)))).sort();
 
   // The old leader stays in the group as a member.
   function makeLeader(uid: string) {
@@ -543,18 +536,6 @@ export default function AssignedGroupsPage() {
                     {!studentsLoading && !studentsError && availableStudents.length === 0 && <p className="rounded-lg bg-[#f8faf7] p-2 text-xs text-[#7b877f]">No available students. A student appears here after registering; students already in a group for this academic year and semester are excluded.</p>}
                     <div className="text-xs font-semibold text-[#59645d]" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPickerOpen(false); }}>
                       Add students to the group (1 to {MAX_GROUP_SIZE})
-                      {(pickCourses.length > 0 || pickSections.length > 0) && (
-                        <span className="mt-1 flex gap-2 font-normal">
-                          <select value={pickCourse} onChange={(event) => { setPickCourse(event.target.value); setPickerOpen(true); }} aria-label="Filter by course" className="h-8 flex-1 rounded-md border border-[#dfe8df] bg-white px-2 text-xs">
-                            <option value="">All courses</option>
-                            {pickCourses.map((item) => <option key={item} value={item}>{item}</option>)}
-                          </select>
-                          <select value={pickSection} onChange={(event) => { setPickSection(event.target.value); setPickerOpen(true); }} aria-label="Filter by section" className="h-8 flex-1 rounded-md border border-[#dfe8df] bg-white px-2 text-xs">
-                            <option value="">All sections</option>
-                            {pickSections.map((item) => <option key={item} value={item}>{item}</option>)}
-                          </select>
-                        </span>
-                      )}
                       <input
                         type="search"
                         value={studentSearch}
