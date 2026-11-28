@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import HeroShowcase from "./_components/landing/HeroShowcase";
+import LandingSplash from "./_components/landing/LandingSplash";
 
 const navLinks = [
   ["About", "#about"],
@@ -391,6 +392,7 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-white text-[#171c19]">
+      <LandingSplash />
       <style>{`
         @keyframes landing-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
         .landing-float { animation: landing-float 6s ease-in-out infinite; }
