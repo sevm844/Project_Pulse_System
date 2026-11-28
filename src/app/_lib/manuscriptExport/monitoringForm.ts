@@ -17,6 +17,19 @@ const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDateT
 const deanText = (row: MonitoringRow) => (row.dean_signature ? row.dean_signature.name ?? "" : row.dean_na ? "Not applicable" : row.state === "failed" ? "Not signed (Failed)" : "");
 const deanDate = (row: MonitoringRow) => (row.dean_signature ? formatDateTime(row.dean_signature.signed_at) : "");
 
+// One member per line, "Surname, First M., e-mail": the e-mail goes in the second column, the name in the first.
+function parseMembers(text: string | null): { name: string; email: string }[] {
+  return (text ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const email = line.match(/[^\s,;]+@[^\s,;]+/)?.[0] ?? "";
+
+      return { name: line.replace(email, "").replace(/[\s,;()-]+$/, "").trim(), email };
+    });
+}
+
 async function dataUrl(url: string): Promise<string> {
   const blob = await (await fetch(url)).blob();
 
@@ -55,11 +68,17 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
     content: [
       // Page 1: the cover.
       header,
-      { text: [{ text: "TEAM NAME: ", bold: true }, { text: form.team_name ?? "" }], margin: [0, 24, 0, 18] },
-      { text: "TEAM MEMBERS: (name and email address)", bold: true },
-      { text: "(Leader followed by members)", margin: [0, 0, 0, 4] },
-      ...(form.members ?? "").split("\n").filter((line) => line.trim()).map((line) => ({ text: line, margin: [10, 2, 0, 0] })),
-      { text: [{ text: "TITLE OF CAPSTONE PROJECT: ", bold: true }, { text: form.project_title ?? "" }], margin: [0, 26, 0, 0] },
+      // As on the school's cover: the team name in capitals, the members with their e-mail in a second column, the title in capitals under its heading.
+      { text: "TEAM NAME:", bold: true, margin: [0, 24, 0, 10] },
+      { text: (form.team_name ?? "").toUpperCase(), margin: [0, 0, 0, 28] },
+      { text: "TEAM MEMBERS:", bold: true },
+      {
+        table: { widths: [300, "*"], body: parseMembers(form.members).map((m) => [{ text: m.name }, { text: m.email }]) },
+        layout: "noBorders",
+        margin: [1, 0, 0, 0],
+      },
+      { text: "TITLE OF CAPSTONE PROJECT:", bold: true, margin: [0, 26, 0, 10] },
+      { text: (form.project_title ?? "").toUpperCase() },
       // Page 2: the milestones table.
       { text: "", pageBreak: "after" },
       header,
@@ -87,6 +106,7 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
   const cell = (children: InstanceType<typeof d.Paragraph>[], width: number) =>
     new d.TableCell({ width: { size: width, type: d.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children });
 
+  const none = { style: d.BorderStyle.NONE, size: 0, color: "FFFFFF" };
   const widths = [1700, 3400, 2000, 1500, 2000, 1500];
   const head = new d.TableRow({
     tableHeader: true,
@@ -116,11 +136,17 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
         properties: { page },
         children: [
           logo(),
-          para([run("TEAM NAME: ", true), run(form.team_name ?? "")], { before: 400, after: 300 }),
-          para([run("TEAM MEMBERS: (name and email address)", true)]),
-          para([run("(Leader followed by members)")], { after: 80 }),
-          ...(form.members ?? "").split("\n").filter((line) => line.trim()).map((line) => para([run(line)], { before: 40 })),
-          para([run("TITLE OF CAPSTONE PROJECT: ", true), run(form.project_title ?? "")], { before: 480 }),
+          para([run("TEAM NAME:", true)], { before: 400, after: 160 }),
+          para([run((form.team_name ?? "").toUpperCase())], { after: 400 }),
+          para([run("TEAM MEMBERS:", true)]),
+          new d.Table({
+            width: { size: 9000, type: d.WidthType.DXA },
+            columnWidths: [5400, 3600],
+            borders: { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: none },
+            rows: parseMembers(form.members).map((m) => new d.TableRow({ children: [cell([para([run(m.name)])], 5400), cell([para([run(m.email)])], 3600)] })),
+          }),
+          para([run("TITLE OF CAPSTONE PROJECT:", true)], { before: 480, after: 160 }),
+          para([run((form.project_title ?? "").toUpperCase())]),
         ],
       },
       {
