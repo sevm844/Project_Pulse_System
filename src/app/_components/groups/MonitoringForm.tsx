@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { approveMonitoringRow, fetchMonitoringForm, saveMonitoringForm, signMonitoringRow, type MonitoringFormData, type MonitoringRow } from "../../_lib/advisers";
+import { deleteSignature, fetchSignature, saveSignature, signatureDataUrl } from "../../_lib/certificates";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate, formatDateTime } from "../../_lib/requirements";
 
@@ -20,6 +21,9 @@ const solidClass = "rounded-lg bg-[#123f2b] px-3 py-1.5 text-xs font-semibold te
 // thing that makes a defense Passed; no adviser approval, or no signature, is a failed defense.
 export default function MonitoringForm({ projectId, role }: { projectId: number; role: "Student" | "Adviser" | "Dean" }) {
   const [form, setForm] = useState<MonitoringFormData | null>(null);
+  // The adviser's (or Dean's) own signature picture: approving puts it on the row, with the date and time added by the system.
+  const [signature, setSignature] = useState<string | null>(null);
+  const [signatureLoaded, setSignatureLoaded] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   // What the students typed and have not saved yet: the cover fields and the milestones of each defense.
@@ -39,6 +43,37 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (role === "Student") return;
+    fetchSignature()
+      .then(setSignature)
+      .catch(() => {})
+      .finally(() => setSignatureLoaded(true));
+  }, [role]);
+
+  async function uploadSignature(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError("");
+
+    try {
+      if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) throw new Error("Choose a PNG, JPEG or WebP picture of your signature.");
+      setSignature(await saveSignature(await signatureDataUrl(file)));
+    } catch (err) {
+      setError(errorMessage(err, "The signature could not be saved."));
+    }
+  }
+
+  async function removeSignature() {
+    try {
+      await deleteSignature();
+      setSignature(null);
+    } catch (err) {
+      setError(errorMessage(err, "The signature could not be removed."));
+    }
+  }
 
   async function run(key: string, action: () => Promise<MonitoringFormData>) {
     setBusy(key);
@@ -115,6 +150,32 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
 
       {error && <p role="alert" className="text-xs font-semibold text-[#b42318]">{error}</p>}
 
+      {role !== "Student" && signatureLoaded && (
+        <section className="rounded-xl border border-[#dfe8df] bg-white p-4">
+          <h4 className="text-sm font-semibold text-[#203028]">Your signature</h4>
+          <p className="mt-1 text-xs leading-5 text-[#7b877f]">
+            {role === "Adviser" ? "Upload a picture of your signature once. When you approve a row, this picture is placed on it, with the date and time added by the system. " : "Upload a picture of your signature once. When you sign a row, it is placed on it with the date and time. "}
+            Supported file types: PNG, JPEG or WebP picture.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {signature && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={signature} alt="Your signature" className="h-12 max-w-[10rem] rounded border border-[#edf2ec] bg-white object-contain p-1" />
+            )}
+            <label className="cursor-pointer rounded-lg border border-[#dfe8df] bg-white px-4 py-2 text-xs font-semibold hover:bg-[#f3f7f1]">
+              {signature ? "Change signature" : "Upload signature"}
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void uploadSignature(event)} className="hidden" />
+            </label>
+            {signature && (
+              <button type="button" onClick={() => void removeSignature()} className="text-xs font-semibold text-[#b42318] hover:underline">
+                Remove
+              </button>
+            )}
+            {!signature && <span className="text-xs text-amber-700">Upload your signature before you {role === "Adviser" ? "approve" : "sign"} a row.</span>}
+          </div>
+        </section>
+      )}
+
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4 text-sm text-[#203028]">
         <p className="font-semibold">Team name</p>
         {coverField("team_name", form.team_name, "Write your team name", 1)}
@@ -175,12 +236,14 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
 
                     <td className="w-40 border border-[#cfd9d1] px-2 py-3 text-center">
                       {row.adviser_signature ? (
-                        <>
+                        row.adviser_signature.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={row.adviser_signature.image} alt={`Signature of ${row.adviser_signature.name ?? "the adviser"}`} className="mx-auto h-14 max-w-full object-contain" />
+                        ) : (
                           <p className="font-semibold">{row.adviser_signature.name}</p>
-                          <p className="text-[#7b877f]">{row.adviser_signature.role}</p>
-                        </>
+                        )
                       ) : role === "Adviser" && row.adviser_may_approve ? (
-                        <button type="button" disabled={busy !== ""} onClick={() => void run(`approve:${row.defense_type}`, () => approveMonitoringRow(projectId, row.defense_type))} className={solidClass}>
+                        <button type="button" disabled={busy !== "" || !signature} title={signature ? undefined : "Upload your signature first"} onClick={() => void run(`approve:${row.defense_type}`, () => approveMonitoringRow(projectId, row.defense_type))} className={solidClass}>
                           {busy === `approve:${row.defense_type}` ? "Approving..." : "Approve"}
                         </button>
                       ) : (
@@ -193,7 +256,12 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
 
                     <td className="w-44 border border-[#cfd9d1] px-2 py-3 text-center">
                       {row.dean_signature ? (
-                        <p className="font-semibold">{row.dean_signature.name}</p>
+                        row.dean_signature.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={row.dean_signature.image} alt={`Signature of ${row.dean_signature.name ?? "the Dean"}`} className="mx-auto h-14 max-w-full object-contain" />
+                        ) : (
+                          <p className="text-[#7b877f]">Signed</p>
+                        )
                       ) : role === "Dean" && row.dean_may_decide ? (
                         confirming?.type === row.defense_type ? (
                           <div className="space-y-1.5">
@@ -207,7 +275,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                           </div>
                         ) : (
                           <div className="flex flex-col gap-1.5">
-                            <button type="button" onClick={() => setConfirming({ type: row.defense_type, passed: true })} className={solidClass}>Sign (Passed)</button>
+                            <button type="button" disabled={!signature} title={signature ? undefined : "Upload your signature first"} onClick={() => setConfirming({ type: row.defense_type, passed: true })} className={solidClass}>Sign (Passed)</button>
                             <button type="button" onClick={() => setConfirming({ type: row.defense_type, passed: false })} className={buttonClass}>No signature (Failed)</button>
                           </div>
                         )

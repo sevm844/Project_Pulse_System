@@ -12,9 +12,11 @@ const HEADINGS = ["DEFENSE", "MILESTONE TO BE COMPLETED", "Adviser's Signature",
 
 const label = (row: MonitoringRow) => `${row.defense_type.toUpperCase()} Defense`;
 const dateOf = (row: MonitoringRow) => (row.defense_date ? formatDate(row.defense_date) : "");
-const adviserText = (row: MonitoringRow) => (row.adviser_signature ? `${row.adviser_signature.name ?? ""}\n(${row.adviser_signature.role ?? "Adviser"})` : "");
+// The adviser's cell is the signature picture only; a row without a picture (old data) falls back to the name.
+const adviserText = (row: MonitoringRow) => (row.adviser_signature ? row.adviser_signature.name ?? "" : "");
 const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDateTime(row.adviser_signature.signed_at) : "");
-const deanText = (row: MonitoringRow) => (row.dean_signature ? row.dean_signature.name ?? "" : row.dean_na ? "Not applicable" : row.state === "failed" ? "Not signed (Failed)" : "");
+// The Dean's cell is his signature picture only (no name); a row signed before pictures existed just says "Signed".
+const deanText = (row: MonitoringRow) => (row.dean_signature ? "Signed" : row.dean_na ? "Not applicable" : row.state === "failed" ? "Not signed (Failed)" : "");
 const deanDate = (row: MonitoringRow) => (row.dean_signature ? formatDateTime(row.dean_signature.signed_at) : "");
 
 // One member per line, "Surname, First M., e-mail": the e-mail goes in the second column, the name in the first.
@@ -52,9 +54,9 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
     body.push([
       cell(`${label(row)}\n${dateOf(row) ? `\n${dateOf(row)}${row.together_with_omega ? "\n(with the Omega Defense)" : ""}` : "\n(Date of Defense)"}`, { alignment: "center" }),
       cell(row.milestones ?? "", { margin: [4, 4, 4, 40] }),
-      cell(adviserText(row), { alignment: "center" }),
+      row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
       cell(adviserDate(row), { alignment: "center" }),
-      cell(deanText(row), { alignment: "center" }),
+      row.dean_signature?.image ? { image: row.dean_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(deanText(row), { alignment: "center" }),
       cell(deanDate(row), { alignment: "center" }),
     ]);
   }
@@ -107,25 +109,36 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
     new d.TableCell({ width: { size: width, type: d.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children });
 
   const none = { style: d.BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  // A signature picture in a cell (fitted in a box about 100 x 42 points), or the plain text when there is none.
+  const signatureCell = async (image: string | null | undefined, fallback: string) => {
+    if (!image) return lines(fallback);
+    const bitmap = await createImageBitmap(await (await fetch(image)).blob());
+    const scale = Math.min(100 / bitmap.width, 42 / bitmap.height);
+    const size = { width: Math.round((bitmap.width * scale * 4) / 3), height: Math.round((bitmap.height * scale * 4) / 3) };
+    bitmap.close();
+    const data = new Uint8Array(await (await fetch(image)).arrayBuffer());
+
+    return [new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [new d.ImageRun({ type: data[0] === 0xff ? "jpg" : "png", data, transformation: size })] })];
+  };
   const widths = [1700, 3400, 2000, 1500, 2000, 1500];
   const head = new d.TableRow({
     tableHeader: true,
     children: HEADINGS.map((h, i) => cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(h, true, 19)] })], widths[i])),
   });
-  const rows = form.rows.map(
-    (row) =>
+  const rows = await Promise.all(form.rows.map(
+    async (row) =>
       new d.TableRow({
         height: { value: 1700, rule: d.HeightRule.ATLEAST },
         children: [
           cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] }), ...lines(dateOf(row) ? `${dateOf(row)}${row.together_with_omega ? "\n(with the Omega Defense)" : ""}` : "(Date of Defense)")], widths[0]),
           cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ children: [run(line, false, 19)] })), widths[1]),
-          cell(lines(adviserText(row)), widths[2]),
+          cell(await signatureCell(row.adviser_signature?.image, adviserText(row)), widths[2]),
           cell(lines(adviserDate(row)), widths[3]),
-          cell(lines(deanText(row)), widths[4]),
+          cell(await signatureCell(row.dean_signature?.image, deanText(row)), widths[4]),
           cell(lines(deanDate(row)), widths[5]),
         ],
       }),
-  );
+  ));
 
   const page = { size: { width: 12240, height: 15840, orientation: d.PageOrientation.LANDSCAPE }, margin: { top: 800, right: 1080, bottom: 800, left: 1080 } };
   const doc = new d.Document({

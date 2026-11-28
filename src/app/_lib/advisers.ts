@@ -19,7 +19,7 @@ export type AdvisingRow = {
 export type Advising = { waiting: AdvisingRow[]; handed_off: AdvisingRow[]; advising: AdvisingRow[] };
 
 // The Capstone Monitoring Form: ONE form per group (cover + a row for each of the Alpha, Beta and Omega defenses). The Dean's signature is the only source of Passed.
-export type MonitoringSignature = { name: string | null; role?: string | null; signed_at: string };
+export type MonitoringSignature = { name: string | null; role?: string | null; image?: string | null; signed_at: string };
 export type MonitoringRow = {
   defense_type: "Alpha" | "Beta" | "Omega";
   defense_id: number | null;
