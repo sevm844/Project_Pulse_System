@@ -1,6 +1,6 @@
 import { saveBlob, safeFileName } from "./index";
 import { loadPdfMake } from "./pdf";
-import { formatDateTime } from "../requirements";
+import { formatDate } from "../requirements";
 import type { MonitoringFormData, MonitoringRow } from "../advisers";
 
 // The Capstone Monitoring Form as one document to print: the cover page (team name, members with e-mail, title) and then the milestones table,
@@ -13,10 +13,10 @@ const HEADINGS = ["DEFENSE", "MILESTONE TO BE COMPLETED", "Adviser's Signature",
 const label = (row: MonitoringRow) => `${row.defense_type.toUpperCase()} Defense`;
 // The adviser's cell is the signature picture only; a row without a picture (old data) falls back to the name.
 const adviserText = (row: MonitoringRow) => (row.adviser_signature ? row.adviser_signature.name ?? "" : "");
-const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDateTime(row.adviser_signature.signed_at) : "");
+const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDate(row.adviser_signature.signed_at) : "");
 // The Dean's cell is his signature picture only (no name); a row signed before pictures existed just says "Signed".
 const deanText = (row: MonitoringRow) => (row.dean_signature ? "Signed" : row.dean_na ? "Not applicable" : row.state === "failed" ? "Not signed (Failed)" : "");
-const deanDate = (row: MonitoringRow) => (row.dean_signature ? formatDateTime(row.dean_signature.signed_at) : "");
+const deanDate = (row: MonitoringRow) => (row.dean_signature ? formatDate(row.dean_signature.signed_at) : "");
 
 // One member per line, "Surname, First M., e-mail": the e-mail goes in the second column, the name in the first.
 function parseMembers(text: string | null): { name: string; email: string }[] {
