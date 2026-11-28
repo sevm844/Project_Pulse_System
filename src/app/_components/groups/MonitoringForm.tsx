@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { approveMonitoringRow, fetchMonitoringForm, saveMilestones, signMonitoringRow, type MonitoringFormData, type MonitoringRow } from "../../_lib/advisers";
+import { approveMonitoringRow, fetchMonitoringForm, saveMonitoringForm, signMonitoringRow, type MonitoringFormData, type MonitoringRow } from "../../_lib/advisers";
 import { errorMessage } from "../../_lib/groups";
 import { formatDate, formatDateTime } from "../../_lib/requirements";
 
@@ -22,6 +22,8 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
   const [form, setForm] = useState<MonitoringFormData | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  // What the students typed and have not saved yet: the cover fields and the milestones of each defense.
+  const [cover, setCover] = useState({ team_name: "", members: "", project_title: "" });
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [confirming, setConfirming] = useState<{ type: string; passed: boolean } | null>(null);
 
@@ -44,12 +46,10 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
 
     try {
       setForm(await action());
-      setDrafts((current) => {
-        const next = { ...current };
-        delete next[key.split(":")[1] ?? ""];
-
-        return next;
-      });
+      if (key === "save") {
+        setDrafts({});
+        setCover({ team_name: "", members: "", project_title: "" });
+      }
     } catch (err) {
       setError(errorMessage(err, "That did not work."));
     } finally {
@@ -73,8 +73,28 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
     }
   }
 
+  const typed = Object.values(drafts).some((text) => text.trim()) || Object.values(cover).some((text) => text.trim());
+
   if (!form) {
     return error ? <p role="alert" className="text-xs font-semibold text-[#b42318]">{error}</p> : <p className="text-sm text-[#7b877f]">Loading...</p>;
+  }
+
+  // A cover place the students have already saved is plain text; an empty one is a box to write in (students only). Saved text cannot be changed.
+  function coverField(field: "team_name" | "members" | "project_title", saved: string | null, placeholder: string, rows: number) {
+    if (saved) return <p className="mt-1 whitespace-pre-wrap">{saved}</p>;
+    if (role !== "Student") return <p className="mt-1 text-[#7b877f]">Not written by the students yet.</p>;
+
+    return (
+      <textarea
+        value={cover[field]}
+        onChange={(event) => setCover((current) => ({ ...current, [field]: event.target.value }))}
+        rows={rows}
+        maxLength={field === "members" ? 2000 : 500}
+        aria-label={field}
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-lg border border-[#cfd9d1] px-2 py-1.5 text-sm outline-none focus:border-[#4ac214]"
+      />
+    );
   }
 
   return (
@@ -96,14 +116,12 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
       {error && <p role="alert" className="text-xs font-semibold text-[#b42318]">{error}</p>}
 
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4 text-sm text-[#203028]">
-        <p><span className="font-semibold">Team name: </span>{form.team_name}</p>
-        <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, with e-mail address)</span></p>
-        <ul className="mt-1 space-y-0.5">
-          {form.members.map((m) => (
-            <li key={m.email}>{m.name} <span className="text-[#7b877f]">· {m.email}</span></li>
-          ))}
-        </ul>
-        <p className="mt-3"><span className="font-semibold">Title of capstone project: </span>{form.project_title ?? <span className="text-[#7b877f]">not chosen yet</span>}</p>
+        <p className="font-semibold">Team name</p>
+        {coverField("team_name", form.team_name, "Write your team name", 1)}
+        <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, then the members: name and e-mail address, one per line)</span></p>
+        {coverField("members", form.members, "Leader's name, e-mail address\nMember's name, e-mail address", 4)}
+        <p className="mt-3 font-semibold">Title of capstone project</p>
+        {coverField("project_title", form.project_title, "Write the title of your capstone project", 2)}
       </section>
 
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4">
@@ -122,7 +140,6 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
             <tbody>
               {form.rows.map((row) => {
                 const [stateText, stateColor] = STATE_TEXT[row.state];
-                const key = `milestones:${row.defense_type}`;
                 const draft = drafts[row.defense_type];
                 const editable = role === "Student" && row.students_may_edit;
 
@@ -140,25 +157,17 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
                       {editable ? (
                         <>
                           <textarea
-                            value={draft ?? row.milestones ?? ""}
+                            value={draft ?? ""}
                             onChange={(event) => setDrafts((current) => ({ ...current, [row.defense_type]: event.target.value }))}
                             rows={5}
                             maxLength={4000}
                             aria-label={`Milestones for the ${row.defense_type} defense`}
                             placeholder="List the milestones / deliverables for this stage, as in your Gantt chart."
-                            className="w-full rounded-lg border border-[#cfd9d1] px-2 py-1.5 text-xs outline-none focus:border-[#4ac214]"
+                            className="w-full rounded-lg border border-[#cfd9d1] px-2 py-1.5 text-center text-xs outline-none focus:border-[#4ac214]"
                           />
-                          <button
-                            type="button"
-                            disabled={busy !== "" || draft === undefined}
-                            onClick={() => void run(key, () => saveMilestones(row.defense_type, draft ?? ""))}
-                            className={`${buttonClass} mt-1.5`}
-                          >
-                            {busy === key ? "Saving..." : "Save"}
-                          </button>
                         </>
                       ) : row.milestones ? (
-                        <p className="whitespace-pre-wrap">{row.milestones}</p>
+                        <p className="whitespace-pre-wrap text-center">{row.milestones}</p>
                       ) : (
                         <p className="text-[#7b877f]">{role === "Student" ? "Locked." : "Nothing written yet."}</p>
                       )}
@@ -223,6 +232,23 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
             <p key={rule}>* {rule}</p>
           ))}
         </div>
+
+        {role === "Student" && (
+          <div className="mt-4 flex items-center justify-end gap-3">
+            <p className="text-[11px] text-[#7b877f]">Once you save, what you wrote cannot be changed.</p>
+            <button
+              type="button"
+              disabled={busy !== "" || !typed}
+              onClick={() => {
+                if (!window.confirm("Save the Capstone Monitoring Form? What you wrote cannot be changed after this.")) return;
+                void run("save", () => saveMonitoringForm({ team_name: cover.team_name, members: cover.members, project_title: cover.project_title, milestones: drafts }));
+              }}
+              className={solidClass}
+            >
+              {busy === "save" ? "Saving..." : "Save"}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

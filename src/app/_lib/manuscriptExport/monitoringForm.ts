@@ -16,7 +16,6 @@ const adviserText = (row: MonitoringRow) => (row.adviser_signature ? `${row.advi
 const adviserDate = (row: MonitoringRow) => (row.adviser_signature ? formatDateTime(row.adviser_signature.signed_at) : "");
 const deanText = (row: MonitoringRow) => (row.dean_signature ? row.dean_signature.name ?? "" : row.dean_na ? "Not applicable" : row.state === "failed" ? "Not signed (Failed)" : "");
 const deanDate = (row: MonitoringRow) => (row.dean_signature ? formatDateTime(row.dean_signature.signed_at) : "");
-const memberLine = (m: { name: string; email: string }) => `${m.name}  (${m.email})`;
 
 async function dataUrl(url: string): Promise<string> {
   const blob = await (await fetch(url)).blob();
@@ -48,7 +47,7 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
   }
 
   const definition = {
-    info: { title: `Capstone Monitoring Form ${form.team_name}`, author: "Project Pulse" },
+    info: { title: `Capstone Monitoring Form ${form.team_name ?? ""}`, author: "Project Pulse" },
     pageSize: "LETTER",
     pageOrientation: "landscape",
     pageMargins: [54, 40, 54, 40],
@@ -56,10 +55,10 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
     content: [
       // Page 1: the cover.
       header,
-      { text: [{ text: "TEAM NAME: ", bold: true }, { text: form.team_name }], margin: [0, 24, 0, 18] },
+      { text: [{ text: "TEAM NAME: ", bold: true }, { text: form.team_name ?? "" }], margin: [0, 24, 0, 18] },
       { text: "TEAM MEMBERS: (name and email address)", bold: true },
       { text: "(Leader followed by members)", margin: [0, 0, 0, 4] },
-      ...form.members.map((m) => ({ text: memberLine(m), margin: [10, 2, 0, 0] })),
+      ...(form.members ?? "").split("\n").filter((line) => line.trim()).map((line) => ({ text: line, margin: [10, 2, 0, 0] })),
       { text: [{ text: "TITLE OF CAPSTONE PROJECT: ", bold: true }, { text: form.project_title ?? "" }], margin: [0, 26, 0, 0] },
       // Page 2: the milestones table.
       { text: "", pageBreak: "after" },
@@ -111,16 +110,16 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
   const page = { size: { width: 12240, height: 15840, orientation: d.PageOrientation.LANDSCAPE }, margin: { top: 800, right: 1080, bottom: 800, left: 1080 } };
   const doc = new d.Document({
     creator: "Project Pulse",
-    title: `Capstone Monitoring Form ${form.team_name}`,
+    title: `Capstone Monitoring Form ${form.team_name ?? ""}`,
     sections: [
       {
         properties: { page },
         children: [
           logo(),
-          para([run("TEAM NAME: ", true), run(form.team_name)], { before: 400, after: 300 }),
+          para([run("TEAM NAME: ", true), run(form.team_name ?? "")], { before: 400, after: 300 }),
           para([run("TEAM MEMBERS: (name and email address)", true)]),
           para([run("(Leader followed by members)")], { after: 80 }),
-          ...form.members.map((m) => para([run(memberLine(m))], { before: 40 })),
+          ...(form.members ?? "").split("\n").filter((line) => line.trim()).map((line) => para([run(line)], { before: 40 })),
           para([run("TITLE OF CAPSTONE PROJECT: ", true), run(form.project_title ?? "")], { before: 480 }),
         ],
       },
@@ -142,5 +141,5 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
 
 export async function downloadMonitoringForm(form: MonitoringFormData, format: "pdf" | "docx") {
   const blob = format === "pdf" ? await buildMonitoringFormPdf(form) : await buildMonitoringFormDocx(form);
-  saveBlob(blob, `${safeFileName(`Capstone Monitoring Form ${form.team_name}`)}.${format}`);
+  saveBlob(blob, `${safeFileName(`Capstone Monitoring Form ${form.team_name ?? ""}`)}.${format}`);
 }

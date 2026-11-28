@@ -38,8 +38,9 @@ export type MonitoringRow = {
 };
 export type MonitoringFormData = {
   project_id: number;
-  team_name: string;
-  members: { name: string; email: string }[];
+  // The cover is typed by the students (null = not written yet).
+  team_name: string | null;
+  members: string | null;
   project_title: string | null;
   academic_year: string;
   rules: string[];
@@ -58,8 +59,10 @@ export const setGroupAdvisers = (projectId: number, capstoneId: number, technica
 
 export const fetchMonitoringForm = (projectId: number) => apiFetch<MonitoringFormData>(`/projects/${projectId}/monitoring-form`);
 
-export const saveMilestones = (type: string, milestones: string) =>
-  apiFetch<MonitoringFormData>(`/my-monitoring-forms/${type}`, { method: "PUT", body: JSON.stringify({ milestones }) });
+export type MonitoringDraft = { team_name: string; members: string; project_title: string; milestones: Record<string, string> };
+
+// One Save for the whole form. What was saved once cannot be changed again.
+export const saveMonitoringForm = (draft: MonitoringDraft) => apiFetch<MonitoringFormData>("/my-monitoring-form", { method: "PUT", body: JSON.stringify(draft) });
 
 export const approveMonitoringRow = (projectId: number, type: string) =>
   apiFetch<MonitoringFormData>(`/projects/${projectId}/monitoring-forms/${type}/adviser-approval`, { method: "POST" });
