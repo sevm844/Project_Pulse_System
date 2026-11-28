@@ -67,7 +67,17 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
     pageMargins: [54, 40, 54, 40],
     defaultStyle: { font: "Arimo", fontSize: 11 },
     content: [
-      // Page 1: the cover.
+      // Page 1: the milestones table.
+      header,
+      { text: "MONITORING OF CAPSTONE PROJECT MILESTONES", bold: true, alignment: "center", fontSize: 11 },
+      { text: `AY ${form.academic_year}`, bold: true, alignment: "center", fontSize: 11, margin: [0, 0, 0, 12] },
+      {
+        table: { headerRows: 1, widths: [90, "*", 100, 76, 100, 76], body },
+        layout: { hLineWidth: () => 0.7, vLineWidth: () => 0.7, hLineColor: () => "#222", vLineColor: () => "#222" },
+      },
+      ...form.rules.map((rule, i) => ({ text: `* ${rule}`, bold: true, margin: [0, i === 0 ? 16 : 4, 0, 0] })),
+      // Page 2: the cover (team name, members, title).
+      { text: "", pageBreak: "after" },
       header,
       // As on the school's cover: the team name in capitals, the members with their e-mail in a second column, the title in capitals under its heading.
       { text: "TEAM NAME:", bold: true, margin: [0, 24, 0, 10] },
@@ -80,16 +90,6 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
       },
       { text: "TITLE OF CAPSTONE PROJECT:", bold: true, margin: [0, 26, 0, 10] },
       { text: (form.project_title ?? "").toUpperCase() },
-      // Page 2: the milestones table.
-      { text: "", pageBreak: "after" },
-      header,
-      { text: "MONITORING OF CAPSTONE PROJECT MILESTONES", bold: true, alignment: "center", fontSize: 11 },
-      { text: `AY ${form.academic_year}`, bold: true, alignment: "center", fontSize: 11, margin: [0, 0, 0, 12] },
-      {
-        table: { headerRows: 1, widths: [90, "*", 100, 76, 100, 76], body },
-        layout: { hLineWidth: () => 0.7, vLineWidth: () => 0.7, hLineColor: () => "#222", vLineColor: () => "#222" },
-      },
-      ...form.rules.map((rule, i) => ({ text: `* ${rule}`, bold: true, margin: [0, i === 0 ? 16 : 4, 0, 0] })),
     ],
   };
 
@@ -148,6 +148,16 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
         properties: { page },
         children: [
           logo(),
+          new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run("MONITORING OF CAPSTONE PROJECT MILESTONES", true)] }),
+          new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { after: 240 }, children: [run(`AY ${form.academic_year}`, true)] }),
+          new d.Table({ width: { size: widths.reduce((a, b) => a + b, 0), type: d.WidthType.DXA }, columnWidths: widths, rows: [head, ...rows] }),
+          ...form.rules.map((rule, i) => para([run(`* ${rule}`, true)], { before: i === 0 ? 300 : 80 })),
+        ],
+      },
+      {
+        properties: { page },
+        children: [
+          logo(),
           para([run("TEAM NAME:", true)], { before: 400, after: 160 }),
           para([run((form.team_name ?? "").toUpperCase())], { after: 400 }),
           para([run("TEAM MEMBERS:", true)]),
@@ -159,16 +169,6 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
           }),
           para([run("TITLE OF CAPSTONE PROJECT:", true)], { before: 480, after: 160 }),
           para([run((form.project_title ?? "").toUpperCase())]),
-        ],
-      },
-      {
-        properties: { page },
-        children: [
-          logo(),
-          new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run("MONITORING OF CAPSTONE PROJECT MILESTONES", true)] }),
-          new d.Paragraph({ alignment: d.AlignmentType.CENTER, spacing: { after: 240 }, children: [run(`AY ${form.academic_year}`, true)] }),
-          new d.Table({ width: { size: widths.reduce((a, b) => a + b, 0), type: d.WidthType.DXA }, columnWidths: widths, rows: [head, ...rows] }),
-          ...form.rules.map((rule, i) => para([run(`* ${rule}`, true)], { before: i === 0 ? 300 : 80 })),
         ],
       },
     ],

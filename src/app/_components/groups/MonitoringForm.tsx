@@ -177,15 +177,6 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
         </section>
       )}
 
-      <section className="rounded-xl border border-[#dfe8df] bg-white p-4 text-sm text-[#203028]">
-        <p className="font-semibold">Team name</p>
-        {coverField("team_name", form.team_name, "TEAM ALON", 1)}
-        <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, then the members: name and e-mail address, one per line)</span></p>
-        {coverField("members", form.members, "Santos, Maria Clara L. 2301234@ub.edu.ph\nReyes, Juan Miguel P. 2305678@ub.edu.ph", 4)}
-        <p className="mt-3 font-semibold">Title of capstone project</p>
-        {coverField("project_title", form.project_title, "Barangay Health Records Management System with Appointment Scheduling", 2)}
-      </section>
-
       <section className="rounded-xl border border-[#dfe8df] bg-white p-4">
         <h4 className="text-center text-sm font-bold uppercase text-[#203028]">Monitoring of Capstone Project Milestones</h4>
         <p className="text-center text-sm font-bold text-[#203028]">AY {form.academic_year}</p>
@@ -296,24 +287,33 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
             <p key={rule}>* {rule}</p>
           ))}
         </div>
-
-        {role === "Student" && (
-          <div className="mt-4 flex items-center justify-end gap-3">
-            <p className="text-[11px] text-[#7b877f]">Once you save, what you wrote cannot be changed.</p>
-            <button
-              type="button"
-              disabled={busy !== "" || !typed}
-              onClick={() => {
-                if (!window.confirm("Save the Capstone Monitoring Form? What you wrote cannot be changed after this.")) return;
-                void run("save", () => saveMonitoringForm({ team_name: cover.team_name, members: cover.members, project_title: cover.project_title, milestones: drafts }));
-              }}
-              className={solidClass}
-            >
-              {busy === "save" ? "Saving..." : "Save"}
-            </button>
-          </div>
-        )}
       </section>
+
+      <section className="rounded-xl border border-[#dfe8df] bg-white p-4 text-sm text-[#203028]">
+        <p className="font-semibold">Team name</p>
+        {coverField("team_name", form.team_name, "TEAM ALON", 1)}
+        <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, then the members: name and e-mail address, one per line)</span></p>
+        {coverField("members", form.members, "Santos, Maria Clara L. 2301234@ub.edu.ph\nReyes, Juan Miguel P. 2305678@ub.edu.ph", 4)}
+        <p className="mt-3 font-semibold">Title of capstone project</p>
+        {coverField("project_title", form.project_title, "Barangay Health Records Management System with Appointment Scheduling", 2)}
+      </section>
+
+      {role === "Student" && (
+        <div className="mt-4 flex items-center justify-end gap-3">
+          <p className="text-[11px] text-[#7b877f]">Once you save, what you wrote cannot be changed.</p>
+          <button
+            type="button"
+            disabled={busy !== "" || !typed}
+            onClick={() => {
+              if (!window.confirm("Save the Capstone Monitoring Form? What you wrote cannot be changed after this.")) return;
+              void run("save", () => saveMonitoringForm({ team_name: cover.team_name, members: cover.members, project_title: cover.project_title, milestones: drafts }));
+            }}
+            className={solidClass}
+          >
+            {busy === "save" ? "Saving..." : "Save"}
+          </button>
+        </div>
+      )}
 
       {/* For the adviser and the Dean only, outside the form itself: when each defense is and how it stands (the form stays exactly like the paper one). */}
       {role !== "Student" && (
