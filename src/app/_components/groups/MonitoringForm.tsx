@@ -187,7 +187,7 @@ export default function MonitoringForm({ projectId, role }: { projectId: number;
         <p className="font-semibold">Team name</p>
         {coverField("team_name", form.team_name, "Team Alon", 1)}
         <p className="mt-3 font-semibold">Team members <span className="font-normal text-[#7b877f]">(leader first, then the members: name and e-mail address, one per line)</span></p>
-        {coverField("members", form.members, "Santos, Maria Clara L., 2301234@ub.edu.ph\nReyes, Juan Miguel P., 2305678@ub.edu.ph", 4)}
+        {coverField("members", form.members, "Santos, Maria Clara L. 2301234@ub.edu.ph\nReyes, Juan Miguel P. 2305678@ub.edu.ph", 4)}
         <p className="mt-3 font-semibold">Title of capstone project</p>
         {coverField("project_title", form.project_title, "Barangay Health Records Management System with Appointment Scheduling", 2)}
       </section>
