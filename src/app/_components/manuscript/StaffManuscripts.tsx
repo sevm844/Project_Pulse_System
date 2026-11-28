@@ -151,25 +151,25 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
                 </div>
                 <div className="flex items-start gap-4 px-5 py-4">
                 <dl className="grid min-w-0 flex-1 grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-xs">
-                  <dt className="font-semibold text-[#203028]">Versions</dt>
+                  <dt className="font-semibold text-[#203028]">Submissions</dt>
                   <dd className="text-[#59645d]">
                     {group.versions === 0
-                      ? "No version submitted yet"
-                      : `${group.versions} ${group.versions === 1 ? "version" : "versions"} · latest is Version ${group.latest_version_no}, ${formatDateTime(group.latest_saved_at)}`}
+                      ? "No version has been submitted."
+                      : `${group.versions} ${group.versions === 1 ? "version" : "versions"} submitted · most recent: Version ${group.latest_version_no} (${formatDateTime(group.latest_saved_at)})`}
                   </dd>
 
                   {(group.latest_decision || group.open_comments > 0) && (
                     <>
-                      <dt className="font-semibold text-[#203028]">Review</dt>
+                      <dt className="font-semibold text-[#203028]">Review status</dt>
                       <dd className="space-y-0.5 font-semibold">
                         {group.latest_decision && (
                           <p className={group.latest_decision === "Approved" ? "text-emerald-700" : "text-amber-700"}>
-                            {group.latest_decision === "Approved" ? "Latest version approved" : "Changes requested on the latest version"}
+                            {group.latest_decision === "Approved" ? "Most recent version approved" : "Revisions requested on the most recent version"}
                           </p>
                         )}
                         {group.open_comments > 0 && (
                           <p className="text-amber-700">
-                            {group.open_comments} open {group.open_comments === 1 ? "comment" : "comments"}
+                            {group.open_comments} unresolved {group.open_comments === 1 ? "comment" : "comments"}
                           </p>
                         )}
                       </dd>
@@ -178,16 +178,16 @@ export default function StaffManuscripts({ role }: { role: "Adviser" | "Dean" | 
 
                   {sharedCount(group) > 0 && (
                     <>
-                      <dt className="font-semibold text-[#203028]">Shared</dt>
+                      <dt className="font-semibold text-[#203028]">Shared documents</dt>
                       <dd className="font-semibold text-[#2f6b3c]">
-                        {sharedCount(group)} shared {sharedCount(group) === 1 ? "document" : "documents"} · latest edited {formatDateTime(group.latest_shared_at ?? null)}
+                        {sharedCount(group)} {sharedCount(group) === 1 ? "document" : "documents"} shared · last edited {formatDateTime(group.latest_shared_at ?? null)}
                       </dd>
                     </>
                   )}
 
                   {(group.members ?? []).length > 0 && (
                     <>
-                      <dt className="font-semibold text-[#203028]">Last typed</dt>
+                      <dt className="font-semibold text-[#203028]">Member activity</dt>
                       <dd className="space-y-0.5 text-[#59645d]">
                         {(group.members ?? []).map((member) => {
                           const last = describeLastActive(member.last_active_at);

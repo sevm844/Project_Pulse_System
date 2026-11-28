@@ -19,12 +19,12 @@ const dayNumber = (date: string) => Math.round(new Date(`${date}T00:00:00Z`).get
 
 /** "today", "yesterday", "3 days ago" or "never" for the last time someone typed, and whether that is long enough to look into (3 days or more). */
 export function describeLastActive(iso: string | null): { text: string; quiet: boolean } {
-  if (!iso) return { text: "has not typed yet", quiet: true };
+  if (!iso) return { text: "no recorded activity", quiet: true };
   const days = dayNumber(todayInManila()) - dayNumber(manilaDate(iso));
-  if (days <= 0) return { text: "today", quiet: false };
-  if (days === 1) return { text: "yesterday", quiet: false };
+  if (days <= 0) return { text: "active today", quiet: false };
+  if (days === 1) return { text: "active yesterday", quiet: false };
 
-  return { text: `${days} days ago`, quiet: days >= 3 };
+  return { text: `last active ${days} days ago`, quiet: days >= 3 };
 }
 
 const dayLabel = (date: string) => {
