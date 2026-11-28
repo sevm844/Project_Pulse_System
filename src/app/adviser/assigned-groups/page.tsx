@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import AdviserShell from "../_components/AdviserShell";
 import Card from "../_components/Card";
@@ -101,6 +101,30 @@ export default function AssignedGroupsPage() {
   // Everyone chosen: the leader first, then the members in the order they were added.
   const chosenIds = leaderUid ? [leaderUid, ...selectedIds.filter((uid) => uid !== leaderUid)] : [];
   const chosenStudents = chosenIds.map((uid) => availableStudents.find((student) => student.uid === uid)).filter((student): student is UserProfile => Boolean(student));
+  // When the leader changes the rows swap places: each row slides from where it was to where it is now instead of jumping.
+  const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
+  const rowTops = useRef(new Map<string, number>());
+  const orderKey = chosenIds.join(",");
+
+  useLayoutEffect(() => {
+    const next = new Map<string, number>();
+
+    rowRefs.current.forEach((row, uid) => {
+      const top = row.getBoundingClientRect().top;
+      const before = rowTops.current.get(uid);
+
+      next.set(uid, top);
+      if (before === undefined || Math.abs(before - top) < 1) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      row.style.transition = "none";
+      row.style.transform = `translateY(${before - top}px)`;
+      void row.offsetHeight;
+      row.style.transition = "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)";
+      row.style.transform = "";
+    });
+    rowTops.current = next;
+  }, [orderKey]);
   const searchWords = studentSearch.trim().toLowerCase();
   const pickable = availableStudents.filter(
     (student) =>
@@ -567,21 +591,29 @@ export default function AssignedGroupsPage() {
                         </thead>
                         <tbody>
                           {chosenStudents.map((student) => (
-                            <tr key={student.uid} className="border-t border-[#edf2ec]">
+                            <tr
+                              key={student.uid}
+                              ref={(node) => { if (node) rowRefs.current.set(student.uid, node); else rowRefs.current.delete(student.uid); }}
+                              className="relative border-t border-[#edf2ec] bg-white"
+                            >
                               <td className="py-1.5 pr-2 text-[#203028]">{student.fullName}</td>
                               <td className={`py-1.5 pr-2 ${student.uid === leaderUid ? "font-semibold text-[#123f2b]" : "text-[#59645d]"}`}>{student.uid === leaderUid ? "Leader" : "Member"}</td>
                               <td className="py-1.5 text-right">
                                 {student.uid !== leaderUid && (
-                                  <button type="button" onClick={() => makeLeader(student.uid)} className="mr-3 font-semibold text-[#2f6b3c] underline">Make leader</button>
+                                  <button type="button" onClick={() => makeLeader(student.uid)} title="Make leader" aria-label={`Make ${student.fullName} the leader`} className="mr-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-[#2f6b3c] transition-colors hover:bg-[#eaf6ea]">
+                                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z" /></svg>
+                                  </button>
                                 )}
-                                <button type="button" onClick={() => toggleStudent(student.uid)} aria-label={`Remove ${student.fullName}`} className="font-semibold text-[#9b3b3b] underline">Remove</button>
+                                <button type="button" onClick={() => toggleStudent(student.uid)} title="Remove" aria-label={`Remove ${student.fullName}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#9b3b3b] transition-colors hover:bg-[#fbeaea]">
+                                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6" /></svg>
+                                </button>
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     )}
-                    <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use Make leader to change it. A group of 1, 2 or 3 is fine. Students who already have a group this academic year and semester are hidden.</p>
+                    <p className="text-xs text-[#7b877f]">Search and add the students of the group. The first one added is the leader; use the star to change it. A group of 1, 2 or 3 is fine. Students who already have a group this academic year and semester are hidden.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 rounded-lg border border-[#edf2ec] bg-[#fbfdfb] p-2.5">
