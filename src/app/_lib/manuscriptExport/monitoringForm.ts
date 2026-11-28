@@ -52,7 +52,7 @@ export async function buildMonitoringFormPdf(form: MonitoringFormData): Promise<
   for (const row of form.rows) {
     body.push([
       cell(label(row), { alignment: "center", bold: true }),
-      cell(row.milestones ?? "", { margin: [4, 4, 4, 40] }),
+      cell(row.milestones ?? "", { alignment: "center", margin: [4, 4, 4, 40] }),
       row.adviser_signature?.image ? { image: row.adviser_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(adviserText(row), { alignment: "center" }),
       cell(adviserDate(row), { alignment: "center" }),
       row.dean_signature?.image ? { image: row.dean_signature.image, fit: [100, 42], alignment: "center", margin: [2, 6, 2, 6] } : cell(deanText(row), { alignment: "center" }),
@@ -130,7 +130,7 @@ export async function buildMonitoringFormDocx(form: MonitoringFormData): Promise
         height: { value: 1700, rule: d.HeightRule.ATLEAST },
         children: [
           cell([new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(label(row), true, 19)] })], widths[0]),
-          cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ children: [run(line, false, 19)] })), widths[1]),
+          cell((row.milestones ?? "").split("\n").map((line) => new d.Paragraph({ alignment: d.AlignmentType.CENTER, children: [run(line, false, 19)] })), widths[1]),
           cell(await signatureCell(row.adviser_signature?.image, adviserText(row)), widths[2]),
           cell(lines(adviserDate(row)), widths[3]),
           cell(await signatureCell(row.dean_signature?.image, deanText(row)), widths[4]),
